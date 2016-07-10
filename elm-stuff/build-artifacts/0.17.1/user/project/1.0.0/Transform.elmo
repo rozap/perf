@@ -1,0 +1,16 @@
+var _user$project$Transform$update = F2(
+	function (action, model) {
+		var _p0 = action;
+		if (_p0.ctor === 'Add') {
+			return _elm_lang$core$Native_List.fromArray(
+				[]);
+		} else {
+			return _elm_lang$core$Native_List.fromArray(
+				[]);
+		}
+	});
+var _user$project$Transform$Stage = function (a) {
+	return {name: a};
+};
+var _user$project$Transform$Remove = {ctor: 'Remove'};
+var _user$project$Transform$Add = {ctor: 'Add'};

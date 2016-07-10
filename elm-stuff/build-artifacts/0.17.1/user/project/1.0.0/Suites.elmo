@@ -1,0 +1,209 @@
+var _user$project$Suites$singleView = function (suite) {
+	return _elm_lang$html$Html$text('iama sutie ama');
+};
+var _user$project$Suites$update = F2(
+	function (action, model) {
+		return model;
+	});
+var _user$project$Suites$specUnit = F2(
+	function (unit, howMany) {
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			function () {
+				var _p0 = unit;
+				switch (_p0.ctor) {
+					case 'Minute':
+						return 'minute';
+					case 'Hour':
+						return 'hour';
+					case 'Day':
+						return 'day';
+					case 'Week':
+						return 'week';
+					default:
+						return 'month';
+				}
+			}(),
+			(_elm_lang$core$Native_Utils.cmp(howMany, 1) > 0) ? 's' : '');
+	});
+var _user$project$Suites$triggerView = function (trigger) {
+	var descriptors = function () {
+		var _p1 = trigger;
+		if (_p1.ctor === 'Git') {
+			var _p2 = _p1._0;
+			return _elm_lang$core$Native_List.fromArray(
+				[
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$class('text-muted')
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('when branch ')
+						])),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(_p2.branch)
+						])),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$class('text-muted')
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(' on ')
+						])),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(_p2.url)
+						])),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$class('text-muted')
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(' is updated')
+						]))
+				]);
+		} else {
+			var _p3 = _p1._0;
+			return _elm_lang$core$Native_List.fromArray(
+				[
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$class('text-muted')
+						]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text('every ')
+						])),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(
+							_elm_lang$core$Basics$toString(_p3.every))
+						])),
+					_elm_lang$html$Html$text(' '),
+					A2(
+					_elm_lang$html$Html$span,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(
+							A2(_user$project$Suites$specUnit, _p3.unit, _p3.every))
+						]))
+				]);
+		}
+	}();
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		descriptors);
+};
+var _user$project$Suites$suiteView = function (suite) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$h3,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(suite.name)
+					])),
+				_user$project$Suites$triggerView(suite.trigger)
+			]));
+};
+var _user$project$Suites$listView = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('hi')
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				A2(_elm_lang$core$List$map, _user$project$Suites$suiteView, model))
+			]));
+};
+var _user$project$Suites$TimeSpec = F2(
+	function (a, b) {
+		return {every: a, unit: b};
+	});
+var _user$project$Suites$GitSpec = F2(
+	function (a, b) {
+		return {url: a, branch: b};
+	});
+var _user$project$Suites$Suite = F2(
+	function (a, b) {
+		return {name: a, trigger: b};
+	});
+var _user$project$Suites$Month = {ctor: 'Month'};
+var _user$project$Suites$Week = {ctor: 'Week'};
+var _user$project$Suites$Day = {ctor: 'Day'};
+var _user$project$Suites$Hour = {ctor: 'Hour'};
+var _user$project$Suites$Minute = {ctor: 'Minute'};
+var _user$project$Suites$Time = function (a) {
+	return {ctor: 'Time', _0: a};
+};
+var _user$project$Suites$Git = function (a) {
+	return {ctor: 'Git', _0: a};
+};
+var _user$project$Suites$model = _elm_lang$core$Native_List.fromArray(
+	[
+		{
+		name: 'foo',
+		trigger: _user$project$Suites$Time(
+			{every: 1, unit: _user$project$Suites$Minute})
+	},
+		{
+		name: 'foo',
+		trigger: _user$project$Suites$Git(
+			{url: 'foobar', branch: 'master'})
+	}
+	]);
+var _user$project$Suites$Edit = function (a) {
+	return {ctor: 'Edit', _0: a};
+};
+var _user$project$Suites$Add = function (a) {
+	return {ctor: 'Add', _0: a};
+};
+var _user$project$Suites$Remove = function (a) {
+	return {ctor: 'Remove', _0: a};
+};
