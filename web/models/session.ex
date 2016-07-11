@@ -3,7 +3,8 @@ defmodule Perf.Session do
 
   def validate(params) do
     case Map.split(params, ["email", "password"]) do
-      {login, %{}} -> {:ok, login}
+      {login, %{}} -> 
+        {:ok, login}
       {_, missing} -> 
         error = missing 
         |> Enum.map(fn k, v -> {k, ["can't be blank"]} end) 

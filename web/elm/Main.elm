@@ -4,11 +4,15 @@ import String
 import Navigation
 import Suites
 import Router exposing (..)
+import Phoenix
 
 type alias Model =
+  {- world state -}
   { suites : Suites.Model
   , suite: Maybe Suites.Suite
-  , page : Page
+  {-app state -}
+  , page : Page,
+  , socket : Phoenix.Socket.Socket Msg
   }
 
 
