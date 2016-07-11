@@ -11,6 +11,7 @@ defmodule Perf.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug Plug.Parsers, parsers: [:json], json_decoder: Poison
   end
 
   scope "/", Perf do
@@ -19,8 +20,10 @@ defmodule Perf.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", Perf do
-  #   pipe_through :api
-  # end
+  scope "/api", Perf do
+    pipe_through :api
+
+    post "/user", Api.User, :index
+    post "/session", Api.Session, :index
+  end
 end

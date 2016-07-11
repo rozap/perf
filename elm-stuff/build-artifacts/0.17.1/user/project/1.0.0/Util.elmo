@@ -1,0 +1,1 @@
+var _user$project$Util$loading = _elm_lang$html$Html$text('loading...');

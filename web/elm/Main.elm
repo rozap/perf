@@ -2,17 +2,15 @@ import Html exposing (Html, button, div, text, table, tr, td)
 import Html.App as Html
 import String
 import Navigation
-import UrlParser exposing (Parser, (</>), format, int, oneOf, s, string)
 import Suites
+import Router exposing (..)
 
 type alias Model =
   { suites : Suites.Model
+  , suite: Maybe Suites.Suite
   , page : Page
   }
 
-type Page
-  = AllSuites
-  | ASuite Int
 
 type Msg
   = SuitesAction Suites.Action
@@ -26,25 +24,15 @@ main = Navigation.program (Navigation.makeParser urlParser)
   , subscriptions = subscriptions
   }
 
+initialState = 
+  { suites = Suites.model
+  , page = SuitesPage
+  , suite = Nothing
+  }
+
 init : Result String Page -> (Model, Cmd Msg)
-init result = urlUpdate result { suites = Suites.model, page = AllSuites}
+init result = urlUpdate result initialState
 
-urlParser : Navigation.Location -> Result String Page
-urlParser location =
-  UrlParser.parse identity pageParser (String.dropLeft 1 location.hash)
-
-pageParser : Parser (Page -> a) a
-pageParser =
-  oneOf
-    [ format AllSuites (s "suites")
-    , format ASuite (s "suites" </> int)
-    ]
-
-pageToRoute : Page -> String
-pageToRoute page =
-  case page of
-    AllSuites -> "#suites"
-    ASuite id -> "#suites/" ++ (toString id)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -62,13 +50,10 @@ view model =
 viewForRoute : Model -> Html Msg
 viewForRoute model =
   case model.page of
-    AllSuites ->
+    SuitesPage ->
       Html.map (\action -> SuitesAction action) (Suites.listView model.suites)
-    ASuite id ->
-      let
-        suite = List.head (List.filter (\suite -> suite.id == id ) model.suites)
-      in
-        Html.map (\action -> SuitesAction action) (Suites.singleView suite)
+    SuitePage _ ->
+      Html.map (\action -> SuitesAction action) (Suites.singleView model.suite)
 
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.none
@@ -77,6 +62,6 @@ urlUpdate : Result String Page -> Model -> (Model, Cmd Msg)
 urlUpdate result model =
   case Debug.log "result" result of
     Err _ -> model ! [ Navigation.modifyUrl (pageToRoute model.page)]
-    Ok page -> model ! []
+    Ok page -> { model | page = page } ! []
 
 

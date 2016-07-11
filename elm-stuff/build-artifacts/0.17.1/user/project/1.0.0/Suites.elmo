@@ -1,5 +1,26 @@
-var _user$project$Suites$singleView = function (suite) {
-	return _elm_lang$html$Html$text('iama sutie ama');
+var _user$project$Suites$singleView = function (maybeSuite) {
+	var _p0 = maybeSuite;
+	if (_p0.ctor === 'Just') {
+		return A2(
+			_elm_lang$html$Html$div,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_elm_lang$html$Html_Attributes$class('suite')
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[
+					A2(
+					_elm_lang$html$Html$h2,
+					_elm_lang$core$Native_List.fromArray(
+						[]),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html$text(_p0._0.name)
+						]))
+				]));
+	} else {
+		return _user$project$Util$loading;
+	}
 };
 var _user$project$Suites$update = F2(
 	function (action, model) {
@@ -10,8 +31,8 @@ var _user$project$Suites$specUnit = F2(
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
 			function () {
-				var _p0 = unit;
-				switch (_p0.ctor) {
+				var _p1 = unit;
+				switch (_p1.ctor) {
 					case 'Minute':
 						return 'minute';
 					case 'Hour':
@@ -28,9 +49,9 @@ var _user$project$Suites$specUnit = F2(
 	});
 var _user$project$Suites$triggerView = function (trigger) {
 	var descriptors = function () {
-		var _p1 = trigger;
-		if (_p1.ctor === 'Git') {
-			var _p2 = _p1._0;
+		var _p2 = trigger;
+		if (_p2.ctor === 'Git') {
+			var _p3 = _p2._0;
 			return _elm_lang$core$Native_List.fromArray(
 				[
 					A2(
@@ -49,7 +70,7 @@ var _user$project$Suites$triggerView = function (trigger) {
 						[]),
 					_elm_lang$core$Native_List.fromArray(
 						[
-							_elm_lang$html$Html$text(_p2.branch)
+							_elm_lang$html$Html$text(_p3.branch)
 						])),
 					A2(
 					_elm_lang$html$Html$span,
@@ -67,7 +88,7 @@ var _user$project$Suites$triggerView = function (trigger) {
 						[]),
 					_elm_lang$core$Native_List.fromArray(
 						[
-							_elm_lang$html$Html$text(_p2.url)
+							_elm_lang$html$Html$text(_p3.url)
 						])),
 					A2(
 					_elm_lang$html$Html$span,
@@ -81,7 +102,7 @@ var _user$project$Suites$triggerView = function (trigger) {
 						]))
 				]);
 		} else {
-			var _p3 = _p1._0;
+			var _p4 = _p2._0;
 			return _elm_lang$core$Native_List.fromArray(
 				[
 					A2(
@@ -101,7 +122,7 @@ var _user$project$Suites$triggerView = function (trigger) {
 					_elm_lang$core$Native_List.fromArray(
 						[
 							_elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p3.every))
+							_elm_lang$core$Basics$toString(_p4.every))
 						])),
 					_elm_lang$html$Html$text(' '),
 					A2(
@@ -111,7 +132,7 @@ var _user$project$Suites$triggerView = function (trigger) {
 					_elm_lang$core$Native_List.fromArray(
 						[
 							_elm_lang$html$Html$text(
-							A2(_user$project$Suites$specUnit, _p3.unit, _p3.every))
+							A2(_user$project$Suites$specUnit, _p4.unit, _p4.every))
 						]))
 				]);
 		}
@@ -126,13 +147,19 @@ var _user$project$Suites$suiteView = function (suite) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[
+				_elm_lang$html$Html_Attributes$class('suite')
+			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
-				_elm_lang$html$Html$h3,
+				_elm_lang$html$Html$a,
 				_elm_lang$core$Native_List.fromArray(
-					[]),
+					[
+						_elm_lang$html$Html_Attributes$href(
+						_user$project$Router$pageToRoute(
+							_user$project$Router$SuitePage(suite.id)))
+					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text(suite.name)
@@ -144,7 +171,9 @@ var _user$project$Suites$listView = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
-			[]),
+			[
+				_elm_lang$html$Html_Attributes$class('suites')
+			]),
 		_elm_lang$core$Native_List.fromArray(
 			[
 				A2(
@@ -153,7 +182,7 @@ var _user$project$Suites$listView = function (model) {
 					[]),
 				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$html$Html$text('hi')
+						_elm_lang$html$Html$text('your suites')
 					])),
 				A2(
 				_elm_lang$html$Html$div,
@@ -170,9 +199,9 @@ var _user$project$Suites$GitSpec = F2(
 	function (a, b) {
 		return {url: a, branch: b};
 	});
-var _user$project$Suites$Suite = F2(
-	function (a, b) {
-		return {name: a, trigger: b};
+var _user$project$Suites$Suite = F3(
+	function (a, b, c) {
+		return {name: a, trigger: b, id: c};
 	});
 var _user$project$Suites$Month = {ctor: 'Month'};
 var _user$project$Suites$Week = {ctor: 'Week'};
@@ -188,12 +217,14 @@ var _user$project$Suites$Git = function (a) {
 var _user$project$Suites$model = _elm_lang$core$Native_List.fromArray(
 	[
 		{
-		name: 'foo',
+		name: 'foo suite',
+		id: 1,
 		trigger: _user$project$Suites$Time(
 			{every: 1, unit: _user$project$Suites$Minute})
 	},
 		{
-		name: 'foo',
+		name: 'bar suite',
+		id: 2,
 		trigger: _user$project$Suites$Git(
 			{url: 'foobar', branch: 'master'})
 	}

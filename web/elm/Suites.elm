@@ -1,6 +1,8 @@
-module Suites exposing (Model, Action, update, listView, singleView, model)
+module Suites exposing (Model, Suite, Action, update, listView, singleView, model)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Router
+import Util
 
 type TimeUnit
   = Minute
@@ -26,6 +28,7 @@ type Trigger
 type alias Suite =
   { name : String
   , trigger: Trigger
+  , id: Int
   }
 
 type alias Model = List Suite
@@ -38,11 +41,13 @@ type Action
 
 model =
   [
-  { name = "foo"
+  { name = "foo suite"
+  , id = 1
   , trigger = Time { every = 1, unit = Minute }
   }
   ,
-  { name = "foo"
+  { name = "bar suite"
+  , id = 2
   , trigger = Git { url = "foobar", branch = "master" }
   }
   ]
@@ -80,8 +85,8 @@ triggerView trigger =
 
 suiteView : Suite -> Html Action
 suiteView suite =
-  div []
-      [ h3 [] [text suite.name]
+  div [ class "suite" ]
+      [ a [ href (Router.pageToRoute (Router.SuitePage suite.id)) ] [text suite.name]
       , triggerView suite.trigger
       ]
 
@@ -93,11 +98,17 @@ update action model =
 
 listView : Model -> Html Action
 listView model =
-  div []
+  div [ class "suites" ]
       [
-      div [] [(text "hi")],
+      div [] [(text "your suites")],
       div [] (List.map suiteView model)
       ]
 
-singleView : Suite -> Html Action
-singleView suite = text "iama sutie ama"
+singleView : Maybe Suite -> Html Action
+singleView maybeSuite = 
+  case maybeSuite of
+    Just suite ->
+      div [ class "suite" ]
+        [ h2 [] [ text suite.name] ]
+    Nothing -> 
+      Util.loading
