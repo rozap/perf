@@ -4,23 +4,25 @@ defmodule Perf.UserSocket do
   require Logger
 
   ## Channels
-  channel "api:*", Perf.ApiChannel
+  channel "api", Perf.ApiChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
 
-  def connect(%{"guardian_token" => jwt} = params, socket) do
-    case sign_in(socket, jwt) do
-      {:ok, authed_socket, _guardian_params} -> 
-        {:ok, authed_socket}
-      err -> 
-        Logger.warn("Connect failed #{inspect err}")
-        :error
-    end
-  end
+  # def connect(%{"guardian_token" => jwt} = params, socket) do
+  #   IO.puts "Got a socket??"
+  #   case sign_in(socket, jwt) do
+  #     {:ok, authed_socket, _guardian_params} ->
+  #       {:ok, authed_socket}
+  #     err ->
+  #       Logger.warn("Connect failed #{inspect err}")
+  #       :error
+  #   end
+  # end
 
   def connect(_params, socket) do
-    :error
+    IO.puts "CONNECT"
+    {:ok, socket}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

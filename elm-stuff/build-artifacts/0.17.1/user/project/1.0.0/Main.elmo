@@ -20,36 +20,120 @@ var _user$project$Main$urlUpdate = F2(
 					[]));
 		}
 	});
-var _user$project$Main$subscriptions = function (model) {
-	return _elm_lang$core$Platform_Sub$none;
+var _user$project$Main$Model = F5(
+	function (a, b, c, d, e) {
+		return {suites: a, suite: b, page: c, socket: d, channel: e};
+	});
+var _user$project$Main$ShowLeftMessage = function (a) {
+	return {ctor: 'ShowLeftMessage', _0: a};
+};
+var _user$project$Main$ShowJoinedMessage = function (a) {
+	return {ctor: 'ShowJoinedMessage', _0: a};
+};
+var _user$project$Main$PhoenixMsg = function (a) {
+	return {ctor: 'PhoenixMsg', _0: a};
+};
+var _user$project$Main$initSocket = function () {
+	var channel = A2(
+		_fbonetti$elm_phoenix_socket$Phoenix_Channel$onClose,
+		_elm_lang$core$Basics$always(
+			_user$project$Main$ShowLeftMessage('left api')),
+		A2(
+			_fbonetti$elm_phoenix_socket$Phoenix_Channel$onJoin,
+			_elm_lang$core$Basics$always(
+				_user$project$Main$ShowJoinedMessage('joined api')),
+			_fbonetti$elm_phoenix_socket$Phoenix_Channel$init('api')));
+	var socket = _fbonetti$elm_phoenix_socket$Phoenix_Socket$withDebug(
+		_fbonetti$elm_phoenix_socket$Phoenix_Socket$init('ws://localhost:4000/socket/websocket'));
+	var _p1 = A2(_fbonetti$elm_phoenix_socket$Phoenix_Socket$join, channel, socket);
+	var sock = _p1._0;
+	var cmd = _p1._1;
+	return {
+		ctor: '_Tuple3',
+		_0: sock,
+		_1: channel,
+		_2: A2(_elm_lang$core$Platform_Cmd$map, _user$project$Main$PhoenixMsg, cmd)
+	};
+}();
+var _user$project$Main$initialState = function () {
+	var _p2 = _user$project$Main$initSocket;
+	var socket = _p2._0;
+	var channel = _p2._1;
+	var cmd = _p2._2;
+	return {
+		ctor: '_Tuple2',
+		_0: {suites: _user$project$Suites$model, page: _user$project$Router$SuitesPage, suite: _elm_lang$core$Maybe$Nothing, socket: socket, channel: channel},
+		_1: cmd
+	};
+}();
+var _user$project$Main$init = function (result) {
+	var _p3 = _user$project$Main$initialState;
+	var preModel = _p3._0;
+	var phxCmd = _p3._1;
+	var _p4 = A2(_user$project$Main$urlUpdate, result, preModel);
+	var model = _p4._0;
+	var urlCmd = _p4._1;
+	return {
+		ctor: '_Tuple2',
+		_0: model,
+		_1: _elm_lang$core$Platform_Cmd$batch(
+			_elm_lang$core$Native_List.fromArray(
+				[phxCmd, urlCmd]))
+	};
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p1 = msg;
-		return A2(
-			_elm_lang$core$Platform_Cmd_ops['!'],
-			_elm_lang$core$Native_Utils.update(
-				model,
-				{
-					suites: A2(_user$project$Suites$update, _p1._0, model.suites)
-				}),
-			_elm_lang$core$Native_List.fromArray(
-				[]));
+		var _p5 = msg;
+		switch (_p5.ctor) {
+			case 'SuitesAction':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							suites: A2(_user$project$Suites$update, _p5._0, model.suites)
+						}),
+					_elm_lang$core$Native_List.fromArray(
+						[]));
+			case 'PhoenixMsg':
+				var _p6 = A2(_fbonetti$elm_phoenix_socket$Phoenix_Socket$update, _p5._0, model.socket);
+				var socket = _p6._0;
+				var phxCmd = _p6._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{socket: socket}),
+					_1: A2(
+						_elm_lang$core$Platform_Cmd$map,
+						_user$project$Main$PhoenixMsg,
+						A2(_elm_lang$core$Debug$log, 'phxCmd', phxCmd))
+				};
+			case 'ShowJoinedMessage':
+				var foo = A2(_elm_lang$core$Debug$log, 'joined channel', _p5._0);
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					model,
+					_elm_lang$core$Native_List.fromArray(
+						[]));
+			default:
+				var foo = A2(_elm_lang$core$Debug$log, 'left channel', _p5._0);
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					model,
+					_elm_lang$core$Native_List.fromArray(
+						[]));
+		}
 	});
-var _user$project$Main$initialState = {suites: _user$project$Suites$model, page: _user$project$Router$SuitesPage, suite: _elm_lang$core$Maybe$Nothing};
-var _user$project$Main$init = function (result) {
-	return A2(_user$project$Main$urlUpdate, result, _user$project$Main$initialState);
+var _user$project$Main$subscriptions = function (model) {
+	return A2(_fbonetti$elm_phoenix_socket$Phoenix_Socket$listen, model.socket, _user$project$Main$PhoenixMsg);
 };
-var _user$project$Main$Model = F3(
-	function (a, b, c) {
-		return {suites: a, suite: b, page: c};
-	});
 var _user$project$Main$SuitesAction = function (a) {
 	return {ctor: 'SuitesAction', _0: a};
 };
 var _user$project$Main$viewForRoute = function (model) {
-	var _p2 = model.page;
-	if (_p2.ctor === 'SuitesPage') {
+	var _p7 = model.page;
+	if (_p7.ctor === 'SuitesPage') {
 		return A2(
 			_elm_lang$html$Html_App$map,
 			function (action) {
