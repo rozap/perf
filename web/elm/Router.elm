@@ -4,9 +4,12 @@ import UrlParser exposing (Parser, (</>), format, int, oneOf, s, string)
 import Navigation
 import String
 
-type Page
+type SuiteRelated
   = SuitesPage
   | SuitePage Int
+
+type Page
+  = SuitesScope SuiteRelated
 
 urlParser : Navigation.Location -> Result String Page
 urlParser location =
@@ -22,5 +25,7 @@ pageParser =
 pageToRoute : Page -> String
 pageToRoute page =
   case page of
-    SuitesPage -> "#suites"
-    SuitePage id -> "#suites/" ++ (toString id)
+    SuitesScope suitesPage ->
+      case suitesPage of
+        SuitesPage -> "#suites"
+        SuitePage id -> "#suites/" ++ (toString id)

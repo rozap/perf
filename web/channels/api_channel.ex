@@ -24,18 +24,8 @@ defmodule Perf.ApiChannel do
   ]
 
 
-  def join("session", _, socket) do
-    Logger.info("Anon session has started")
+  def join("api", _, socket) do
     {:ok, socket}
-  end
-
-  def join("session:" <> session_token, _message, socket) do
-    {:ok, socket}
-  end
-
-  def join(invalid, _, _) do
-    Logger.warn("Invalid session join #{invalid}")
-    {:error, %{error: :invalid_handshake}}
   end
 
 

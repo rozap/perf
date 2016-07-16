@@ -1,3 +1,7 @@
+var _user$project$Suites$urlUpdate = F2(
+	function (page, model) {
+		return model;
+	});
 var _user$project$Suites$singleView = function (maybeSuite) {
 	var _p0 = maybeSuite;
 	if (_p0.ctor === 'Just') {
@@ -24,7 +28,11 @@ var _user$project$Suites$singleView = function (maybeSuite) {
 };
 var _user$project$Suites$update = F2(
 	function (action, model) {
-		return model;
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			A2(_elm_lang$core$Debug$log, 'suitesAction', model),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
 	});
 var _user$project$Suites$specUnit = F2(
 	function (unit, howMany) {
@@ -191,6 +199,8 @@ var _user$project$Suites$listView = function (model) {
 				A2(_elm_lang$core$List$map, _user$project$Suites$suiteView, model))
 			]));
 };
+var _user$project$Suites$model = _elm_lang$core$Native_List.fromArray(
+	[]);
 var _user$project$Suites$TimeSpec = F2(
 	function (a, b) {
 		return {every: a, unit: b};
@@ -214,21 +224,6 @@ var _user$project$Suites$Time = function (a) {
 var _user$project$Suites$Git = function (a) {
 	return {ctor: 'Git', _0: a};
 };
-var _user$project$Suites$model = _elm_lang$core$Native_List.fromArray(
-	[
-		{
-		name: 'foo suite',
-		id: 1,
-		trigger: _user$project$Suites$Time(
-			{every: 1, unit: _user$project$Suites$Minute})
-	},
-		{
-		name: 'bar suite',
-		id: 2,
-		trigger: _user$project$Suites$Git(
-			{url: 'foobar', branch: 'master'})
-	}
-	]);
 var _user$project$Suites$Edit = function (a) {
 	return {ctor: 'Edit', _0: a};
 };

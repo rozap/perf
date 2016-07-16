@@ -1,4 +1,4 @@
-module Suites exposing (Model, Suite, Action, update, listView, singleView, model)
+module Suites exposing (Model, Suite, Action, update, urlUpdate, listView, singleView, model)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Router
@@ -39,19 +39,7 @@ type Action
   | Edit Suite
 
 
-model =
-  [
-  { name = "foo suite"
-  , id = 1
-  , trigger = Time { every = 1, unit = Minute }
-  }
-  ,
-  { name = "bar suite"
-  , id = 2
-  , trigger = Git { url = "foobar", branch = "master" }
-  }
-  ]
-
+model = []
 
 specUnit : TimeUnit -> Int -> String
 specUnit unit howMany =
@@ -92,9 +80,9 @@ suiteView suite =
 
 
 
-update : Action -> Model -> Model
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
-  model
+  (Debug.log "suitesAction" model) ! []
 
 listView : Model -> Html Action
 listView model =
@@ -112,3 +100,7 @@ singleView maybeSuite =
         [ h2 [] [ text suite.name] ]
     Nothing -> 
       Util.loading
+
+urlUpdate : Router.SuiteRelated -> Model -> Model
+urlUpdate page model =
+  model

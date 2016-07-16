@@ -71,26 +71,34 @@ init result =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  case msg of
-    SuitesAction action ->
-      { model | suites = (Suites.update action model.suites) } ! []
-    PhoenixMsg msg ->
-      let
-        ( socket, phxCmd ) = Phoenix.Socket.update msg model.socket
-      in
-        ( { model | socket = socket }
-        , Cmd.map PhoenixMsg (Debug.log "phxCmd" phxCmd)
-        )
-    ShowJoinedMessage msg ->
-      let
-        foo = Debug.log "joined channel" msg
-      in
-        model ! []
-    ShowLeftMessage msg ->
-      let
-        foo = Debug.log "left channel" msg
-      in
-        model ! []
+  --let 
+    --foo = Debug.log "model" model
+  --in
+    case Debug.log "msg" msg of
+      SuitesAction action ->
+        let 
+          (suiteState, suiteCmd) = Suites.update action model.suites
+        in
+          { model 
+          | suites = suiteState 
+          } ! [(Cmd.map SuitesAction suiteCmd)]
+      PhoenixMsg msg ->
+        let
+          ( socket, phxCmd ) = Phoenix.Socket.update msg model.socket
+        in
+          ( { model | socket = socket }
+          , Cmd.map PhoenixMsg (Debug.log "phxCmd" phxCmd)
+          )
+      ShowJoinedMessage msg ->
+        let
+          foo = Debug.log "joined channel" msg
+        in
+          model ! []
+      ShowLeftMessage msg ->
+        let
+          foo = Debug.log "left channel" msg
+        in
+          model ! []
 
 
 view : Model -> Html Msg
@@ -112,10 +120,18 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   Phoenix.Socket.listen model.socket PhoenixMsg
 
+
 urlUpdate : Result String Page -> Model -> (Model, Cmd Msg)
 urlUpdate result model =
   case Debug.log "result" result of
     Err _ -> model ! [ Navigation.modifyUrl (pageToRoute model.page)]
-    Ok page -> { model | page = page } ! []
-
+    Ok page -> 
+      let 
+        newModel = { model | page = page }
+      in
+        case page of
+          SuitesPage -> 
+            { newModel | suites = (Suites.urlUpdate page newModel.suites)} ! []
+          SuitePage id -> 
+            newModel ! []
 
