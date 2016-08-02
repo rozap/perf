@@ -2,13 +2,21 @@
   box-sizing: border-box;
 }
 
+@base-radius: 1px;
+
 @margin:                 1em;
 @gray-base:              #000;
 @gray-darker:            lighten(@gray-base, 13.5%); // #222
 @gray-dark:              lighten(@gray-base, 20%);   // #333
 @gray:                   lighten(@gray-base, 33.5%); // #555
 @gray-light:             lighten(@gray-base, 46.7%); // #777
-@gray-lighter:           lighten(@gray-base, 93.5%); // #eee
+@gray-lighter:           lighten(@gray-base, 96.5%); // #eee
+@white:                  #fff;
+
+@green: rgb(28, 184, 65);
+@red: rgb(202, 60, 60);
+@orange: rgb(223, 117, 20);
+@blue: rgb(66, 184, 221);
 
 body {
   margin: @margin;
@@ -16,4 +24,81 @@ body {
 
 .text-muted {
   color: @gray-light;
+}
+
+h1, h2, h3, p {
+  margin: @margin/2 0px;
+}
+
+a {
+  text-decoration: none;
+  color: @gray-darker;
+  &:hover {
+    color: @gray-light;
+  }
+}
+
+.button-success,
+.button-error,
+.button-warning,
+.button-secondary {
+    color: white;
+    border-radius: @base-radius;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.button-success {
+    background: @green; /* this is a green */
+}
+
+.button-error {
+    background: @red; /* this is a maroon */
+}
+
+.button-warning {
+    background: @orange; /* this is an orange */
+}
+
+.button-secondary {
+    background: @blue; /* this is a light blue */
+}
+
+.pure-button {
+  margin: 1em 0em;
+  &:hover {
+    color: @white;
+  }
+  i {
+    font-size: 1em;
+  }
+}
+.mono {
+  font-family: monospace;
+  padding: @margin;
+  background: @gray-lighter;
+  border: 1px solid @gray-light;
+  border-radius: @base-radius;
+}
+
+form {
+  fieldset {
+    .pure-u-1-1 {
+      border-bottom: 1px solid @gray-lighter;
+      margin: 0px 0px;
+      padding: @margin 0px;
+    }
+  }
+
+  label {
+    border-left: 4px solid @blue;
+    padding-left: @margin/2;
+  }
+}
+
+.inline {
+  display: inline-block !important;
+}
+
+.separated {
+  border-top: 1px solid @gray-lighter;
 }

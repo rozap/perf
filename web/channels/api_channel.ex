@@ -10,8 +10,12 @@ defmodule Perf.ApiChannel do
   @list   "list"
 
   @creatable %{}
-  @listable %{}
-  @readable %{}
+  @listable %{
+    "suite" => %Perf.Suite{}
+  }
+  @readable %{
+    "suite" => %Perf.Suite{}
+  }
   @updatable %{}
   @deletable %{}
 
@@ -33,6 +37,7 @@ defmodule Perf.ApiChannel do
     {:reply, {:ok, %{}}, socket}
   end
   defp r(%State{resp: resp, socket: socket, error: nil}) do
+    IO.inspect resp
     {:reply, {:ok, resp}, socket}
   end
   defp r(%State{socket: socket, error: reason}) do

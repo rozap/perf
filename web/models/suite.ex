@@ -3,6 +3,7 @@ defmodule Perf.Suite do
 
   schema "suites" do
     field :name, :string
+    field :description, :string
     field :trigger, :map
     belongs_to :user, Perf.User
 
@@ -16,5 +17,15 @@ defmodule Perf.Suite do
     struct
     |> cast(params, [:name, :trigger])
     |> validate_required([:name, :trigger, :user_id])
+  end
+
+  defimpl Poison.Encoder, for: Perf.Suite do
+    @attributes ~W(id name description belongs_to inserted_at updated_at)a
+
+    def encode(suite, _options) do
+      suite
+      |> Map.take(@attributes)
+      |> Poison.encode!
+    end
   end
 end

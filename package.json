@@ -24,6 +24,10 @@
     "watchify": "latest",
     "babelify": "6.1.2",
     "gulp-elm": "0.4.1",
-    "less": "latest"
+    "less": "latest",
+    "choo": "latest",
+    "tiny-emitter": "latest",
+    "colors": "latest",
+    "query-string": "latest"
   }
 }
