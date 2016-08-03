@@ -1,7 +1,7 @@
 import html from "choo/html";
 import _ from "underscore";
 
-function keyvalue(name, items, dispatch, {isShowing}, toggle) {
+function keyvalue(name, items, dispatch, isShowing, toggle) {
   const onCreate = (created) => {
     dispatch(_.extend({}, created, items));
   };
@@ -97,9 +97,7 @@ function keyvalue(name, items, dispatch, {isShowing}, toggle) {
       <h5>
         <a href="javascript:void(0);"
           onclick=${toggle}>
-
           <i class="ion-ios-arrow-${isShowing? 'down': 'right'}"></i>
-
           ${name}
         </a>
       </h5>

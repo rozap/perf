@@ -6,6 +6,7 @@ import createStore from './store'
 
 import suites from './pages/suites';
 import suite from './pages/suite';
+import editSuite from './pages/edit-suite';
 import newSuite from './pages/new-suite';
 
 const app = choo({

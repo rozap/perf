@@ -12,8 +12,8 @@ function wrap(channel) {
 
   return {
     list: (name, params) => (sync(`list:${name}`, params)),
-    get: (name, params) => (sync(`read:${name}`, params))
-
+    get: (name, params) => (sync(`read:${name}`, params)),
+    create: (name, params) => (sync(`create:${name}`, params))
   }
 }
 

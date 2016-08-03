@@ -9,13 +9,11 @@
 }
 
 .edit-trigger {
-  input {
-    display: inline-block !important;
-    width: 80px;
-  }
+  margin-top: @margin/2;
   select {
-    display: inline-block;
-    margin-top: 3px; //wtf??
+  }
+  select.select-method {
+    width: 6em;
   }
 }
 
@@ -24,24 +22,22 @@
   .pure-control-group {
     label {
       text-align: left;
-      width: @margin * 6;
     }
 
-    select {
-      width: @margin * 8;
-    }
-
-    input {
-      width: @margin * 16;
-    }
   }
   .request {
     border-left: 4px solid @orange;
-    padding: @margin/2;
+    padding: @margin/4;
     margin: @margin/2 0px;
   }
 
-  select.select-method {
-    width: 6em;
+
+
+  .request {
+    .request-body {
+      textarea {
+        width: 100%;
+      }
+    }
   }
 }

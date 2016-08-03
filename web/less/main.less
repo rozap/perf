@@ -26,8 +26,8 @@ body {
   color: @gray-light;
 }
 
-h1, h2, h3, p {
-  margin: @margin/2 0px;
+h1, h2, h3, h4, h5, p {
+  margin: @margin 0px;
 }
 
 a {
@@ -90,8 +90,7 @@ form {
   }
 
   label {
-    border-left: 4px solid @blue;
-    padding-left: @margin/2;
+    // padding-left: @margin/2;
   }
 }
 
@@ -101,4 +100,14 @@ form {
 
 .separated {
   border-top: 1px solid @gray-lighter;
+}
+
+.generic-error {
+  margin: @margin 0px;
+  text-align: center;
+  span {
+    border-bottom: 2px solid @red;
+    padding: @margin/2;
+    margin-top: @margin;
+  }
 }

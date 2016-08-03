@@ -1,0 +1,77 @@
+@width: @margin * 50;
+
+.loading {
+  width: @width;
+  text-align: center;
+  margin-left: ~"calc(50% -" @width/2 ~")";
+  position: relative;
+  margin-bottom: 160px;
+}
+
+.loading-anim {
+  width: 120px;
+  height: 120px;
+  margin: 0px auto;
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  top: @margin * 8;
+  bottom: 0;
+  &::before {
+    content: '';
+    width: 120px;
+    height: 5px;
+    background: #000;
+    opacity: 0.1;
+    position: absolute;
+    top: 59px;
+    left: 0;
+    border-radius: 50%;
+    animation: shadow .5s linear infinite;
+  }
+  &::after {
+    content: "(づ｡◕‿‿◕｡)づ";
+    width: 140px;
+    height: 70px;
+    padding-top: 50px;
+    background: @blue;
+    opacity: .3;
+    animation: animate .5s linear infinite;
+    position: absolute;
+    top: -73px;
+    left: 0;
+    border-radius: 70px;
+  }
+}
+
+@keyframes animate {
+  17% {
+    border-bottom-right-radius: 40px;
+  }
+  25% {
+    border-bottom-left-radius: 50px;
+    transform: translateY(9px) rotate(2deg);
+  }
+  50% {
+    border-top-left-radius: 50px;
+    transform: translateY(18px) scale(1, .9) rotate(4deg);
+  }
+  75% {
+    border-top-right-radius: 50px;
+    transform: translateY(9px) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+
+@keyframes shadow {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.3, 1);
+  }
+}
