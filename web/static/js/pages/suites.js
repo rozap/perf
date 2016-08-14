@@ -21,7 +21,12 @@ function model(store) {
           send('suites:list', suites, done)
         });
       }
-    }
+    },
+    subscriptions: [
+      (send, done) => {
+        console.log("SUITES SUBSCRIPTION FIRE");
+      }
+    ]
   };
 }
 
@@ -41,8 +46,7 @@ function suiteView({id, name, description}) {
 function view({suites: state}, prev, send) {
   return html`
     <main>
-      <div onload=${() => send('suites:getSuites')}>
-
+      <div>
         <div class="pure-g">
           <div class="pure-u-2-3">
             <h1>Suites</h1>

@@ -9,19 +9,19 @@ defmodule Perf.UserSocket do
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
 
-  # def connect(%{"guardian_token" => jwt} = params, socket) do
-  #   IO.puts "Got a socket??"
-  #   case sign_in(socket, jwt) do
-  #     {:ok, authed_socket, _guardian_params} ->
-  #       {:ok, authed_socket}
-  #     err ->
-  #       Logger.warn("Connect failed #{inspect err}")
-  #       :error
-  #   end
-  # end
+  def connect(%{"token" => jwt} = params, socket) do
+    case sign_in(socket, jwt) do
+      {:ok, authed_socket, _guardian_params} ->
+        IO.inspect authed_socket.assigns
+        {:ok, authed_socket}
+      err ->
+        Logger.warn("Authorization failed #{inspect err}")
+        {:ok, socket}
+    end
+  end
 
-  def connect(_params, socket) do
-    IO.puts "CONNECT"
+  def connect(params, socket) do
+    IO.puts "Setup socket #{inspect params}"
     {:ok, socket}
   end
 

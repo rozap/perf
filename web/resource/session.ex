@@ -28,5 +28,35 @@ defmodule Perf.Resource.Session do
       end
     end
   end
-  
+
+  defimpl Perf.Resource.Delete, for: Perf.Session do
+    use Perf.Resource
+    alias Perf.{Repo, User, Session}
+    import Ecto.Query
+    import Guardian.Phoenix.Socket
+    alias Perf.Resource.State
+
+    on(%{"token" => token}) do
+      case Guardian.revoke!(token) do
+        result -> ok(state, %{})
+      end
+    end
+  end
+
+  defimpl Perf.Resource.Read, for: Perf.Session do
+    use Perf.Resource
+    import Guardian.Phoenix.Socket
+
+    on(%{"token" => token}) do
+      case Guardian.decode_and_verify(token) do
+        { :ok, claims } ->
+          ok(state, claims)
+        { :error, :token_not_found } ->
+          not_found(state, %{reason: "expired"})
+        { :error, reason } ->
+          bad_request(state, %{reason: reason})
+      end
+    end
+
+  end
 end

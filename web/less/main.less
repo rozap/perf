@@ -18,9 +18,7 @@
 @orange: rgb(223, 117, 20);
 @blue: rgb(66, 184, 221);
 
-body {
-  margin: @margin;
-}
+body {}
 
 .text-muted {
   color: @gray-light;
@@ -38,12 +36,16 @@ a {
   }
 }
 
+.pure-button {
+
+}
 .button-success,
+.pure-button-primary,
 .button-error,
 .button-warning,
 .button-secondary {
+    box-shadow: 2px 2px 2px fade(@gray-light, 40%);
     color: white;
-    border-radius: @base-radius;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
@@ -102,12 +104,78 @@ form {
   border-top: 1px solid @gray-lighter;
 }
 
+
+.generic-success {
+  margin: @margin 0px;
+  text-align: left;
+  span {
+    border-left: @margin/4 solid @green;
+    padding: @margin/2;
+    color: @green;
+  }
+}
+
+.global-error {
+  margin: @margin;
+  padding: @margin/4;
+  border: 1px solid fade(@red, 30%);
+}
+
 .generic-error {
   margin: @margin 0px;
-  text-align: center;
+  text-align: left;
   span {
-    border-bottom: 2px solid @red;
     padding: @margin/2;
-    margin-top: @margin;
+    color: @red;
+  }
+}
+
+.field-error {
+  .field-errors {
+    li {
+      border-left: @margin/4 solid @red;
+      padding-left: @margin/2;
+      color: @red;
+    }
+
+  }
+}
+
+ul {
+  list-style-type: none;
+  padding: 0px;
+}
+
+.constrained {
+  max-width: @margin * 30;
+  margin: auto;
+}
+
+.top-menu {
+  width: 100%;
+  background: fade(@blue, 80%);
+  box-shadow: 0px 1px 3px fade(@gray-light, 40%);
+  color: @gray-lighter;
+  position: relative;
+  white-space: nowrap;
+
+  .auths {
+    position: absolute;
+    right: @margin;
+    top: 0px;
+  }
+
+  .title {
+    border-right: 1px solid lighten(@blue, 20%);
+    padding: @margin;
+    display: inline-block;
+  }
+
+  .actions {
+    border-left: 1px solid lighten(@blue, 25%);
+    padding: @margin;
+    display: inline-block;
+    margin: 0px;
+
   }
 }

@@ -37,6 +37,7 @@ defmodule Perf.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:cowboy, "~> 1.0"},
      {:guardian, "~> 0.12.0"},
+     {:guardian_db, "~> 0.7.0"},
      {:comeonin, "~> 2.5"}
    ]
   end

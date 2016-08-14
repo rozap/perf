@@ -2,6 +2,7 @@ defmodule Perf.ApiChannel do
   use Phoenix.Channel
   require Logger
   alias Perf.Resource.State
+  import Perf.Resource
 
   @create "create"
   @update "update"
@@ -9,15 +10,22 @@ defmodule Perf.ApiChannel do
   @read   "read"
   @list   "list"
 
-  @creatable %{}
+  @creatable %{
+    "suite" => %Perf.Suite{},
+    "user" => %Perf.User{},
+    "session" => %Perf.Session{}
+  }
   @listable %{
     "suite" => %Perf.Suite{}
   }
   @readable %{
-    "suite" => %Perf.Suite{}
+    "suite" => %Perf.Suite{},
+    "session" => %Perf.Session{}
   }
   @updatable %{}
-  @deletable %{}
+  @deletable %{
+    "session" => %Perf.Session{}
+  }
 
   @operations [
     {@create, Perf.Resource.Create, quote do: @creatable},
@@ -28,20 +36,18 @@ defmodule Perf.ApiChannel do
   ]
 
 
-  def join("api", _, socket) do
+  def join("api", args, socket) do
     {:ok, socket}
   end
-
 
   defp r(%State{resp: nil, socket: socket, error: nil}) do
     {:reply, {:ok, %{}}, socket}
   end
   defp r(%State{resp: resp, socket: socket, error: nil}) do
-    IO.inspect resp
     {:reply, {:ok, resp}, socket}
   end
-  defp r(%State{socket: socket, error: reason}) do
-    {:reply, {:error, reason}, socket}
+  defp r(%State{socket: socket, kind: kind, error: error}) do
+    {:reply, {:error, %{kind: kind, error: error}}, socket}
   end
 
 
@@ -50,7 +56,9 @@ defmodule Perf.ApiChannel do
       case Dict.get(unquote(noun), name) do
         nil ->
           Logger.error("Invalid resource #{unquote(verb) <> ":" <> name} #{inspect unquote(noun)}")
-          %State{error: %{message: "invalid_resource"}, socket: socket}
+
+          %State{socket: socket}
+          |> bad_request(%{key: "invalid_resource"})
           |> r
         model ->
           state = %State{params: params, socket: socket}

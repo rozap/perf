@@ -1,12 +1,12 @@
 defmodule Perf.Resource do
   defmodule State do
-    defstruct params: nil, 
+    defstruct params: nil,
       conn: nil,
-      socket: nil, 
-      assigns: nil, 
-      resp: nil, 
-      error: nil, 
-      query: nil, 
+      socket: nil,
+      assigns: nil,
+      resp: nil,
+      error: nil,
+      query: nil,
       model: nil,
       kind: :ok
   end
@@ -16,10 +16,44 @@ defmodule Perf.Resource do
     compile_stages(env, stages)
   end
 
+  defmacro on(params, body) do
+    {_, _, args} = params
+    wanted = args
+    |> Enum.map(fn {key, _} -> key end)
+
+    quote do
+      def handle(model, %State{params: unquote(params)} = var!(state)) do
+        unquote(body[:do])
+      end
+
+      def handle(model, state) do
+        required = MapSet.new(unquote(wanted))
+        given = state.params
+        |> Map.keys
+        |> MapSet.new
+
+        omitted = MapSet.difference(required, given) |> Enum.into([])
+        extras = MapSet.difference(given, required) |> Enum.into([])
+
+        bad_request(state, %{
+          "english" => "I didn't see {omitted} fields and saw {extras} which I didn't expect",
+          "reason" => "invalid_fields",
+          "params" => %{
+            "extras" => extras,
+            "omitted" => omitted
+          }
+        })
+      end
+    end
+  end
+
 
   defmacro __using__(_opts) do
     quote do
       import Perf.Resource
+      alias Perf.{Repo, User, Session}
+      import Ecto.Query
+      alias Perf.Resource.State
 
       def handle(model, state) do
         stage_builder(model, state)
@@ -33,7 +67,7 @@ defmodule Perf.Resource do
 
   defmacro stage(stage, opts \\ []) do
     quote do
-      @stages {unquote(stage), unquote(opts)} 
+      @stages {unquote(stage), unquote(opts)}
     end
   end
 
@@ -43,12 +77,11 @@ defmodule Perf.Resource do
       defp stage_builder(model, state) do
         unquote(resolved)
         |> Enum.reverse
-        |> Enum.reduce(state, fn 
+        |> Enum.reduce(state, fn
           {stage, args}, %State{error: nil} = state ->
             {module, args} = Keyword.pop(args, :mod, __MODULE__)
-            # IO.puts "--- Running stage #{module} #{stage} #{inspect model} #{inspect state}"
             apply(module, stage, args ++ [model, state])
-          _, state -> 
+          _, state ->
             state
         end)
       end
@@ -58,9 +91,9 @@ defmodule Perf.Resource do
 
   def created(state, resp, params \\ %{}) do
     struct(
-      state, 
-      kind: :created, 
-      resp: resp, 
+      state,
+      kind: :created,
+      resp: resp,
       params: params
     )
   end
@@ -70,6 +103,22 @@ defmodule Perf.Resource do
       state,
       kind: :bad_request,
       error: resp
+    )
+  end
+
+  def not_found(state, resp) do
+    struct(
+      state,
+      kind: :not_found,
+      error: resp
+    )
+  end
+
+  def ok(state, resp) do
+    struct(
+      state,
+      kind: :ok,
+      resp: resp
     )
   end
 end

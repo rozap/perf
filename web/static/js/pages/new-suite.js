@@ -11,7 +11,6 @@ function model(store) {
       error: false
     },
     reducers: {
-      createdSuite,
       genericError
     },
     effects: {
@@ -25,7 +24,9 @@ function createNewSuite(store, data, state, send, done) {
   store.create('suite', {})
   .on('error', (e) => send('genericError', e, done))
   .on('ok', (suite) => {
-    send('createdSuite', suite, done);
+    send('location:setLocation', {
+      location: `/app/suites/${suite.id}`
+    }, done);
   });
 }
 
@@ -33,10 +34,6 @@ function genericError(reason, state) {
   return {...state, error: reason};
 }
 
-function createdSuite(data, state) {
-  console.log(data, state);
-  return state;
-}
 
 function view(state, prev, send) {
   const fire = () => {

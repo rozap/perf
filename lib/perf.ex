@@ -11,6 +11,7 @@ defmodule Perf do
       supervisor(Perf.Endpoint, []),
       # Start the Ecto repository
       worker(Perf.Repo, []),
+      worker(GuardianDb.ExpiredSweeper, [])
       # Here you could define other workers and supervisors as children
       # worker(Perf.Worker, [arg1, arg2, arg3]),
     ]

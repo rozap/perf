@@ -36,4 +36,10 @@ config :guardian, Guardian,
   ttl: { 30, :days },
   verify_issuer: true, # optional
   secret_key: "boodles",
-  serializer: Perf.GuardianSerializer
+  serializer: Perf.GuardianSerializer,
+  hooks: GuardianDb
+
+config :guardian_db, GuardianDb,
+       repo: Perf.Repo,
+       schema_name: "tokens",
+       sweep_interval: 60 * 24 * 30
