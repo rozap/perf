@@ -10,7 +10,7 @@ defmodule Perf.Resource.CreateAny do
 
     case Perf.Repo.insert(cset) do
       {:error, %Changeset{} = cset} ->
-        struct(state, kind: :bad_request, error: Perf.ErrorHelpers.format(cset))
+        value_error(state, cset)
       {:error, reason} ->
         # failed()
         struct(state, kind: :internal, error: reason)

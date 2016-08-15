@@ -8,6 +8,7 @@ defmodule Perf.ErrorHelpers do
 
   def translate_error({msg, opts}) do
     Enum.reduce(opts, msg, fn {key, value}, _acc ->
+      IO.puts "translate_error #{key} #{value}"
       String.replace(msg, "%{#{key}}", to_string(value))
     end)
   end

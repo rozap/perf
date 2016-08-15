@@ -4,8 +4,9 @@
   width: @width;
   text-align: center;
   margin-left: ~"calc(50% -" @width/2 ~")";
-  position: relative;
+  margin-top: @margin * 2;
   margin-bottom: 160px;
+  position: relative;
 }
 
 .loading-anim {
@@ -36,7 +37,7 @@
     height: 70px;
     padding-top: 50px;
     background: @blue;
-    opacity: .3;
+    opacity: .5;
     animation: animate .5s linear infinite;
     position: absolute;
     top: -73px;

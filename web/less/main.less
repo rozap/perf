@@ -2,7 +2,7 @@
   box-sizing: border-box;
 }
 
-@base-radius: 1px;
+@base-radius: 3px;
 
 @margin:                 1em;
 @gray-base:              #000;
@@ -13,10 +13,10 @@
 @gray-lighter:           lighten(@gray-base, 96.5%); // #eee
 @white:                  #fff;
 
-@green: rgb(28, 184, 65);
+@green: #39cccc;
 @red: rgb(202, 60, 60);
 @orange: rgb(223, 117, 20);
-@blue: rgb(66, 184, 221);
+@blue: #39cccc;
 
 body {}
 
@@ -108,36 +108,48 @@ form {
 .generic-success {
   margin: @margin 0px;
   text-align: left;
-  span {
-    border-left: @margin/4 solid @green;
-    padding: @margin/2;
+  span, p {
+    padding: @margin;
+    margin: 0px;
     color: @green;
   }
 }
 
-.global-error {
-  margin: @margin;
-  padding: @margin/4;
-  border: 1px solid fade(@red, 30%);
+.floating-message {
+  position: fixed;
+  top: @margin * 4;
+  right: @margin;
+  background: fade(@gray-lighter, 70%);
+  box-shadow: 0 6px 10px fade(@gray-light, 30%);
+  p {
+    // text-shadow: 
+    color: @white;
+  }
+
 }
 
+.floating-message.generic-success {
+  border-radius: @base-radius;
+  // border: 1px solid fade(@gray, 70%);
+  background: fade(@green, 50%);
+
+}
+
+
 .generic-error {
+  border: 1px solid fade(@red, 30%);
   margin: @margin 0px;
   text-align: left;
-  span {
+  p {
     padding: @margin/2;
     color: @red;
   }
+  padding: 0px @margin/2;
 }
 
-.field-error {
-  .field-errors {
-    li {
-      border-left: @margin/4 solid @red;
-      padding-left: @margin/2;
-      color: @red;
-    }
-
+.field-errors {
+  li {
+    color: @red;
   }
 }
 
@@ -146,36 +158,77 @@ ul {
   padding: 0px;
 }
 
+.app {
+  .content {
+    padding: @margin;
+  }
+}
+
 .constrained {
   max-width: @margin * 30;
   margin: auto;
 }
 
+
+@menu-color: lighten(@blue, 5%);
 .top-menu {
   width: 100%;
-  background: fade(@blue, 80%);
+  background: @menu-color;
   box-shadow: 0px 1px 3px fade(@gray-light, 40%);
-  color: @gray-lighter;
   position: relative;
   white-space: nowrap;
+  display: flex;
 
-  .auths {
-    position: absolute;
-    right: @margin;
-    top: 0px;
+  a {
+    color: @white;
+    line-height: @margin;
+    display: inline;
+
+    text-shadow: 1px 1px 2px darken(@blue, 5%);
+
+    &:hover {
+      text-shadow: 1px 1px 2px lighten(@blue, 25%);
+    }
+  }
+
+  ul {
+    margin: 0px;
+
+    li {
+      display: inline-block;
+      padding: @margin * 1.5;
+
+      &.active {
+        border-bottom: 6px solid @white;
+        a {
+          text-shadow: 1px 1px 2px lighten(@menu-color, 15%);
+        }
+      }
+    }
   }
 
   .title {
-    border-right: 1px solid lighten(@blue, 20%);
+    font-size: @margin * 1.5;
+    border-right: 1px solid darken(@menu-color, 10%);
     padding: @margin;
-    display: inline-block;
+    max-width: 200px;
+    width: 20%;
+    flex: 1;
   }
 
   .actions {
-    border-left: 1px solid lighten(@blue, 25%);
-    padding: @margin;
-    display: inline-block;
-    margin: 0px;
+    border-left: 1px solid lighten(@menu-color, 15%);
+    border-right: 1px solid darken(@menu-color, 10%);
+    flex-grow: 1;
+    min-width: 200px;
+  }
+
+  .auths {
+    border-left: 1px solid lighten(@menu-color, 15%);
+    text-align: right;
+  }
+
+  .actions, auths {
 
   }
 }

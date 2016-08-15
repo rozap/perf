@@ -2,11 +2,12 @@ import html from "choo/html"
 import _ from "underscore";
 
 function view({error}, name) {
+  console.log("FIELD ERROR", error);
+
   if(!error.error) return;
-  if(!error.error[name]) return;
-
-
-  const arr = error.error[name];
+  const problems = error.error.params.field_errors[name];
+  if(!problems) return;
+  
   const cap = (s) => {
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
@@ -15,7 +16,7 @@ function view({error}, name) {
     <div class="field-error">
       <ul class="field-errors">
       ${
-        arr.map((problem) => {
+        problems.map((problem) => {
           return html`<li>${cap(name)}: ${problem}</li>`;
         })
       }

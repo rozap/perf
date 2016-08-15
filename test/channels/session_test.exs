@@ -54,10 +54,10 @@ defmodule Perf.ApiSessionTest do
 
     assert verify == %{
       kind: :bad_request,
-      error: %{
-        "english" => "I didn't see {omitted} fields and saw {extras} which I didn't expect",
-        "params" => %{"extras" => ["jwt"], "omitted" => ["token"]},
-        "reason" => "invalid_fields"
+      error: %Perf.Resource.Error{
+        english: "I didn't see token and saw jwt which I didn't expect",
+        params: %{"extras" => ["jwt"], "omitted" => ["token"]},
+        reason: "field_set_invalid"
       }
     }
   end

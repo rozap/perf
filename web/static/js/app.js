@@ -84,8 +84,9 @@ function rootModel() {
 function startApp() {
   app.model(rootModel());
   app.model(suites.model(store));
-  app.model(suite.model(store));
+  // app.model(suite.model(store));
   app.model(newSuite.model(store));
+  app.model(editSuite.model(store));
   app.model(register.model(store));
   app.model(login.model(store));
 
@@ -96,7 +97,7 @@ function startApp() {
 
     route('/app/suites', suites.view, [
       route('new', newSuite.view),
-      route(':id', suite.view),
+      route(':id', editSuite.view),
     ]),
   ])
 

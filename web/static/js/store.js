@@ -8,10 +8,24 @@ function getToken() {
 
 class Store extends Emitter {
 
+  constructor() {
+    super();
+    this._queued = [];
+
+    setInterval(this._checkTimeouts.bind(this), 500);
+  }
+
   onJoin(channel) {
     console.info("Joined channel");
     this._underlying = channel;
     this.emit('connected');
+
+    this.login();
+
+    this._queued.forEach((waiter) => {
+      this._doSync(waiter);
+    });
+    this._queued = [];
   }
 
   onError(resp) {
@@ -20,19 +34,40 @@ class Store extends Emitter {
     this.emit('error', resp);
   }
 
-  sync(op, params) {
+  _checkTimeouts() {
+    const now = Date.now();
+    this._queued = this._queued.filter(({expiry, em}) => {
+      if(expiry < now) {
+        em.emit('error', {reason: 'timeout'});
+        return false;
+      }
+      return true;
+    });
+  }
+
+  _doSync({op, params, em}) {
+    this._underlying.push(op, params)
+    .receive('ok', (payload) => {
+      console.log("Channel -->", op, params, payload);
+      em.emit('ok', payload)
+    })
+    .receive('error', (payload) => {
+      console.error("Channel -->", op, params, payload);
+      em.emit('error', payload)
+    });
+  }
+
+  sync(op, params, timeout) {
+    timeout = timeout || 5000;
+    const expiry = Date.now() + timeout;
+
     const em = new Emitter();
     if(!this._underlying) {
-      return setTimeout(() => {
-        em.emit('error', {reason: 'not_connected'});
-      }, 0);
-    };
 
-    console.log("Channel -->", op, params)
-
-    this._underlying.push(op, params)
-    .receive('ok', (payload) => em.emit('ok', payload))
-    .receive('error', (payload) => em.emit('error', payload));
+      this._queued.push({op, params, em, expiry});
+    } else {
+      this._doSync({op, params, em});
+    }
     return em;
   }
 
@@ -47,6 +82,9 @@ class Store extends Emitter {
   }
   del(name, params) {
     return this.sync(`delete:${name}`, params);
+  }
+  update(name, params) {
+    return this.sync(`update:${name}`, params);
   }
 
 
@@ -85,10 +123,7 @@ function createStore(cb) {
     let channel = socket.channel("api", {})
 
     channel.join()
-    .receive("ok", resp => {
-      store.onJoin(channel);
-      store.login();
-    })
+    .receive("ok", resp => store.onJoin(channel))
     .receive("error", resp => store.onError(resp));
   });
 

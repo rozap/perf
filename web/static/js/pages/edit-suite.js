@@ -5,26 +5,32 @@ import {putIn, updateIn, errorClass} from '../util';
 import queryString from'query-string';
 import select from "./widgets/select";
 import keyvalue from "./widgets/key-value";
+import loader from './widgets/loader';
+import errorView from './widgets/error';
+import successView from './widgets/success-floating';
+import menu from './widgets/menu';
+import flash from './widgets/flash';
 
 
-const emptySuite = {
-  name: '',
-  description: '',
-  trigger: {
-    kind: 'interval',
-    opts: {
-      interval: 5,
-      unit: 'day'
-    }
-  },
-  requests: [newRequest()]
+function emptySuite() {
+  return {
+    name: 'Empty Suite',
+    description: '',
+    trigger: {
+      kind: 'interval',
+      opts: {
+        interval: 5,
+        unit: 'day'
+      }
+    },
+    requests: []
+  };
 }
 
 function model(store) {
   return {
-    state: { suite: emptySuite, error: false },
+    state: { suite: false, error: false },
     namespace: 'edit',
-    subscriptions: [],
     reducers: {
       updateName,
       triggerChange,
@@ -39,10 +45,17 @@ function model(store) {
       toggleHeadersView,
       toggleParamsView,
       toggleBodyView,
-      toggleRequestView
+      toggleRequestView,
+      error,
+      updateSuite, 
+      showSuccess,
+      clearSuccess
     },
     effects: {
-    }
+      getSuite: _.partial(getSuite, store),
+      saveSuite: _.partial(saveSuite, store),
+      success
+    },
   }
 }
 
@@ -53,6 +66,41 @@ function triggerChange(kind, state) {
   return {...state, suite};
 }
 
+function getSuite(store, {id}, state, send, done) {
+  store.get('suite', {id})
+  .on('error', (e) => send('edit:error', e, done))
+  .on('ok', (suite) => send('edit:updateSuite', suite, done));
+}
+
+function saveSuite(store, _data, {suite}, send, done) {
+  store.update('suite', suite)
+  .on('error', (e) => send('edit:error', e, done))
+  .on('ok', (suite) => send('edit:success', 'Your suite has been updated', done));
+}
+
+const save = _.debounce((send) => {
+  send('edit:saveSuite');
+}, 500);
+
+function updateSuite(suite, state) {
+  return {...state, suite: suite};
+}
+
+function error(error, state) {
+  return {...state, error: error};
+}
+function showSuccess(title, state) {
+  return {...state, success: title};
+}
+function clearSuccess(_nothing, state) {
+  return {...state, success: false};
+}
+function success(title, state, send, done) {
+  send('edit:showSuccess', title, done);
+  setTimeout(() => {
+    // send('edit:clearSuccess', {}, done);
+  }, 2000)
+}
 
 
 function newRequest() {
@@ -148,25 +196,25 @@ function gitTriggerView(suite, send) {
 
 function intervalTriggerView(suite, send) {
   return html`
-    <label >
-      <div>Run this suite every</label>
-      <input
-        value=${suite.trigger.opts.interval || ''}
-        onblur=${(e) => {
-        send('edit:intervalChange', e.target.value)
-      }} placeholder="eg: 4"/>
+  <div>
+    <label >Run this suite every</label>
+    <input
+      value=${suite.trigger.opts.interval || ''}
+      onblur=${(e) => {
+      send('edit:intervalChange', e.target.value)
+    }} placeholder="eg: 4"/>
 
-      ${
-        select({
-          week: 'Weeks',
-          day: 'Days',
-          hour: 'Hours',
-          minute: 'Minutes'
-        },
-        (e) => send('edit:intervalUnitChange', e.target.value),
-        suite.trigger.opts.unit)
-      }
-    </div>
+    ${
+      select({
+        week: 'Weeks',
+        day: 'Days',
+        hour: 'Hours',
+        minute: 'Minutes'
+      },
+      (e) => send('edit:intervalUnitChange', e.target.value),
+      suite.trigger.opts.unit)
+    }
+  </div>
   `
 }
 
@@ -337,7 +385,7 @@ function requestListView({requests}, send) {
           onclick=${() => send('edit:appendRequest')}
           class="pure-button pure-button-primary"
           >
-          Add Requests
+          Add a Request
         </a>
       </div>
       ${requests.map((req) => requestView(req, send))}
@@ -346,35 +394,62 @@ function requestListView({requests}, send) {
 }
 
 
-function view({edit: state}, prev, send) {
+function suiteView(state, send) {
   const {suite: suite} = state;
+
+  if(!suite) {
+    return loader('Loading your suite');
+  }
+
   const onChangeName = (e) => {
     send('edit:updateName', e.target.value);
+    save(send)
   }
-  return html`
-    <main class="edit-suite">
-      <div>
-        <h1>${suite.name || 'New Suite'}</h1>
-        <form class="pure-form pure-form-aligned">
-          <fieldset>
-            <div class="pure-control-group">
-              <label for="name">Name</label>
-              <input
-                name="name"
-                onkeyup=${onChangeName}
-                value="${suite.name}"
-                placeholder="eg: 'users', 'analytics', etc" />
-            </div>
 
-            ${triggerView(state, send)}
-            ${requestListView(suite, send)}
-          </fieldset>
-        </form>
-      </div>
-    </main>
+  return html`
+  <div class="content">
+    <h1>${suite.name || '???'}</h1>
+    ${successView(state, state.success)}
+    ${errorView(state)}
+    <form class="pure-form pure-form-aligned">
+      <fieldset>
+        <div class="pure-control-group">
+          <label for="name">Name</label>
+          <input
+            name="name"
+            onkeyup=${onChangeName}
+            value="${suite.name}"
+            placeholder="eg: 'users', 'analytics', etc" />
+        </div>
+
+        ${triggerView(state, send)}
+        ${requestListView(suite, send)}
+      </fieldset>
+    </form>
+  </div>
+  `
+}
+
+
+function view(appState, prev, send) {
+
+  const {params} = appState;
+  const getSuite = () => {
+    console.log("Getting suite")
+    send('edit:getSuite', params);
+  }
+
+  const {edit: state} = appState;
+  return html`
+    <div class="app edit-suite" onload=${getSuite}>
+      ${menu(appState, send)}
+      ${flash(appState, send)}
+
+      ${suiteView(state, send)}
+    </div>
   `
 }
 
 export default {
-  model, view
+  model, view, emptySuite
 }

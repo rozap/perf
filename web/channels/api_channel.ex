@@ -22,7 +22,9 @@ defmodule Perf.ApiChannel do
     "suite" => %Perf.Suite{},
     "session" => %Perf.Session{}
   }
-  @updatable %{}
+  @updatable %{
+    "suite" => %Perf.Suite{}
+  }
   @deletable %{
     "session" => %Perf.Session{}
   }
@@ -58,7 +60,7 @@ defmodule Perf.ApiChannel do
           Logger.error("Invalid resource #{unquote(verb) <> ":" <> name} #{inspect unquote(noun)}")
 
           %State{socket: socket}
-          |> bad_request(%{key: "invalid_resource"})
+          |> resource_error(unquote(verb), name)
           |> r
         model ->
           state = %State{params: params, socket: socket}

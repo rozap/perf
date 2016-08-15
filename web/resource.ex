@@ -3,12 +3,17 @@ defmodule Perf.Resource do
     defstruct params: nil,
       conn: nil,
       socket: nil,
-      assigns: nil,
       resp: nil,
       error: nil,
       query: nil,
       model: nil,
       kind: :ok
+  end
+
+  defmodule Error do
+    defstruct reason: :none,
+      params: %{},
+      english: ""
   end
 
   defmacro __before_compile__(env) do
@@ -35,10 +40,10 @@ defmodule Perf.Resource do
         omitted = MapSet.difference(required, given) |> Enum.into([])
         extras = MapSet.difference(given, required) |> Enum.into([])
 
-        bad_request(state, %{
-          "english" => "I didn't see {omitted} fields and saw {extras} which I didn't expect",
-          "reason" => "invalid_fields",
-          "params" => %{
+        bad_request(state, %Error{
+          english:  "I didn't see #{Enum.join(omitted, ",")} and saw #{Enum.join(extras, ",")} which I didn't expect",
+          reason: "field_set_invalid",
+          params: %{
             "extras" => extras,
             "omitted" => omitted
           }
@@ -54,6 +59,7 @@ defmodule Perf.Resource do
       alias Perf.{Repo, User, Session}
       import Ecto.Query
       alias Perf.Resource.State
+      alias Perf.Resource.Error
 
       def handle(model, state) do
         stage_builder(model, state)
@@ -98,6 +104,44 @@ defmodule Perf.Resource do
     )
   end
 
+  def forbidden(state) do
+    struct(
+      state, 
+      kind: :forbidden,
+      error: %Error{
+        reason: "session_required",
+        english: "You need to be logged in to do that"
+      }
+    )
+  end
+
+  def value_error(state, %Ecto.Changeset{valid?: false} = cset) do
+    field_errors = Perf.ErrorHelpers.format(cset)
+    value_error(state, field_errors)
+  end
+
+  def value_error(state, field_errors) do
+    formatted = field_errors
+    |> Enum.map(fn {k, v} -> "#{k}: #{Enum.join(v, "; ")}" end)
+    |> Enum.join(",")
+
+    bad_request(state, %{
+      reason: :field_values_invalid,
+      english: "Error! #{formatted}",
+      params: %{
+        field_errors: field_errors
+      }
+    })
+  end
+
+  def resource_error(state, verb, name) do
+    bad_request(state, %{
+      reason: :invalid_resource_action,
+      english: "#{verb} action is not allowed on #{name}",
+      params: %{}
+    })
+  end
+
   def bad_request(state, resp) do
     struct(
       state,
@@ -106,11 +150,30 @@ defmodule Perf.Resource do
     )
   end
 
-  def not_found(state, resp) do
+  def not_found(state, details) do
     struct(
       state,
       kind: :not_found,
-      error: resp
+      error: %Error{
+        reason: "not_found",
+        english: "That item was not found: #{details}",
+        params: %{
+          details: details
+        }
+      }
+    )
+  end
+
+  def internal_error(state, reason) do
+    struct(
+      state,
+      kind: :internal_error,
+      error: %{
+        english: "An unknown error occurred: #{reason}",
+        params: %{
+          reason: reason
+        }
+      }
     )
   end
 

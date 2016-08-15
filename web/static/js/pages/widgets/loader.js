@@ -1,9 +1,9 @@
 import html from "choo/html"
 
-function view() {
+function view(text) {
   return html`
     <div class="loading pure-u-1-1">
-      <h4 class="text-muted">Creating a new suite just for you</h4>
+      <h4 class="text-muted">${text}</h4>
       <div class="loading-anim"></div>
     </div>
   `;

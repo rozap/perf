@@ -2,47 +2,52 @@ import choo from "choo"
 import html from "choo/html"
 import _ from "underscore";
 import loader from './widgets/loader';
-import error from './widgets/error';
+import errorView from './widgets/error';
+import menu from './widgets/menu';
+import flash from './widgets/flash';
+import {emptySuite} from './edit-suite';
 
 function model(store) {
-  window.store = store;
   return {
+    namespace: 'newSuite',
     state: {
       error: false
     },
     reducers: {
-      genericError
+      error
     },
     effects: {
-      createNewSuite: _.partial(createNewSuite, store)
+      create: _.partial(create, store)
     }
   }
 }
 
-function createNewSuite(store, data, state, send, done) {
+function create(store, data, state, send, done) {
   console.log('Create new!')
-  store.create('suite', {})
-  .on('error', (e) => send('genericError', e, done))
+  store.create('suite', emptySuite())
+  .on('error', (e) => send('newSuite:error', e, done))
   .on('ok', (suite) => {
-    send('location:setLocation', {
-      location: `/app/suites/${suite.id}`
-    }, done);
+    window.location.replace(`/app/suites/${suite.id}`);
   });
 }
 
-function genericError(reason, state) {
-  return {...state, error: reason};
+function error(error, state) {
+  return {...state, error: error};
 }
 
 
-function view(state, prev, send) {
-  const fire = () => {
-    send('createNewSuite')
-  }
+function view(appState, prev, send) {
+  const {newSuite: state} = appState;
+  const fire = () => send('newSuite:create');
   return html`
-    <div class="pure-g" onload=${fire}>
-      ${loader()}
-      ${error(state)}
+    <div class="app">
+      ${menu(appState, send)}
+      ${flash(appState, send)}
+
+      <div class="pure-g constrained" onload=${fire}>
+        ${errorView(state, send)}
+        ${loader('Creating a new suite just for you')}
+      </div>
     </div>
   `;
 }

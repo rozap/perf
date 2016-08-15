@@ -33,7 +33,13 @@ defmodule Perf.ApiUserTest do
 
     assert_reply ref, :error, %{
       error: %{
-        password: ["should be at least 6 character(s)"]
+        english: "Error! password: should be at least 6 character(s)", 
+        params: %{
+          field_errors: %{
+            password: ["should be at least 6 character(s)"]
+          }
+        }, 
+        reason: :field_values_invalid
       },
       kind: :bad_request
     }

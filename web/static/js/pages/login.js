@@ -77,7 +77,6 @@ function view(appState, prev, send) {
         <div class="pure-u-1-1">
           <h2>Login</h2>
         </div>
-        ${errorView(state)}
         ${successView(state, 'You have logged in')}
         <div class="pure-u-1-1">
           <form class="pure-form pure-form-aligned">

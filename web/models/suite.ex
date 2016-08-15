@@ -4,7 +4,8 @@ defmodule Perf.Suite do
   schema "suites" do
     field :name, :string
     field :description, :string
-    field :trigger, :map
+    field :trigger, :map, default: %{}
+    field :requests, {:array, :map}, default: []
     belongs_to :user, Perf.User
 
     timestamps()
@@ -15,12 +16,12 @@ defmodule Perf.Suite do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :trigger])
+    |> cast(params, [:name, :trigger, :user_id])
     |> validate_required([:name, :trigger, :user_id])
   end
 
   defimpl Poison.Encoder, for: Perf.Suite do
-    @attributes ~W(id name description belongs_to inserted_at updated_at)a
+    @attributes ~W(id name description trigger requests belongs_to inserted_at updated_at)a
 
     def encode(suite, _options) do
       suite

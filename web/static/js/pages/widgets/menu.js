@@ -1,28 +1,41 @@
 import html from "choo/html"
 
-function current(user, send) {
+function current({user}, send) {
   if(user) {
     return html`
-    <div>
-      <a href="/app/profile">${user.email}</a>
-      <a href="javascript:void(0)"
+    <ul class="auths">
+      <li>
+        <a href="/app/profile">${user.email}</a>
+      </li>
+      <li>
+        <a href="javascript:void(0)"
         onclick=${() => send('logout')}
         >Logout</a>
-    </div>`;
+      </li>
+    </ul>`;
   }
   return html`
-    <div>
+  <ul class="auths">
+    <li class=${routeActive('login')} >
       <a href="/app/login">Login</a>
+    </li>
+    <li class=${routeActive('register')} >
       <a href="/app/register">Register</a>
-    </div>`;
+    </li>
+  </ul>`;
+}
+
+function routeActive(wtf) {
+  return window.location.pathname.indexOf(wtf) > -1? 'active': '';
 }
 
 function actions(user) {
-  if(!user) return;
+  if(!user) return html`<ul class="actions"></ul>`;
 
   return html`
     <ul class="actions">
-      <li><a href="/app/suites">Suites</a></li>
+      <li class="${routeActive('suites')}"><a href="/app/suites">Suites</a></li>
+      <li><a href="/app/runs">Runs</a></li>
     </ul>
   `
 }
@@ -30,11 +43,9 @@ function actions(user) {
 function view({user}, send) {
   return html`
     <div class="top-menu">
-      <a class="title" href="/app">perf.fail</a>${actions(user)}
-
-      <ul class="auths">
-        <li>${current(user, send)}</li>
-      </ul>
+      <a class="title" href="/app">perf.fail</a>
+      ${actions(user)}
+      ${current(user, send)}
     </div>
   `;
 }
