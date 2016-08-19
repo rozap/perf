@@ -43,3 +43,6 @@ config :guardian_db, GuardianDb,
        repo: Perf.Repo,
        schema_name: "tokens",
        sweep_interval: 60 * 24 * 30
+
+config :perf, :yams,
+  space: "/tmp"

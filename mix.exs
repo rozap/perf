@@ -19,7 +19,7 @@ defmodule Perf.Mixfile do
   def application do
     [mod: {Perf, []},
      applications: [:phoenix, :phoenix_html, :cowboy, :logger,
-                    :phoenix_ecto, :postgrex, :comeonin]]
+                    :phoenix_ecto, :postgrex, :comeonin, :exleveldb, :eleveldb]]
   end
 
   # Specifies which paths to compile per environment.
@@ -38,7 +38,10 @@ defmodule Perf.Mixfile do
      {:cowboy, "~> 1.0"},
      {:guardian, "~> 0.12.0"},
      {:guardian_db, "~> 0.7.0"},
-     {:comeonin, "~> 2.5"}
+     {:comeonin, "~> 2.5"},
+     {:exleveldb, "~> 0.7.0"},
+     {:uuid, "~> 1.1.4"},
+     {:eleveldb, github: "basho/eleveldb", tag: "2.2.19"}
    ]
   end
 
