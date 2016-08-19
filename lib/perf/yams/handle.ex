@@ -8,21 +8,23 @@ defmodule Perf.Yams.Handle do
     |> :eleveldb.open([create_if_missing: true])
 
     {:ok, %{
-      db: ref
-      }}
+      db: ref,
+      subscribers: []
+    }}
   end
 
-  def handle_call({:put, row}, _, state) do
-    key = "#{System.os_time(:milliseconds)}"
-    value = :erlang.term_to_binary(row)
+  def handle_call({:put, {key, value}}, _, state) do
+    serialized = :erlang.term_to_binary(value)
+    result = :eleveldb.put(state.db, key, serialized, [])
 
-    IO.puts key
-    result = :eleveldb.put(state.db, key, value, [])
+    Enum.each(state.subscribers, fn who ->
+      send who, {:change, {key, value}, {:from, self}}
+    end)
+
     {:reply, result, state}
   end
 
   def handle_call({:stream, start_time, end_time}, _, state) do
-    IO.puts "#{start_time}, #{end_time}"
     stream = Stream.resource(
       fn ->
         {:ok, ref} = :eleveldb.iterator(state.db, [])
@@ -43,21 +45,54 @@ defmodule Perf.Yams.Handle do
     {:reply, stream, state}
   end
 
+  def handle_call({:changes, who}, _, state) do
+    Process.monitor(who)
+    {:reply, :ok, Map.put(state, :subscribers, [who | state.subscribers])}
+  end
+
+  def handle_call(:listeners, _, state) do
+    {:reply, {:ok, length(state.subscribers)}, state}
+  end
+
+  def handle_info({:DOWN, ref, :process, who, _reason}, state) do
+    subs = Enum.reject(state.subscribers, fn s -> s == who end)
+    {:noreply, Map.put(state, :subscribers, subs)}
+  end
+
   def stream!(pid, start_time, end_time) do
     GenServer.call(pid, {:stream, start_time, end_time})
   end
 
-  def put(pid, row) do
-    GenServer.call(pid, {:put, row})
+  def put(pid, key, value) do
+    GenServer.call(pid, {:put, {key, value}})
+  end
+
+  def listeners(pid) do
+    GenServer.call(pid, :listeners)
+  end
+
+  def changes(pid) do
+    Stream.resource(
+      fn -> 
+        GenServer.call(pid, {:changes, self})
+      end,
+      fn state ->
+        receive do
+          {:change, row, {:from, ^pid}} -> {[row], state}
+          :done -> {:halt, state}
+        end
+      end,
+      fn _ -> :ok end
+    )
   end
 
   def open(key) do
     name = String.to_atom("yams_handler_#{key}")
 
-    case Process.whereis(name) do
-      nil ->
-        GenServer.start(__MODULE__, [key: key], [name: name])
-      pid -> pid
+    case GenServer.start(__MODULE__, [key: key], [name: name]) do
+      {:error, {:already_started, pid}} -> {:existing, pid}
+      {:ok, pid}                        -> {:created, pid}
+      err                               -> err
     end
   end
 end

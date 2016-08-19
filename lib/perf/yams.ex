@@ -14,4 +14,8 @@ defmodule Perf.Yams do
 
     supervise(children, strategy: :one_for_one)
   end
+
+  def key do
+    "#{System.os_time(:nanoseconds)}"
+  end
 end
