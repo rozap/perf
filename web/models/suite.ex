@@ -1,6 +1,20 @@
 defmodule Perf.Suite do
   use Perf.Web, :model
 
+  defmodule Request do
+    defstruct method: "GET",
+      verified: false,
+      path: "https://foo.com/bar/baz",
+      params: [{"qux", 42}],
+      body: :empty,
+      headers: %{
+        "Content-Type": "application/json"
+      },
+      concurrency: 20,
+      runlength: 5,
+      view: %{}
+  end
+
   schema "suites" do
     field :name, :string
     field :description, :string

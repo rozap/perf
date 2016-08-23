@@ -8,6 +8,6 @@ defmodule Perf.TestHelpers do
   end
 end
 
-ExUnit.start
+ExUnit.start(timeout: 5_000)
 Ecto.Adapters.SQL.Sandbox.mode(Perf.Repo, :manual)
 
