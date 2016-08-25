@@ -13,9 +13,13 @@ defmodule Perf.Yams.Handle do
     }}
   end
 
+  # def handle_call({:put, many}, _, state) when is_list(many) do
+
+  # end
+
   def handle_call({:put, {key, value}}, _, state) do
     serialized = :erlang.term_to_binary(value)
-    result = :eleveldb.put(state.db, key, serialized, [])
+    result = :eleveldb.put(state.db, "#{key}", serialized, [])
 
     Enum.each(state.subscribers, fn who ->
       send who, {:change, {key, value}, {:from, self}}
@@ -73,7 +77,7 @@ defmodule Perf.Yams.Handle do
 
   def changes(pid) do
     Stream.resource(
-      fn -> 
+      fn ->
         GenServer.call(pid, {:changes, self})
       end,
       fn state ->

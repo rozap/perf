@@ -3,18 +3,50 @@ defmodule Perf.Runner.Consumer do
   use GenStage
   require Logger
   alias Perf.Runner.Coordinator
+  alias Perf.Yams.Handle
 
-  def start_link do
-    GenStage.start_link(__MODULE__, [])
+  def start_link(yams) do
+    GenStage.start_link(__MODULE__, [yams])
   end
 
-  def init(state) do
-    {:consumer, state}
+  def init([yams]) do
+    Logger.debug("Consumer started on #{inspect self}")
+    Process.monitor(yams)
+    {:consumer, %{yams: yams, result: %{}, meta_refs: MapSet.new}}
+  end
+
+  defp record(events, state) do
+    Enum.each(events, fn event ->
+      case state.yams do
+        :none ->
+          Logger.warn("Consumer got #{inspect event} but yams is dead?")
+        handle ->
+          Handle.put(handle, event.at, event)
+      end
+    end)
+  end
+
+  def handle_info({:DOWN, yams, _, _, _}, %{yams: yams} = state) do
+    {:noreply, [], Map.put(state, :yams, :none)}
+  end
+
+  def handle_info({_, {:broadcast, event}}, %{meta_refs: refs} = state) do
+    new_state = if !MapSet.member?(refs, event.ref) do
+      record([event], state)
+      %{state | meta_refs: MapSet.put(refs, event.ref)}
+    else
+      state
+    end
+    {:noreply, [], new_state}
+  end
+
+  def handle_info(_, state) do
+    {:noreply, [], state}
   end
 
   def handle_events(events, _, state) do
-    Logger.debug("Consumer got #{inspect events}")
-
+    Logger.warn("Consumer got #{inspect events}")
+    record(events, state)
     {:noreply, [], state}
   end
 

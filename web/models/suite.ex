@@ -12,6 +12,8 @@ defmodule Perf.Suite do
       },
       concurrency: 20,
       runlength: 5,
+      timeout: 500,
+      receive_timeout: 500,
       view: %{}
   end
 

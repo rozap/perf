@@ -16,6 +16,6 @@ defmodule Perf.Yams do
   end
 
   def key do
-    "#{System.os_time(:nanoseconds)}"
+    System.os_time(:nanoseconds)
   end
 end

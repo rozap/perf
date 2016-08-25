@@ -7,7 +7,7 @@ defmodule Perf.TestHelpers do
     end
   end
 end
-
+ExUnit.configure seed: elem(:os.timestamp, 2)
 ExUnit.start(timeout: 5_000)
 Ecto.Adapters.SQL.Sandbox.mode(Perf.Repo, :manual)
 
