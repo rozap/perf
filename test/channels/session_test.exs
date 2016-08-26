@@ -79,7 +79,7 @@ defmodule Perf.ApiSessionTest do
       "token" => session.token
     })
     ok = wait_for(ok_attempt)
-    assert ok["iss"] == "Perf"
+    assert ok.token["iss"] == "Perf"
 
     Guardian.revoke! session.token
 
@@ -88,7 +88,11 @@ defmodule Perf.ApiSessionTest do
     })
     revoked = wait_for(revoked_attempt)
 
-    assert revoked == %{error: %{reason: "expired"}, kind: :not_found}
+    assert revoked == %{error: %Perf.Resource.Error{
+      english: "That item was not found: expired",
+      params: %{details: "expired"},
+      reason: "not_found"
+    }, kind: :not_found}
   end
 
 end

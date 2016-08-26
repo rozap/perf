@@ -18,13 +18,13 @@ defmodule YamsTest do
 
     to_ts = Yams.key
 
-    values = Yams.Handle.stream!(h, from_ts, to_ts)
+    values = Yams.Handle.stream!(h, {from_ts, to_ts})
     |> Stream.map(fn {key, value} -> value end)
     |> Enum.into([])
-    
+
     assert values == [
-      [:a, :b, :c], 
-      [:d, :e, :f], 
+      [:a, :b, :c],
+      [:d, :e, :f],
       [:g, :h, :i]
     ]
   end
@@ -41,7 +41,7 @@ defmodule YamsTest do
     end)
 
     {_, h} = Yams.Handle.open(ref)
-    
+
     from_ts = Yams.key
     :ok = Yams.Handle.put(h, Yams.key, [:a, :b, :c])
     :ok = Yams.Handle.put(h, Yams.key, [:d, :e, :f])
@@ -49,16 +49,16 @@ defmodule YamsTest do
     to_ts = Yams.key
 
 
-    send task.pid, :done    
+    send task.pid, :done
     changes = Task.await(task)
 
     assert changes == [
-      [:a, :b, :c], 
-      [:d, :e, :f], 
+      [:a, :b, :c],
+      [:d, :e, :f],
       [:g, :h, :i]
     ]
 
-    values = Yams.Handle.stream!(h, from_ts, to_ts)
+    values = Yams.Handle.stream!(h, {from_ts, to_ts})
     |> Stream.map(fn {key, value} -> value end)
     |> Enum.into([])
 
@@ -80,10 +80,10 @@ defmodule YamsTest do
 
     assert Yams.Handle.listeners(h) == {:ok, 1}
 
-    send task.pid, :done    
+    send task.pid, :done
     changes = Task.await(task)
 
-    
+
     from_ts = Yams.key
     :ok = Yams.Handle.put(h, Yams.key, [:a, :b, :c])
     :ok = Yams.Handle.put(h, Yams.key, [:d, :e, :f])

@@ -4,6 +4,7 @@ defmodule Perf.Runner.Producer do
   require Logger
   alias Perf.Suite.Request
   alias Perf.Yams
+  alias Perf.{Suite, Run, Repo}
   alias Experimental.GenStage
   alias Perf.Runner.{RequestWorker, RequestTracker, Consumer}
   alias Perf.Runner.Events.{StartingRequest, Done}
@@ -16,35 +17,29 @@ defmodule Perf.Runner.Producer do
   def init(run) do
     state = %{
       run: run,
-      requests: run.suite.requests,
-      workers: []
+      requests: run.suite.requests
     }
-    {:producer, state}
+    {:producer, state, [buffer_size: 10, buffer_keep: :last]}
   end
 
-  # def handle_demand(demand, %{current: :not_started} = state) do
-  #   {:noreply, [], state}
-  # end
-
-  def handle_demand(demand, %{requests: []} = state) do
+  def handle_demand(demand, %{request: :done} = state) when demand > 0 do
     {:noreply, [], state}
   end
 
-  def handle_demand(demand, %{requests: [request | _]} = state) do
-    IO.puts "Demand for #{inspect request}"
+  def handle_demand(demand, %{request: request} = state) when demand > 0 do
     {:noreply, [request], state}
   end
 
-
   def handle_call(:next_request, _, %{requests: []} = state) do
-    {:reply, %Done{at: Yams.key, ref: make_ref()}, [], state}
+    new_state = Map.put(state, :request, :done)
+    {:reply, %Done{at: Yams.key, ref: make_ref()}, [], new_state}
   end
 
   def handle_call(:next_request, _, %{requests: [request | rest]} = state) do
     Logger.debug("Moving to request #{inspect request}")
 
     new_state = state
-    |> Map.put(:current, request)
+    |> Map.put(:request, request)
     |> Map.put(:requests, rest)
 
     drain_time = request.runlength + request.timeout + request.receive_timeout
@@ -56,7 +51,7 @@ defmodule Perf.Runner.Producer do
       ref: make_ref()
     }
 
-    {:reply, starting, [], new_state}
+    {:reply, starting, [request], new_state}
   end
 
   def next_request(pid) do
@@ -64,38 +59,38 @@ defmodule Perf.Runner.Producer do
     GenStage.sync_notify(pid, {:broadcast, broadcast})
   end
 
-  def execute(run, ref) do
-    {_, handle} = Perf.Yams.Handle.open(ref)
-    {:ok, producer} = __MODULE__.start_link(run)
-    {:ok, consumer} = Consumer.start_link(handle)
+  def execute(suite) do
+    yam_ref = UUID.uuid1()
+    with {:ok, run} <- Repo.insert(%Run{suite: suite, yam_ref: yam_ref}) do
 
-    Logger.debug("Producer #{inspect producer} Consumer #{inspect consumer}")
+      {_, handle} = Perf.Yams.Handle.open(yam_ref)
+      {:ok, producer} = __MODULE__.start_link(run)
+      {:ok, consumer} = Consumer.start_link(handle, run)
 
-    c = run.suite.requests
-    |> Enum.map(fn %Request{concurrency: c} -> c end)
-    |> Enum.max
+      Logger.debug("Producer #{inspect producer} Consumer #{inspect consumer}")
 
-    workers = (0..c)
-    |> Enum.map(fn _ -> :poolboy.checkout(RequestWorker) end)
+      c = run.suite.requests
+      |> Enum.map(fn %Request{concurrency: c} -> c end)
+      |> Enum.max
 
-    trackers = workers
-    |> Enum.chunk(20, 20, [])
-    |> Enum.map(fn workers ->
-      {:ok, tracker} = RequestTracker.start_link(run)
-
-      GenStage.sync_subscribe(consumer, to: tracker, min_demand: 0, max_demand: 20)
-      Enum.each(workers, fn worker ->
-        GenStage.sync_subscribe(tracker, to: worker, min_demand: 0, max_demand: 2)
+      workers = (0..c)
+      |> Enum.map(fn _ -> :poolboy.checkout(RequestWorker) end)
+      |> Enum.map(fn worker ->
+        GenStage.sync_subscribe(consumer, to: worker, min_demand: 0, max_demand: 1)
+        worker
       end)
-      tracker
-    end)
 
-    Enum.each(workers, fn worker ->
-      GenStage.sync_subscribe(worker, to: producer, min_demand: 0, max_demand: 1)
-    end)
+      Logger.debug("Created #{inspect workers}")
 
-    next_request(producer)
+      next_request(producer)
 
-    Perf.Yams.Handle.changes(handle)
+      Enum.each(workers, fn worker ->
+        GenStage.sync_subscribe(worker, to: producer, min_demand: 0, max_demand: 1)
+      end)
+
+      stream = Perf.Yams.Handle.changes(handle)
+
+      {:ok, stream}
+    end
   end
 end

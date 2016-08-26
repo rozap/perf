@@ -4,7 +4,9 @@ defmodule Perf.Runner.RequestWorker do
   alias Perf.Suite.Request
   alias Perf.Yams
   require Logger
-  alias Perf.Runner.Events.Result
+  alias Perf.Runner.Events.{Success, Error}
+
+  @methods ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
   def start_link(_) do
     GenStage.start_link(__MODULE__, [])
@@ -21,6 +23,10 @@ defmodule Perf.Runner.RequestWorker do
     ])
   end
 
+  defp now do
+    {Yams.key, Yams.key}
+  end
+
   defp time(func) do
     start_t = Yams.key
     result = func.()
@@ -29,16 +35,49 @@ defmodule Perf.Runner.RequestWorker do
     {result, {start_t, end_t}}
   end
 
-  defp on_event(%Request{method: "GET"} = r) do
-    {result, range} = time fn -> request(:get, r) end
-    {r, result, range}
+  Enum.each(@methods, fn method ->
+    defp method_from_request(unquote(method)) do
+      {:ok, String.downcase(unquote(method)) |> String.to_atom}
+    end
+  end)
+  defp method_from_request(unknown) do
+    {:error, %{key: :invalid_method, params: %{method: unknown}}}
+  end
+
+  defp on_event(%Request{} = r) do
+    case method_from_request(r.method) do
+      {:ok, method} ->
+        {result, range} = time fn -> request(method, r) end
+        {r, result, range}
+      err ->
+        {r, err, now()}
+    end
   end
 
   defp on_event(ev), do: ev
 
-  defp to_result({request, {:error, %HTTPoison.Error{reason: reason}}, _}) do
-    %Result{
-      reason: reason
+
+
+  defp to_result({request, {:error, %HTTPoison.Error{reason: reason}}, range}) do
+    {_, end_t} = range
+
+    %Error{
+      at: end_t,
+      reason: %{
+        key: :request_failed,
+        params: %{
+          reason: reason
+        }
+      },
+      request: request
+    }
+  end
+
+  defp to_result({request, {:error, error}, {_, end_t}}) do
+    %Error{
+      at: end_t,
+      reason: error,
+      request: request
     }
   end
 
@@ -47,12 +86,12 @@ defmodule Perf.Runner.RequestWorker do
     %HTTPoison.Response{body: body, status_code: status} = response
     size = byte_size(body)
 
-    %Result{
+    %Success{
       size: size,
       start_t: start_t,
+      at: end_t,
       end_t: end_t,
       status: status,
-      success: true,
       request: request
     }
   end
@@ -60,7 +99,6 @@ defmodule Perf.Runner.RequestWorker do
   defp to_result(ev), do: ev
 
   def handle_events(events, _, state) do
-    Logger.debug("RequestWorker got #{inspect events}")
     results = events
     |> Enum.map(fn event ->
       event

@@ -3,11 +3,13 @@ defmodule Perf.Repo.Migrations.CreateRun do
 
   def change do
     create table(:runs) do
-      add :suite, references(:suites, on_delete: :nothing)
+      add :suite_id, references(:suites, on_delete: :nothing)
 
       timestamps()
     end
-    create index(:runs, [:suite])
+    create index(:runs, [:suite_id])
 
   end
 end
+
+

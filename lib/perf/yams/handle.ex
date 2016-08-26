@@ -28,7 +28,7 @@ defmodule Perf.Yams.Handle do
     {:reply, result, state}
   end
 
-  def handle_call({:stream, start_time, end_time}, _, state) do
+  def handle_call({:stream, {start_time, end_time}}, _, state) do
     stream = Stream.resource(
       fn ->
         {:ok, ref} = :eleveldb.iterator(state.db, [])
@@ -37,8 +37,13 @@ defmodule Perf.Yams.Handle do
       fn {state, ref} ->
         case :eleveldb.iterator_move(ref, state) do
           {:ok, key, bin} ->
-            value = :erlang.binary_to_term(bin)
-            {[{key, value}], {:next, ref}}
+            t = String.to_integer(key)
+            if t <= end_time do
+              value = :erlang.binary_to_term(bin)
+              {[{t, value}], {:next, ref}}
+            else
+              {:halt, {:done, ref}}
+            end
           {:error, err} ->
             {:halt, {:done, ref}}
         end
@@ -63,8 +68,8 @@ defmodule Perf.Yams.Handle do
     {:noreply, Map.put(state, :subscribers, subs)}
   end
 
-  def stream!(pid, start_time, end_time) do
-    GenServer.call(pid, {:stream, start_time, end_time})
+  def stream!(pid, range) do
+    GenServer.call(pid, {:stream, range})
   end
 
   def put(pid, key, value) do

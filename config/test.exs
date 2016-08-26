@@ -7,7 +7,7 @@ config :perf, Perf.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :debug
+config :logger, level: :warn
 
 # Configure your database
 config :perf, Perf.Repo,

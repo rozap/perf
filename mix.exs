@@ -45,7 +45,8 @@ defmodule Perf.Mixfile do
      {:eleveldb, github: "basho/eleveldb", tag: "2.2.19"},
      {:gen_stage, "~> 0.5.0"},
      {:poolboy, "~> 1.5"},
-     {:httpoison, "~> 0.9.0"}
+     {:httpoison, "~> 0.9.0"},
+     {:statistics, "~> 0.4.1"}
    ]
   end
 

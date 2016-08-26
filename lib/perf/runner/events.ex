@@ -1,24 +1,17 @@
 defmodule Perf.Runner.Events do
-  defmodule Result do
-    defstruct size: 0,
+  defmodule Success do
+    defstruct at: 0,
       start_t: 0,
       end_t: 0,
-      success: false,
-      status: :none,
+      size: 0,
       request: :none,
-      reason: :none
-  end
-
-  defmodule Success do
-    defstruct latency: 0,
-      at: 0,
-      throughput: 0,
       status: :none
   end
 
   defmodule Error do
     defstruct reason: :none,
       status: :none,
+      request: :none,
       at: 0
   end
 

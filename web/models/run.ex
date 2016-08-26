@@ -3,7 +3,7 @@ defmodule Perf.Run do
 
   schema "runs" do
     belongs_to :suite, Perf.Suite
-
+    field :yam_ref, :string
     timestamps()
   end
 

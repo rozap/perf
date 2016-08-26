@@ -5,15 +5,19 @@ defmodule Perf.Runner.Consumer do
   alias Perf.Runner.Coordinator
   alias Perf.Yams.Handle
 
-  def start_link(yams) do
-    GenStage.start_link(__MODULE__, [yams])
+  def start_link(yams, run) do
+    GenStage.start_link(__MODULE__, [yams, run])
   end
 
-  def init([yams]) do
-    Logger.debug("Consumer started on #{inspect self}")
+  def init([yams, run]) do
+    Logger.debug("Consumer started on #{inspect run}")
     Process.monitor(yams)
     {:consumer, %{yams: yams, result: %{}, meta_refs: MapSet.new}}
   end
+
+  # defp on_event(%Done{}) do
+
+  # end
 
   defp record(events, state) do
     Enum.each(events, fn event ->
@@ -45,7 +49,6 @@ defmodule Perf.Runner.Consumer do
   end
 
   def handle_events(events, _, state) do
-    Logger.warn("Consumer got #{inspect events}")
     record(events, state)
     {:noreply, [], state}
   end
