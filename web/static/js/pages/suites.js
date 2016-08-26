@@ -35,12 +35,12 @@ function model(store) {
 
 function suiteView({id, name, description}) {
   return html`
-    <div class="suite">
-      <h2>
+    <div class="suite card">
+      <h3>
         <a href="/app/suites/${id}">
           ${name}
         </a>
-      </h2>
+      </h3>
       <p>${description}</p>
     </div>
   `
@@ -49,24 +49,30 @@ function suiteView({id, name, description}) {
 function view(appState, prev, send) {
   const {suites: state} = appState;
 
+  const getSuites = () => {
+    send('suites:getSuites');
+  }
+
   return html`
     <div class="app">
       ${menu(appState, send)}
       ${flash(appState, send)}
 
-      <div class="content pure-g">
-        <div class="pure-u-2-3">
-          <h1>Suites</h1>
+      <div class="content">
+        <div class="suites-head" onload=${getSuites}>
+          <div class="heading">
+            <h1>Suites</h1>
+          </div>
+          <div class="create-new">
+            <a class="pure-button pure-button-primary" href="suites/new">
+              New Suite
+            </a>
+          </div>
         </div>
-        <div class="pure-u-1-3">
-          <a class="pure-button pure-button-primary" href="suites/new">
-            New Suite
-          </a>
-        </div>
-      </div>
 
-      <div class="suites">
-        ${state.items.map((suite) => suiteView(suite))}
+        <div class="suites">
+          ${state.items.map((suite) => suiteView(suite))}
+        </div>
       </div>
     </div>
   `

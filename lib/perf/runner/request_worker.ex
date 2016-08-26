@@ -1,7 +1,7 @@
 defmodule Perf.Runner.RequestWorker do
   alias Experimental.GenStage
   use GenStage
-  alias Perf.Suite.Request
+  alias Perf.Request
   alias Perf.Yams
   require Logger
   alias Perf.Runner.Events.{Success, Error}

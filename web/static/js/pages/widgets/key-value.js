@@ -29,7 +29,7 @@ function keyvalue(name, items, dispatch, isShowing, toggle) {
       const onCreateKey = (e) => key = e.target.value;
 
       return html`
-      <div>
+      <div class="keyvalue-list">
         ${
           ordered.map(([key, value]) => {
             const onEditKey = (e) => {
@@ -93,7 +93,7 @@ function keyvalue(name, items, dispatch, isShowing, toggle) {
   }
 
   return html`
-    <div>
+    <div class="keyvalue">
       <h5>
         <a href="javascript:void(0);"
           onclick=${toggle}>

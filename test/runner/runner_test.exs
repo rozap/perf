@@ -1,7 +1,6 @@
 defmodule RunnerTest do
   use ExUnit.Case
-  alias Perf.{Runner, Run, Suite, User, Repo}
-  alias Perf.Suite.Request
+  alias Perf.{Runner, Run, Suite, User, Repo, Request}
   alias Perf.Runner.{Consumer, Producer}
   alias Perf.Runner.Events.{Done, Error, Success}
 
@@ -18,31 +17,28 @@ defmodule RunnerTest do
   end
 
   test "can run the thing and get some errors for a bad method" do
-    suite = %Suite{
+    suite = Repo.insert! %Suite{
         name: "test",
         description: "testtest",
         trigger: %{},
-        requests: [
-          %Request{
-            method: "FOO",
-            path: "https://aircooledrescue.com",
-            params: %{"qux" => 42},
-            body: :empty,
-            headers: %{
-              "Content-Type": "application/json"
-            },
-            concurrency: 2,
-            runlength: 50,
-            timeout: 20,
-            receive_timeout: 20
-          }
-        ],
+        requests: [%Request{
+          method: "FOO",
+          path: "https://aircooledrescue.com",
+          params: %{"qux" => 42},
+          headers: %{
+            "Content-Type": "application/json"
+          },
+          concurrency: 2,
+          runlength: 50,
+          timeout: 20,
+          receive_timeout: 20
+        }],
         user: %User{
           email: "something"
         }
       }
-    {:ok, event_stream} = suite
-    |> Repo.insert!
+
+    {:ok, event_stream} = Repo.get!(Suite, suite.id)
     |> Producer.execute
 
     errors = event_stream
@@ -70,7 +66,7 @@ defmodule RunnerTest do
             method: "GET",
             path: "https://aircooledrescue.com",
             params: %{"qux" => 42},
-            body: :empty,
+            body: "",
             headers: %{
               "Content-Type": "application/json"
             },

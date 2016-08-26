@@ -13,20 +13,24 @@ defmodule Perf.ApiChannel do
   @creatable %{
     "suite" => %Perf.Suite{},
     "user" => %Perf.User{},
-    "session" => %Perf.Session{}
+    "session" => %Perf.Session{},
+    "request" => %Perf.Request{}
   }
   @listable %{
     "suite" => %Perf.Suite{}
   }
   @readable %{
     "suite" => %Perf.Suite{},
-    "session" => %Perf.Session{}
+    "session" => %Perf.Session{},
   }
   @updatable %{
-    "suite" => %Perf.Suite{}
+    "suite" => %Perf.Suite{},
+    "request" => %Perf.Request{}
   }
   @deletable %{
-    "session" => %Perf.Session{}
+    "session" => %Perf.Session{},
+    "request" => %Perf.Request{}
+
   }
 
   @operations [

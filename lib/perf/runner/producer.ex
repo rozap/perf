@@ -2,7 +2,7 @@ defmodule Perf.Runner.Producer do
   alias Experimental.GenStage
   use GenStage
   require Logger
-  alias Perf.Suite.Request
+  alias Perf.Request
   alias Perf.Yams
   alias Perf.{Suite, Run, Repo}
   alias Experimental.GenStage
@@ -60,6 +60,7 @@ defmodule Perf.Runner.Producer do
   end
 
   def execute(suite) do
+    suite = Repo.preload(suite, :requests)
     yam_ref = UUID.uuid1()
     with {:ok, run} <- Repo.insert(%Run{suite: suite, yam_ref: yam_ref}) do
 

@@ -46,7 +46,8 @@ function view(appState, prev, send) {
 
       <div class="pure-g constrained" onload=${fire}>
         ${errorView(state, send)}
-        ${loader('Creating a new suite just for you')}
+
+        ${!state.error ? loader('Creating a new suite just for you') : null}
       </div>
     </div>
   `;

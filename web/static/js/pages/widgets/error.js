@@ -7,11 +7,15 @@ const e = (key, thing) => {
   console.error("i don't know how to show", key, thing);
 }
 
+function isFieldError(error) {
+  return error.reason === 'field_values_invalid';
+}
+
 function view({error}) {
   if(!error) return;
   if(!_.isObject(error.error)) return;
 
-  console.error("ErrorView", error);
+  if(isFieldError(error.error)) return;
 
   return html`
     <div class="generic-error pure-u-1-1">

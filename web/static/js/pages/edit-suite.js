@@ -22,9 +22,29 @@ function emptySuite() {
         interval: 5,
         unit: 'day'
       }
-    },
-    requests: []
+    }
   };
+}
+
+
+function newRequest() {
+  return {
+    method: 'GET',
+    verified: true,
+    path: "https://foo.com/bar/baz",
+    params: {"qux": 42},
+    body: '',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    concurrency: 47,
+    runlength: 60,
+
+    isShowing: true,
+    headersShowing: false,
+    paramsShowing: false,
+    bodyShowing: false,
+  }
 }
 
 function model(store) {
@@ -54,6 +74,7 @@ function model(store) {
     effects: {
       getSuite: _.partial(getSuite, store),
       saveSuite: _.partial(saveSuite, store),
+      createRequest: _.partial(createRequest, store),
       success
     },
   }
@@ -78,8 +99,21 @@ function saveSuite(store, _data, {suite}, send, done) {
   .on('ok', (suite) => send('edit:success', 'Your suite has been updated', done));
 }
 
+function createRequest(store, request, state, send, done) {
+  store.create('request', {...request, suite_id: state.suite.id})
+  .on('error', (e) => send('edit:error', e, done))
+  .on('ok', (request) => {
+    send('edit:appendRequest', request, done);
+    send('edit:success', 'Your request has been added', done);
+  });
+}
+
 const save = _.debounce((send) => {
   send('edit:saveSuite');
+}, 500);
+
+const saveRequest = _.debounce((send, request) => {
+  send('edit:saveRequest');
 }, 500);
 
 function updateSuite(suite, state) {
@@ -102,27 +136,6 @@ function success(title, state, send, done) {
   }, 2000)
 }
 
-
-function newRequest() {
-  return {
-    method: 'GET',
-    verified: true,
-    path: "https://foo.com/bar/baz",
-    params: {"qux": 42},
-    body: {},
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    concurrency: 47,
-    runlength: 60,
-
-    isShowing: true,
-    headersShowing: false,
-    paramsShowing: false,
-    bodyShowing: false,
-  }
-}
-
 function intervalChange(interval, state) {
   return putIn(state, 'suite.trigger.opts.interval', parseInt(interval));
 }
@@ -131,8 +144,8 @@ function intervalUnitChange(unit, state) {
   return putIn(state, 'suite.trigger.opts.unit', unit);
 }
 
-function appendRequest(data, state) {
-  let requests = state.suite.requests.concat([newRequest()]);
+function appendRequest(request, state) {
+  let requests = state.suite.requests.concat([request]);
   return putIn(state, 'suite.requests', requests);
 }
 
@@ -312,6 +325,7 @@ function bodyView(req, send) {
 }
 
 function requestView(req, send) {
+  console.info("RequestView", req);
   const qs = queryString.stringify(req.params);
   const toggleRequest = () => {
     send('edit:toggleRequestView', {req});
@@ -319,41 +333,44 @@ function requestView(req, send) {
 
   const onPathChange = (e) => {
     send('edit:updateReqPath', {req, path: e.target.value});
+    saveRequest(req)
   };
 
   const render = () => {
     if(!req.isShowing) return;
 
     return html`
-    <div>
-      <div class="pure-u-1-3">
-        <label>Method</label>
-        ${
-          select({
-              'GET': 'GET',
-              'POST': 'POST',
-              'DELETE': 'DELETE',
-              'PUT': 'PUT',
-              'PATCH': 'PATCH'
-            },
-            (e) => send('edit:updateReqMethod', {
-              req,
-              to: e.target.value
-            }),
-            req.method,
-            {
-              'class': 'select-method'
-            }
-          )
-        }
-      </div>
+    <div class="request-options">
+      <div class="method-path">
+        <div class="method">
+          <label>Method</label>
+          ${
+            select({
+                'GET': 'GET',
+                'POST': 'POST',
+                'DELETE': 'DELETE',
+                'PUT': 'PUT',
+                'PATCH': 'PATCH'
+              },
+              (e) => send('edit:updateReqMethod', {
+                req,
+                to: e.target.value
+              }),
+              req.method,
+              {
+                'class': 'select-method'
+              }
+            )
+          }
+        </div>
 
-      <input
-        name="path"
-        class="path pure-input-2-3"
-        value="${req.path}"
-        onkeyup=${onPathChange}
-      />
+        <input
+          name="path"
+          class="path"
+          value="${req.path}"
+          onkeyup=${onPathChange}
+        />
+      </div>
 
       ${headersView(req, send)}
       ${queryParamView(req, send)}
@@ -363,7 +380,7 @@ function requestView(req, send) {
   };
 
   return html`
-    <div class="pure-control-group request">
+    <div class="request">
       <h4>
         <a href="javascript:void(0)"
           onclick=${toggleRequest}>
@@ -378,16 +395,24 @@ function requestView(req, send) {
 }
 
 function requestListView({requests}, send) {
+  const appendRequest = () => {
+    send('edit:createRequest', newRequest());
+  }
+
   return html`
-    <div class="separated">
-      <div class="pure-control-group">
+    <div class="separated requests">
+      <div class="heading">
+        <h4 class="text-muted">Run these requests</h4>
+
         <a href="javascript:void(0)"
-          onclick=${() => send('edit:appendRequest')}
+          onclick=${appendRequest}
           class="pure-button pure-button-primary"
           >
           Add a Request
         </a>
       </div>
+
+
       ${requests.map((req) => requestView(req, send))}
     </div>
   `;
@@ -407,8 +432,7 @@ function suiteView(state, send) {
   }
 
   return html`
-  <div class="content">
-    <h1>${suite.name || '???'}</h1>
+  <div class="content edit-suite">
     ${successView(state, state.success)}
     ${errorView(state)}
     <form class="pure-form pure-form-aligned">
@@ -441,7 +465,7 @@ function view(appState, prev, send) {
 
   const {edit: state} = appState;
   return html`
-    <div class="app edit-suite" onload=${getSuite}>
+    <div class="app" onload=${getSuite}>
       ${menu(appState, send)}
       ${flash(appState, send)}
 

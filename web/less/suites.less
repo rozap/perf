@@ -1,11 +1,33 @@
+.suites-head {
+  display: flex;
+  flex-direction: row;
+  .heading {
+    flex-grow: 1;
+  }
+
+  .create-new {
+    padding: @margin;
+  }
+}
+
+.card {
+  border: 1px solid @gray-lighter;
+  padding: @margin/2;
+  margin-bottom: @margin/2;
+  box-shadow: 0px 1px 1px fade(@gray-light, 80%);
+
+  h3 {
+    margin: 0px;
+    border-bottom: 1px solid @gray-lighter;
+  }
+
+}
+
 .suites {
   .suite {
-    border-left: 4px solid @blue;
-    padding: 0px @margin/2;
-    &:hover {
-      background: @gray-lighter;
-    }
+    
   }
+
 }
 
 .edit-trigger {
@@ -17,25 +39,42 @@
   }
 }
 
+.label {
+  padding: @margin;
+}
 
 .edit-suite {
-  .pure-control-group {
-    label {
-      text-align: left;
+  .requests {
+    .heading {
+      display: flex;
+      h4 {
+        flex-grow: 1;
+      }
     }
+    .request {
+      border-left: 4px solid @orange;
+      padding: 0px @margin/2;
+      .request-body {
+        textarea {
+          width: 100%;
+        }
+      }
 
-  }
-  .request {
-    border-left: 4px solid @orange;
-    padding: 0px @margin/2;
-  }
+      .request-options {
+        .method-path {
+          display: flex;
 
-
-
-  .request {
-    .request-body {
-      textarea {
-        width: 100%;
+          .method {
+            width: 33%;
+            label {
+              flex-grow: 1;
+            }
+          }
+          .path {
+            flex-grow: 1;
+            margin-left: @margin;
+          }
+        }
       }
     }
   }

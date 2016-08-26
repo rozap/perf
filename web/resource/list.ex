@@ -19,7 +19,10 @@ defmodule Perf.Resource.ListAny do
       query = query
       |> limit([m], ^limit)
       |> offset([m], ^offset)
-      struct(state, model: Perf.Repo.all(query |> select([m], m)))
+
+      model = Perf.Repo.all(query |> select([m], m))
+
+      struct(state, model: model)
     rescue
       e in [Ecto.QueryError] ->
         struct(state, error: %{query: e.message})
