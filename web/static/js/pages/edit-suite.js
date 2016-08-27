@@ -75,6 +75,7 @@ function model(store) {
       getSuite: _.partial(getSuite, store),
       saveSuite: _.partial(saveSuite, store),
       createRequest: _.partial(createRequest, store),
+      updateRequest: _.partial(updateRequest, store),
       success
     },
   }
@@ -108,12 +109,22 @@ function createRequest(store, request, state, send, done) {
   });
 }
 
+function updateRequest(store, request, state, send, done) {
+  console.log(request)
+  store.update('request', request)
+  .on('error', (e) => send('edit:error', e, done))
+  .on('ok', (request) => {
+    send('edit:success', 'Your request has been updated', done);
+  });
+}
+
+
 const save = _.debounce((send) => {
   send('edit:saveSuite');
 }, 500);
 
 const saveRequest = _.debounce((send, request) => {
-  send('edit:saveRequest');
+  send('edit:updateRequest', request);
 }, 500);
 
 function updateSuite(suite, state) {
@@ -269,6 +280,7 @@ function headersView(req, send) {
 
   const dispatch = (newHeaders) => {
     send('edit:updateReqHeaders', {req, headers: newHeaders});
+    saveRequest(send, req);
   };
 
   return keyvalue(
@@ -285,6 +297,7 @@ function queryParamView(req, send) {
 
   const dispatch = (params) => {
     send('edit:updateReqParams', {req, params});
+    saveRequest(send, req);
   }
 
   return keyvalue(
@@ -302,6 +315,7 @@ function bodyView(req, send) {
   const render = () => {
     const onchange = (e) => {
       send('edit:updateReqBody', {req, body: e.target.value});
+      saveRequest(send, req);
     };
 
     if(!req.bodyShowing) return '';
@@ -325,7 +339,6 @@ function bodyView(req, send) {
 }
 
 function requestView(req, send) {
-  console.info("RequestView", req);
   const qs = queryString.stringify(req.params);
   const toggleRequest = () => {
     send('edit:toggleRequestView', {req});
@@ -333,7 +346,7 @@ function requestView(req, send) {
 
   const onPathChange = (e) => {
     send('edit:updateReqPath', {req, path: e.target.value});
-    saveRequest(req)
+    saveRequest(send, req)
   };
 
   const render = () => {

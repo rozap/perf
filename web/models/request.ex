@@ -29,7 +29,7 @@ defmodule Perf.Request do
   end
 
   defimpl Poison.Encoder, for: Perf.Request do
-    @attributes [:suite_id, :method, :path, :body, :params, :body, :headers, :concurrency, :runlength, :timeout, :receive_timeout, :view]
+    @attributes [:id, :suite_id, :method, :path, :body, :params, :body, :headers, :concurrency, :runlength, :timeout, :receive_timeout, :view]
 
     def encode(suite, _options) do
       suite
