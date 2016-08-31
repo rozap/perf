@@ -3,6 +3,7 @@ defmodule RunnerTest do
   alias Perf.{Runner, Run, Suite, User, Repo, Request}
   alias Perf.Runner.{Consumer, Producer}
   alias Perf.Runner.Events.{Done, Error, Success}
+  alias Perf.Yams.Handle
 
   setup_all do
     Runner.start_link
@@ -38,22 +39,27 @@ defmodule RunnerTest do
         }
       }
 
-    {:ok, event_stream} = Repo.get!(Suite, suite.id)
-    |> Producer.execute
+    run = Repo.insert!(%Run{suite: suite, yam_ref: UUID.uuid1()})
+    :ok = Runner.execute(run)
 
-    errors = event_stream
-    |> Stream.take_while(fn
-      {_, %Done{}} -> false
-      _ -> true
-    end)
-    |> Stream.map(fn {_, e} -> e end)
-    |> Enum.into([])
-    |> Enum.filter(fn
-      %Error{} -> true
-      _ -> false
-    end)
+    :ok = with {_, handle} <- Handle.open(run.yam_ref) do
+      errors = handle
+      |> Handle.changes
+      |> Stream.take_while(fn
+        {_, %Done{}} -> false
+        _ -> true
+      end)
+      |> Stream.map(fn {_, e} -> e end)
+      |> Enum.into([])
+      |> Enum.filter(fn
+        %Error{} -> true
+        _ -> false
+      end)
 
-    assert length(errors) > 0
+      assert length(errors) > 0
+      :ok
+    end
+
   end
 
   test "can run the thing and get some results for a working website" do
@@ -80,23 +86,31 @@ defmodule RunnerTest do
           email: "something"
         }
       }
-    {:ok, event_stream} = suite
-    |> Repo.insert!
-    |> Producer.execute
 
-    success = event_stream
-    |> Stream.take_while(fn
-      {_, %Done{}} -> false
-      _ -> true
-    end)
-    |> Stream.map(fn {_, e} -> e end)
-    |> Stream.filter(fn
-      %Success{} -> true
-      _ -> false
-    end)
-    |> Enum.into([])
+    suite = Repo.insert!(suite)
+    run = Repo.insert!(%Run{suite: suite, yam_ref: UUID.uuid1()})
+    :ok = Runner.execute(run)
 
-    assert length(success) > 0
+    :ok = with {_, handle} <- Handle.open(run.yam_ref) do
+      success = handle
+      |> Handle.changes
+      |> Stream.take_while(fn
+        {_, %Done{}} -> false
+        _ -> true
+      end)
+      |> Stream.map(fn {_, e} -> e end)
+      |> Stream.filter(fn
+        %Success{} -> true
+        _ -> false
+      end)
+      |> Enum.into([])
+
+      assert length(success) > 0
+
+      :ok
+    end
+
+
   end
 
 end

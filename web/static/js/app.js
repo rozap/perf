@@ -2,10 +2,12 @@ import {Socket} from "phoenix"
 import choo from "choo"
 import html from "choo/html"
 import _ from "underscore";
-import createStore from './store'
+import store from './store'
 
 import suites from './pages/suites';
 import suite from './pages/suite';
+import runs from './pages/runs';
+import run from './pages/run';
 import editSuite from './pages/edit-suite';
 import newSuite from './pages/new-suite';
 import register from './pages/register';
@@ -34,8 +36,8 @@ const fatalError = (e) => {
   console.error("i give up ;_;", e);
 }
 
-
-const store = createStore();
+const channelFactory = store();
+const api = channelFactory.create('api');
 
 
 function rootModel() {
@@ -50,29 +52,29 @@ function rootModel() {
     },
     effects: {
       invalidateSession: () => localStorage.clear(),
-      logout: () => store.logout()
+      logout: () => api.logout()
     },
     subscriptions: [
       (send, done) => {
-        store.on('login:ok', (user) => {
+        api.on('login:ok', (user) => {
           console.log(user, 'has logged in');
           send('login', user, done);
         })
       },
       (send, done) => {
-        store.on('login:error', (error) => {
+        api.on('login:error', (error) => {
           send('invalidateSession', {}, done);
           send('error', error, done);
         })
       },
       (send, done) => {
-        store.on('logout:ok', () => {
+        api.on('logout:ok', () => {
           send('invalidateSession', {}, done);
           send('login', false, done);
         });
       },
       (send, done) => {
-        store.on('logout:error', (error) => {
+        api.on('logout:error', (error) => {
           send('error', error, done);
         });
       }
@@ -83,12 +85,14 @@ function rootModel() {
 
 function startApp() {
   app.model(rootModel());
-  app.model(suites.model(store));
-  // app.model(suite.model(store));
-  app.model(newSuite.model(store));
-  app.model(editSuite.model(store));
-  app.model(register.model(store));
-  app.model(login.model(store));
+  app.model(suites.model(api));
+  app.model(newSuite.model(api));
+  app.model(editSuite.model(api));
+  app.model(runs.model(api));
+  app.model(run.model(api, channelFactory));
+
+  app.model(register.model(api));
+  app.model(login.model(api));
 
 
   app.router((route) => [
@@ -99,6 +103,9 @@ function startApp() {
       route('new', newSuite.view),
       route(':id', editSuite.view),
     ]),
+    route('/app/runs', runs.view, [
+      route(':id', run.view)
+    ])
   ])
 
   const tree = app.start();

@@ -27,7 +27,7 @@ defmodule Perf.Resource do
     |> Enum.map(fn {key, _} -> key end)
 
     quote do
-      def handle(model, %State{params: unquote(params)} = var!(state)) do
+      def handle(var!(model), %State{params: unquote(params)} = var!(state)) do
         unquote(body[:do])
       end
 
@@ -40,14 +40,7 @@ defmodule Perf.Resource do
         omitted = MapSet.difference(required, given) |> Enum.into([])
         extras = MapSet.difference(given, required) |> Enum.into([])
 
-        bad_request(state, %Error{
-          english:  "I didn't see #{Enum.join(omitted, ",")} and saw #{Enum.join(extras, ",")} which I didn't expect",
-          reason: "field_set_invalid",
-          params: %{
-            "extras" => extras,
-            "omitted" => omitted
-          }
-        })
+        missing_params(state, omitted, extras)
       end
     end
   end
@@ -106,13 +99,24 @@ defmodule Perf.Resource do
 
   def forbidden(state) do
     struct(
-      state, 
+      state,
       kind: :forbidden,
       error: %Error{
         reason: "session_required",
         english: "You need to be logged in to do that"
       }
     )
+  end
+
+  def missing_params(state, omitted, extras) do
+    bad_request(state, %Error{
+      english:  "I didn't see #{Enum.join(omitted, ",")} and saw #{Enum.join(extras, ",")} which I didn't expect",
+      reason: "field_set_invalid",
+      params: %{
+        "extras" => extras,
+        "omitted" => omitted
+      }
+    })
   end
 
   def value_error(state, %Ecto.Changeset{valid?: false} = cset) do

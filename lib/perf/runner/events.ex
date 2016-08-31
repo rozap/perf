@@ -26,4 +26,31 @@ defmodule Perf.Runner.Events do
       ref: :none
   end
 
+  def encode(s, _) do
+    type = s.__struct__
+    |> Atom.to_string
+    |> String.split(".")
+    |> List.last
+    |> String.downcase
+
+    s
+    |> Map.from_struct
+    |> Map.drop([:ref])
+    |> Map.put(:type, type)
+    |> Poison.encode!
+  end
+
+  defimpl Poison.Encoder, for: Success do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
+  defimpl Poison.Encoder, for: Error do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
+  defimpl Poison.Encoder, for: StartingRequest do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
+  defimpl Poison.Encoder, for: Done do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
+
 end

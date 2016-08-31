@@ -2,13 +2,13 @@ import html from "choo/html"
 import error from "./error";
 import _ from "underscore";
 
-function view(appState, send) {
-  if(!appState.error) return;
-  if(!_.isObject(appState.error.error)) return;
+function view(state, send, options) {
+  if(!state.error) return;
+  if(!_.isObject(state.error.error)) return;
 
   return html`
     <div class="global-error">
-      ${error(appState)}
+      ${error(state, options)}
     </div>
   `;
 }

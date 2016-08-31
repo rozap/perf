@@ -13,10 +13,6 @@ defmodule Perf.Yams.Handle do
     }}
   end
 
-  # def handle_call({:put, many}, _, state) when is_list(many) do
-
-  # end
-
   def handle_call({:put, {key, value}}, _, state) do
     serialized = :erlang.term_to_binary(value)
     result = :eleveldb.put(state.db, "#{key}", serialized, [])
@@ -93,6 +89,10 @@ defmodule Perf.Yams.Handle do
       end,
       fn _ -> :ok end
     )
+  end
+
+  def subscribe_changes(pid) do
+    GenServer.call(pid, {:changes, self})
   end
 
   def open(key) do

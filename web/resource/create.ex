@@ -12,9 +12,9 @@ defmodule Perf.Resource.CreateAny do
       {:error, %Changeset{} = cset} ->
         value_error(state, cset)
       {:error, reason} ->
-        # failed()
         struct(state, kind: :internal, error: reason)
       {:ok, inserted} ->
+        IO.inspect inserted
         created(state, inserted, %{"id" => inserted.id})
     end
   end

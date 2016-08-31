@@ -10,14 +10,10 @@ defmodule Perf.Runner.Consumer do
   end
 
   def init([yams, run]) do
-    Logger.debug("Consumer started on #{inspect run}")
+    Logger.warn("Consumer started on #{inspect run.suite.name} #{inspect yams}")
     Process.monitor(yams)
     {:consumer, %{yams: yams, result: %{}, meta_refs: MapSet.new}}
   end
-
-  # defp on_event(%Done{}) do
-
-  # end
 
   defp record(events, state) do
     Enum.each(events, fn event ->

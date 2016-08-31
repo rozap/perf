@@ -11,11 +11,12 @@ function isFieldError(error) {
   return error.reason === 'field_values_invalid';
 }
 
-function view({error}) {
+function view({error}, options) {
   if(!error) return;
   if(!_.isObject(error.error)) return;
+  options = options || {};
 
-  if(isFieldError(error.error)) return;
+  if(options.showFields && isFieldError(error.error)) return;
 
   return html`
     <div class="generic-error pure-u-1-1">

@@ -14,14 +14,17 @@ defmodule Perf.ApiChannel do
     "suite" => %Perf.Suite{},
     "user" => %Perf.User{},
     "session" => %Perf.Session{},
-    "request" => %Perf.Request{}
+    "request" => %Perf.Request{},
+    "run" => %Perf.Run{}
   }
   @listable %{
-    "suite" => %Perf.Suite{}
+    "suite" => %Perf.Suite{},
+    "run" => %Perf.Run{}
   }
   @readable %{
     "suite" => %Perf.Suite{},
     "session" => %Perf.Session{},
+    "run" => %Perf.Run{}
   }
   @updatable %{
     "suite" => %Perf.Suite{},

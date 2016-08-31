@@ -1,14 +1,4 @@
-.suites-head {
-  display: flex;
-  flex-direction: row;
-  .heading {
-    flex-grow: 1;
-  }
 
-  .create-new {
-    padding: @margin;
-  }
-}
 
 .card {
   border: 1px solid @gray-lighter;
@@ -20,12 +10,16 @@
     margin: 0px;
     border-bottom: 1px solid @gray-lighter;
   }
-
+  ul {
+    li {
+      margin: @margin/2 0px;
+    }
+  }
 }
 
 .suites {
   .suite {
-    
+
   }
 
 }
@@ -45,12 +39,6 @@
 
 .edit-suite {
   .requests {
-    .heading {
-      display: flex;
-      h4 {
-        flex-grow: 1;
-      }
-    }
     .request {
       border-left: 4px solid @orange;
       padding: 0px @margin/2;

@@ -39,13 +39,14 @@ function error(error, state) {
 function view(appState, prev, send) {
   const {newSuite: state} = appState;
   const fire = () => send('newSuite:create');
+
   return html`
     <div class="app">
       ${menu(appState, send)}
       ${flash(appState, send)}
 
       <div class="pure-g constrained" onload=${fire}>
-        ${errorView(state, send)}
+        ${errorView(state, send, {showFields: true})}
 
         ${!state.error ? loader('Creating a new suite just for you') : null}
       </div>

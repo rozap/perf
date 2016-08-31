@@ -7,33 +7,51 @@ import flash from './widgets/flash';
 
 function model(store) {
   return {
-    state: { items: [], count: 0 },
+    state: { items: [], count: 0, hasLoaded: false },
     namespace: 'suites',
-    subscriptions: [
-      // storeSubscription
-    ],
     reducers: {
-      list: (resp, state) => (_.extend({}, state, resp))
+      list,
+      error
     },
     effects: {
-      getSuites: (data, state, send, done) => {
-        store.list('suite')
-        .on('error', (error) => console.error("got an error!", error))
-        .on('ok', (suites) => {
-          console.log("suites are", suites);
-          send('suites:list', suites, done)
-        });
-      }
-    },
-    subscriptions: [
-      (send, done) => {
-        console.log("SUITES SUBSCRIPTION FIRE");
-      }
-    ]
+      getSuites: _.partial(getSuites, store)
+    }
   };
 }
 
-function suiteView({id, name, description}) {
+function getSuites(store, data, state, send, done) {
+  store.list('suite')
+  .on('error', (error) => send('suites:error', error, done))
+  .on('ok', (suites) => send('suites:list', suites, done));
+}
+
+function list({items, count}, state) {
+  return {
+    ...state,
+    hasLoaded: true,
+    items,
+    count
+  }
+}
+
+function error(error, state) {
+  return {
+    ...state,
+    hasLoaded: true,
+    error
+  }
+}
+
+function requestView(request) {
+  return html`
+    <li>
+      <span class="badge badge-${request.method.toLowerCase()}">${request.method}</span>
+      <span>${request.path}</span>
+    </li>
+  `
+}
+
+function suiteView({id, name, requests}) {
   return html`
     <div class="suite card">
       <h3>
@@ -41,7 +59,9 @@ function suiteView({id, name, description}) {
           ${name}
         </a>
       </h3>
-      <p>${description}</p>
+      <ul class="requests">
+        ${requests.map((r) => requestView(r))}
+      </ul>
     </div>
   `
 }
@@ -49,7 +69,7 @@ function suiteView({id, name, description}) {
 function view(appState, prev, send) {
   const {suites: state} = appState;
 
-  const getSuites = () => {
+  if(!state.hasLoaded) {
     send('suites:getSuites');
   }
 
@@ -59,11 +79,9 @@ function view(appState, prev, send) {
       ${flash(appState, send)}
 
       <div class="content">
-        <div class="suites-head" onload=${getSuites}>
+        <div class="suites-head">
           <div class="heading">
-            <h1>Suites</h1>
-          </div>
-          <div class="create-new">
+            <h4>Suites</h4>
             <a class="pure-button pure-button-primary" href="suites/new">
               New Suite
             </a>

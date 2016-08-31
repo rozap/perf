@@ -17,12 +17,12 @@ defmodule Perf.Suite do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :trigger, :user_id])
-    |> validate_required([:name, :trigger, :user_id])
+    |> cast(params, [:name, :description, :trigger, :user_id])
+    |> validate_required([:name, :description, :trigger, :user_id])
   end
 
   defimpl Poison.Encoder, for: Perf.Suite do
-    @attributes ~W(id name description trigger requests belongs_to inserted_at updated_at)a
+    @attributes ~W(id name description trigger inserted_at updated_at requests)a
 
     def encode(suite, _options) do
       suite

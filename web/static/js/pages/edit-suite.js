@@ -15,7 +15,7 @@ import flash from './widgets/flash';
 function emptySuite() {
   return {
     name: 'Empty Suite',
-    description: '',
+    description: 'empty',
     trigger: {
       kind: 'interval',
       opts: {
@@ -67,7 +67,7 @@ function model(store) {
       toggleBodyView,
       toggleRequestView,
       error,
-      updateSuite, 
+      updateSuite,
       showSuccess,
       clearSuccess
     },
@@ -76,6 +76,7 @@ function model(store) {
       saveSuite: _.partial(saveSuite, store),
       createRequest: _.partial(createRequest, store),
       updateRequest: _.partial(updateRequest, store),
+      createRun: _.partial(createRun, store),
       success
     },
   }
@@ -97,7 +98,7 @@ function getSuite(store, {id}, state, send, done) {
 function saveSuite(store, _data, {suite}, send, done) {
   store.update('suite', suite)
   .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (suite) => send('edit:success', 'Your suite has been updated', done));
+  .on('ok', (suite) => floatySuccess('Your suite has been updated', send, done));
 }
 
 function createRequest(store, request, state, send, done) {
@@ -105,27 +106,40 @@ function createRequest(store, request, state, send, done) {
   .on('error', (e) => send('edit:error', e, done))
   .on('ok', (request) => {
     send('edit:appendRequest', request, done);
-    send('edit:success', 'Your request has been added', done);
+    floatySuccess('Your request has been added', send, done);
   });
 }
 
 function updateRequest(store, request, state, send, done) {
-  console.log(request)
   store.update('request', request)
   .on('error', (e) => send('edit:error', e, done))
   .on('ok', (request) => {
-    send('edit:success', 'Your request has been updated', done);
+    floatySuccess('Your request has been updated', send, done);
   });
 }
 
+function createRun(store, _data, {suite}, send, done) {
+  store.create('run', {suite_id: suite.id})
+  .on('error', (e) => send('edit:error', e, done))
+  .on('ok', (run) => {
+    window.location.href = `/app/runs/${run.id}`;
+  })
+}
+
+function floatySuccess(message, send, done) {
+  send('edit:success', message, done);
+  setTimeout(() => {
+    send('edit:clearSuccess', done);
+  }, 1500)
+}
 
 const save = _.debounce((send) => {
   send('edit:saveSuite');
-}, 500);
+}, 1000);
 
 const saveRequest = _.debounce((send, request) => {
   send('edit:updateRequest', request);
-}, 500);
+}, 1000);
 
 function updateSuite(suite, state) {
   return {...state, suite: suite};
@@ -236,7 +250,8 @@ function intervalTriggerView(suite, send) {
         minute: 'Minutes'
       },
       (e) => send('edit:intervalUnitChange', e.target.value),
-      suite.trigger.opts.unit)
+      suite.trigger.opts.unit
+      )
     }
   </div>
   `
@@ -365,10 +380,13 @@ function requestView(req, send) {
                 'PUT': 'PUT',
                 'PATCH': 'PATCH'
               },
-              (e) => send('edit:updateReqMethod', {
-                req,
-                to: e.target.value
-              }),
+              (e) => {
+                send('edit:updateReqMethod', {
+                  req,
+                  to: e.target.value
+                });
+                saveRequest(send, req);
+              },
               req.method,
               {
                 'class': 'select-method'
@@ -435,6 +453,9 @@ function requestListView({requests}, send) {
 function suiteView(state, send) {
   const {suite: suite} = state;
 
+  if(state.error) {
+    return;
+  }
   if(!suite) {
     return loader('Loading your suite');
   }
@@ -444,10 +465,24 @@ function suiteView(state, send) {
     save(send)
   }
 
+  const createRun = () => {
+    send('edit:createRun');
+  }
+
   return html`
-  <div class="content edit-suite">
+  <div class="edit-suite">
     ${successView(state, state.success)}
     ${errorView(state)}
+    <div class="heading">
+      <h4 class="text-muted">${suite.name}</h4>
+
+      <a href="javascript:void(0)"
+        class="pure-button button-success"
+        onclick=${createRun}
+        >
+        Run
+      </a>
+    </div>
     <form class="pure-form pure-form-aligned">
       <fieldset>
         <div class="pure-control-group">
@@ -472,7 +507,6 @@ function view(appState, prev, send) {
 
   const {params} = appState;
   const getSuite = () => {
-    console.log("Getting suite")
     send('edit:getSuite', params);
   }
 
@@ -480,9 +514,12 @@ function view(appState, prev, send) {
   return html`
     <div class="app" onload=${getSuite}>
       ${menu(appState, send)}
-      ${flash(appState, send)}
+      <div class="content">
+        ${flash(appState, send)}
+        ${flash(appState.edit, send)}
 
-      ${suiteView(state, send)}
+        ${suiteView(state, send)}
+      </div>
     </div>
   `
 }

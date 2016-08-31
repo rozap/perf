@@ -1,5 +1,6 @@
 import Emitter from 'tiny-emitter';
 import {Socket} from "phoenix";
+import _ from "underscore";
 
 function getToken() {
   const {token} = JSON.parse(localStorage['session']);
@@ -8,11 +9,34 @@ function getToken() {
 
 class Store extends Emitter {
 
-  constructor() {
+  constructor(socket, params) {
     super();
+
+    const makeChannel = () => {
+      let channel = socket.channel(this.name(), params);
+      console.info("Joining", this.name(), params)
+      channel.join()
+      .receive("ok", resp => this.onJoin(channel))
+      .receive("error", resp => this.onError(resp));
+    }
+
+    if(socket.isConnected()) {
+      makeChannel();
+    } else {
+      socket.onOpen(makeChannel);
+    }
+
+    socket.onError((e) => {
+      this.onError(e);
+    });
+
     this._queued = [];
 
     setInterval(this._checkTimeouts.bind(this), 500);
+  }
+
+  onConnect() {
+
   }
 
   onJoin(channel) {
@@ -20,10 +44,10 @@ class Store extends Emitter {
     this._underlying = channel;
     this.emit('connected');
 
-    this.login();
+    this.onConnect()
 
     this._queued.forEach((waiter) => {
-      this._doSync(waiter);
+      this._doSend(waiter);
     });
     this._queued = [];
   }
@@ -45,7 +69,7 @@ class Store extends Emitter {
     });
   }
 
-  _doSync({op, params, em}) {
+  _doSend({op, params, em}) {
     this._underlying.push(op, params)
     .receive('ok', (payload) => {
       console.log("Channel -->", op, params, payload);
@@ -57,37 +81,42 @@ class Store extends Emitter {
     });
   }
 
-  sync(op, params, timeout) {
+  send(op, params, timeout) {
     timeout = timeout || 5000;
     const expiry = Date.now() + timeout;
 
     const em = new Emitter();
     if(!this._underlying) {
-
       this._queued.push({op, params, em, expiry});
     } else {
-      this._doSync({op, params, em});
+      this._doSend({op, params, em});
     }
     return em;
   }
+}
 
+class Api extends Store {
+  name() {
+    return 'api';
+  }
+  onConnect() {
+    this.login();
+  }
   list(name, params) {
-    return this.sync(`list:${name}`, params);
+    return this.send(`list:${name}`, params);
   }
   get(name, params) {
-    return this.sync(`read:${name}`, params);
+    return this.send(`read:${name}`, params);
   }
   create(name, params) {
-    return this.sync(`create:${name}`, params);
+    return this.send(`create:${name}`, params);
   }
   del(name, params) {
-    return this.sync(`delete:${name}`, params);
+    return this.send(`delete:${name}`, params);
   }
   update(name, params) {
-    return this.sync(`update:${name}`, params);
+    return this.send(`update:${name}`, params);
   }
-
-
 
   login() {
     try {
@@ -108,29 +137,40 @@ class Store extends Emitter {
       console.info("No session info found, logout")
     }
   }
+}
 
+class Yams extends Store {
+  name() {
+    return 'yams';
+  }
+
+  changes(cb) {
+    this.send('change:events', {});
+    return this._underlying.on('change:events', cb)
+  }
+
+  slice(params) {
+    return this.send('list:events', params);
+  }
 }
 
 
-
-
-function createStore(cb) {
+function store() {
   var params = {};
   const socket = new Socket("/socket", {params});
-  const store = new Store();
 
-  socket.onOpen(() => {
-    let channel = socket.channel("api", {})
 
-    channel.join()
-    .receive("ok", resp => store.onJoin(channel))
-    .receive("error", resp => store.onError(resp));
-  });
-
-  socket.onError((e) => store.onError(e));
+  const channels = {
+    api: Api,
+    yams: Yams
+  }
 
   socket.connect();
 
-  return store;
+  return {
+    create: (name, params) => {
+      return new channels[name](socket, params || {});
+    }
+  }
 }
-export default createStore;
+export default store;

@@ -59,39 +59,5 @@ defmodule Perf.Runner.Producer do
     GenStage.sync_notify(pid, {:broadcast, broadcast})
   end
 
-  def execute(suite) do
-    suite = Repo.preload(suite, :requests)
-    yam_ref = UUID.uuid1()
-    with {:ok, run} <- Repo.insert(%Run{suite: suite, yam_ref: yam_ref}) do
 
-      {_, handle} = Perf.Yams.Handle.open(yam_ref)
-      {:ok, producer} = __MODULE__.start_link(run)
-      {:ok, consumer} = Consumer.start_link(handle, run)
-
-      Logger.debug("Producer #{inspect producer} Consumer #{inspect consumer}")
-
-      c = run.suite.requests
-      |> Enum.map(fn %Request{concurrency: c} -> c end)
-      |> Enum.max
-
-      workers = (0..c)
-      |> Enum.map(fn _ -> :poolboy.checkout(RequestWorker) end)
-      |> Enum.map(fn worker ->
-        GenStage.sync_subscribe(consumer, to: worker, min_demand: 0, max_demand: 1)
-        worker
-      end)
-
-      Logger.debug("Created #{inspect workers}")
-
-      next_request(producer)
-
-      Enum.each(workers, fn worker ->
-        GenStage.sync_subscribe(worker, to: producer, min_demand: 0, max_demand: 1)
-      end)
-
-      stream = Perf.Yams.Handle.changes(handle)
-
-      {:ok, stream}
-    end
-  end
 end

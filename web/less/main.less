@@ -17,7 +17,7 @@
 @red: rgb(202, 60, 60);
 @orange: rgb(223, 117, 20);
 @blue: #39cccc;
-
+@purple: rgb(223, 117, 20);
 body {}
 
 .text-muted {
@@ -37,7 +37,7 @@ a {
 }
 
 .pure-button {
-
+  margin: @margin @margin/2 !important;
 }
 .button-success,
 .pure-button-primary,
@@ -122,7 +122,7 @@ form {
   background: fade(@gray-lighter, 70%);
   box-shadow: 0 6px 10px fade(@gray-light, 30%);
   p {
-    // text-shadow: 
+    // text-shadow:
     color: @white;
   }
 
@@ -131,7 +131,7 @@ form {
 .floating-message.generic-success {
   border-radius: @base-radius;
   // border: 1px solid fade(@gray, 70%);
-  background: fade(@green, 50%);
+  background: fade(@green, 60%);
 
 }
 
@@ -167,6 +167,36 @@ ul {
   margin: auto;
 }
 
+.heading {
+  display: flex;
+  h1, h2, h3, h4 {
+    flex-grow: 1;
+  }
+}
+
+.badge {
+  padding: @margin/8 @margin/2;
+  box-shadow: inset 1px 1px 4px @gray-light;
+  border-radius: @base-radius;
+  color: @white;
+  margin: @margin/2;
+}
+
+.badge-get {
+  background: @blue;
+}
+.badge-post {
+  background: @green;
+}
+.badge-put {
+  background: @orange;
+}
+.badge-delete {
+  background: @red;
+}
+.badge-patch {
+  background: @purple;
+}
 
 @menu-color: lighten(@blue, 5%);
 .top-menu {
@@ -235,5 +265,5 @@ ul {
   display: block;
   .keyvalue-list {
 
-  } 
+  }
 }

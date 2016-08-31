@@ -1,5 +1,6 @@
 defmodule YamsTest do
   use ExUnit.Case
+  alias Perf.Yams.Handle
   alias Perf.Yams
 
   setup do
@@ -10,15 +11,15 @@ defmodule YamsTest do
   test "can put and get" do
     from_ts = Yams.key
 
-    {:created, h} = Yams.Handle.open(UUID.uuid1())
+    {:created, h} = Handle.open(UUID.uuid1())
 
-    :ok = Yams.Handle.put(h, Yams.key, [:a, :b, :c])
-    :ok = Yams.Handle.put(h, Yams.key, [:d, :e, :f])
-    :ok = Yams.Handle.put(h, Yams.key, [:g, :h, :i])
+    :ok = Handle.put(h, Yams.key, [:a, :b, :c])
+    :ok = Handle.put(h, Yams.key, [:d, :e, :f])
+    :ok = Handle.put(h, Yams.key, [:g, :h, :i])
 
     to_ts = Yams.key
 
-    values = Yams.Handle.stream!(h, {from_ts, to_ts})
+    values = Handle.stream!(h, {from_ts, to_ts})
     |> Stream.map(fn {key, value} -> value end)
     |> Enum.into([])
 
@@ -34,18 +35,18 @@ defmodule YamsTest do
     ref = UUID.uuid1()
 
     task = Task.async(fn ->
-      {_, pid} = Yams.Handle.open(ref)
-      Yams.Handle.changes(pid)
+      {_, pid} = Handle.open(ref)
+      Handle.changes(pid)
       |> Stream.map(fn {key, value} -> value end)
       |> Enum.into([])
     end)
 
-    {_, h} = Yams.Handle.open(ref)
+    {_, h} = Handle.open(ref)
 
     from_ts = Yams.key
-    :ok = Yams.Handle.put(h, Yams.key, [:a, :b, :c])
-    :ok = Yams.Handle.put(h, Yams.key, [:d, :e, :f])
-    :ok = Yams.Handle.put(h, Yams.key, [:g, :h, :i])
+    :ok = Handle.put(h, Yams.key, [:a, :b, :c])
+    :ok = Handle.put(h, Yams.key, [:d, :e, :f])
+    :ok = Handle.put(h, Yams.key, [:g, :h, :i])
     to_ts = Yams.key
 
 
@@ -58,7 +59,7 @@ defmodule YamsTest do
       [:g, :h, :i]
     ]
 
-    values = Yams.Handle.stream!(h, {from_ts, to_ts})
+    values = Handle.stream!(h, {from_ts, to_ts})
     |> Stream.map(fn {key, value} -> value end)
     |> Enum.into([])
 
@@ -70,26 +71,26 @@ defmodule YamsTest do
     ref = UUID.uuid1()
 
     task = Task.async(fn ->
-      {_, pid} = Yams.Handle.open(ref)
-      Yams.Handle.changes(pid)
+      {_, pid} = Handle.open(ref)
+      Handle.changes(pid)
       |> Stream.map(fn {key, value} -> value end)
       |> Enum.into([])
     end)
 
-    {_, h} = Yams.Handle.open(ref)
+    {_, h} = Handle.open(ref)
 
-    assert Yams.Handle.listeners(h) == {:ok, 1}
+    assert Handle.listeners(h) == {:ok, 1}
 
     send task.pid, :done
     changes = Task.await(task)
 
 
     from_ts = Yams.key
-    :ok = Yams.Handle.put(h, Yams.key, [:a, :b, :c])
-    :ok = Yams.Handle.put(h, Yams.key, [:d, :e, :f])
-    :ok = Yams.Handle.put(h, Yams.key, [:g, :h, :i])
+    :ok = Handle.put(h, Yams.key, [:a, :b, :c])
+    :ok = Handle.put(h, Yams.key, [:d, :e, :f])
+    :ok = Handle.put(h, Yams.key, [:g, :h, :i])
     to_ts = Yams.key
 
-    assert Yams.Handle.listeners(h) == {:ok, 0}
+    assert Handle.listeners(h) == {:ok, 0}
   end
 end

@@ -1,3 +1,5 @@
 * do the login on startup
-* make the menu have links to get around
+* make state refresh on reloading a page
+
+* make yams a genstage
 
