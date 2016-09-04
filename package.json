@@ -29,6 +29,7 @@
     "tiny-emitter": "latest",
     "colors": "latest",
     "query-string": "latest",
-    "moment" : "2.14.1"
+    "moment" : "2.14.1",
+    "rickshaw": "latest"
   }
 }

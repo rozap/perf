@@ -4,6 +4,7 @@ defmodule Perf.Runner.Consumer do
   require Logger
   alias Perf.Runner.Coordinator
   alias Perf.Yams.Handle
+  @buf_size 100
 
   def start_link(yams, run) do
     GenStage.start_link(__MODULE__, [yams, run])
@@ -11,46 +12,26 @@ defmodule Perf.Runner.Consumer do
 
   def init([yams, run]) do
     Logger.warn("Consumer started on #{inspect run.suite.name} #{inspect yams}")
-    Process.monitor(yams)
-    {:consumer, %{yams: yams, result: %{}, meta_refs: MapSet.new}}
+    Process.link(yams)
+    {:consumer, %{yams: yams, buf: [], meta_refs: MapSet.new}}
   end
 
-  defp record(events, state) do
-    Enum.each(events, fn event ->
-      case state.yams do
-        :none ->
-          Logger.warn("Consumer got #{inspect event} but yams is dead?")
-        handle ->
-          Handle.put(handle, event.at, event)
-      end
-    end)
+  defp record(event, %{yams: :none} = s) do
+    %{s | buf: Enum.take([event | s.buf], @buf_size)}
   end
 
-  def handle_info({:DOWN, yams, _, _, _}, %{yams: yams} = state) do
-    {:noreply, [], Map.put(state, :yams, :none)}
+  defp record(event, %{yams: yam} = state) do
+    Handle.put(yam, event.at, event)
+    state
   end
 
-  def handle_info({_, {:broadcast, event}}, %{meta_refs: refs} = state) do
-    new_state = if !MapSet.member?(refs, event.ref) do
-      record([event], state)
-      %{state | meta_refs: MapSet.put(refs, event.ref)}
-    else
-      state
-    end
+  def handle_cast({:event, event}, state) do
+    new_state = record(event, state)
     {:noreply, [], new_state}
   end
 
-  def handle_info(_, state) do
-    {:noreply, [], state}
-  end
-
-  def handle_events(events, _, state) do
-    record(events, state)
-    {:noreply, [], state}
-  end
-
-  def handle_call({:complete, result}, _, state) do
-    {:noreply, [result], state}
+  def on_event(consumer, event) do
+    GenStage.cast(consumer, {:event, event})
   end
 
 end

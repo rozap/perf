@@ -18,4 +18,13 @@ defmodule Perf.Yams do
   def key do
     System.os_time(:nanoseconds)
   end
+
+  @ms_factor 1000 * 1000
+  def key_to_ms(k) do
+    k / @ms_factor
+  end
+
+  def ms_to_key(ms) do
+    ms * @ms_factor
+  end
 end

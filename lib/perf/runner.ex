@@ -34,26 +34,28 @@ defmodule Perf.Runner do
     {:ok, producer} = Producer.start_link(run)
     {:ok, consumer} = Consumer.start_link(handle, run)
 
-    Logger.debug("Producer #{inspect producer} Consumer #{inspect consumer}")
+    Producer.next_request(producer, consumer)
 
-    c = run.suite.requests
-    |> Enum.map(fn %Request{concurrency: c} -> c end)
-    |> Enum.max
+    # Logger.debug("Producer #{inspect producer} Consumer #{inspect consumer}")
 
-    workers = (0..c)
-    |> Enum.map(fn _ -> :poolboy.checkout(RequestWorker) end)
-    |> Enum.map(fn worker ->
-      GenStage.sync_subscribe(consumer, to: worker, min_demand: 0, max_demand: 1)
-      worker
-    end)
+    # c = run.suite.requests
+    # |> Enum.map(fn %Request{concurrency: c} -> c end)
+    # |> Enum.max
 
-    Logger.debug("Created #{inspect workers}")
+    # workers = (0..c)
+    # |> Enum.map(fn _ -> :poolboy.checkout(RequestWorker) end)
+    # |> Enum.map(fn worker ->
+    #   GenStage.sync_subscribe(consumer, to: worker, min_demand: 0, max_demand: 1)
+    #   worker
+    # end)
 
-    Producer.next_request(producer)
+    # Logger.debug("Created #{inspect workers}")
 
-    Enum.each(workers, fn worker ->
-      GenStage.sync_subscribe(worker, to: producer, min_demand: 0, max_demand: 1)
-    end)
+    # Producer.next_request(producer)
+
+    # Enum.each(workers, fn worker ->
+    #   GenStage.sync_subscribe(worker, to: producer, min_demand: 0, max_demand: 1)
+    # end)
 
     :ok
   end

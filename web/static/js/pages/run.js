@@ -6,6 +6,7 @@ import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
 import moment from 'moment';
+import Rickshaw from 'rickshaw';
 
 const defaultFormat = 'MM/DD/YYYY h:mm a'
 
@@ -75,7 +76,6 @@ function model(api, channelFactory) {
         }
       },
       changes: () => {
-        console.warn("SUBSCRIBE TO CHANGES")
         yam.changes(onYamChanges);
       }
 
@@ -83,7 +83,7 @@ function model(api, channelFactory) {
     subscriptions: [
       (send, done) => {
         onYamChanges = (c) => {
-          console.log("On change!", c)
+          console.log(c)
         }
       }
     ]
@@ -129,6 +129,38 @@ function error(error, state) {
 }
 
 
+function chart(state, send) {
+  // function shapes() {
+  //   return shape.line()
+  //   .x((d) => 0)
+  //   .y((d) => 10)
+  //   .curve(shape.curveBasis)
+  // }
+  var div = document.createElement('div')
+
+  var graph = new Rickshaw.Graph({
+    element: div,
+    width: 800,
+    series: [
+      {
+        color: 'steelblue',
+        data: [ { x: 0, y: 23}, { x: 1, y: 15 }, { x: 2, y: 79 } ]
+      }, {
+        color: 'lightblue',
+        data: [ { x: 0, y: 30}, { x: 1, y: 20 }, { x: 2, y: 64 } ]
+      }
+    ]
+  });
+
+  var axes = new Rickshaw.Graph.Axis.Time( {
+    graph: graph
+  });
+  graph.render();
+  axes.render();
+  return div;
+}
+
+
 function runView(state, send) {
   if(!state.hasLoaded) {
     return loader('Loading that run...');
@@ -158,6 +190,7 @@ function runView(state, send) {
         <span class="text-muted">Started</span>
         <span>${moment.utc(run.inserted_at).format(defaultFormat)}</span>
         ${finished}
+        ${chart(state, send)}
       </h5>
     </div>
   `

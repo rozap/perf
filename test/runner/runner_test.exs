@@ -70,14 +70,14 @@ defmodule RunnerTest do
         requests: [
           %Request{
             method: "GET",
-            path: "https://aircooledrescue.com",
+            path: "https://aircooledrescue.com/api/people",
             params: %{"qux" => 42},
             body: "",
             headers: %{
               "Content-Type": "application/json"
             },
             concurrency: 2,
-            runlength: 50,
+            runlength: 500,
             timeout: 750,
             receive_timeout: 750
           }
@@ -89,6 +89,7 @@ defmodule RunnerTest do
 
     suite = Repo.insert!(suite)
     run = Repo.insert!(%Run{suite: suite, yam_ref: UUID.uuid1()})
+
     :ok = Runner.execute(run)
 
     :ok = with {_, handle} <- Handle.open(run.yam_ref) do

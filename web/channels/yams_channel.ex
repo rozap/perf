@@ -15,8 +15,6 @@ defmodule Perf.YamsChannel do
   end
 
   def handle_in("change:events", _, socket) do
-    Logger.warn "Asked for changes"
-
     res = case Handle.subscribe_changes(socket.assigns.handle) do
       :ok -> {:ok, %{}}
       err ->
@@ -35,7 +33,6 @@ defmodule Perf.YamsChannel do
   end
 
   def handle_info({:change, {_key, event}, {:from, pid}}, %{assigns: %{handle: pid}} = socket) do
-    Logger.info("Got a change from yam #{inspect event}")
     push socket, "change:events", event
     {:noreply, socket}
   end

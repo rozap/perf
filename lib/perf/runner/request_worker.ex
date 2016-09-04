@@ -1,19 +1,19 @@
 defmodule Perf.Runner.RequestWorker do
-  alias Experimental.GenStage
-  use GenStage
+  use GenServer
   alias Perf.Request
   alias Perf.Yams
   require Logger
   alias Perf.Runner.Events.{Success, Error}
+  alias Perf.Runner.{Producer, Consumer}
 
   @methods ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
   def start_link(_) do
-    GenStage.start_link(__MODULE__, [])
+    GenServer.start_link(__MODULE__, [])
   end
 
   def init(_) do
-    {:producer_consumer, %{}}
+    {:ok, %{request: :none, until: :none, consumer: :none, producer: :none}}
   end
 
   defp request(method, request) do
@@ -44,21 +44,18 @@ defmodule Perf.Runner.RequestWorker do
     {:error, %{key: :invalid_method, params: %{method: unknown}}}
   end
 
-  defp on_event(%Request{} = r) do
+  defp make_request(%Request{} = r) do
     case method_from_request(r.method) do
       {:ok, method} ->
+        Logger.debug("Making a request #{method} #{r.path}")
         {result, range} = time fn -> request(method, r) end
-        {r, result, range}
+        {result, range}
       err ->
-        {r, err, now()}
+        {err, now()}
     end
   end
 
-  defp on_event(ev), do: ev
-
-
-
-  defp to_result({request, {:error, %HTTPoison.Error{reason: reason}}, range}) do
+  defp to_result(request, {{:error, %HTTPoison.Error{reason: reason}}, range}) do
     {_, end_t} = range
 
     %Error{
@@ -73,7 +70,8 @@ defmodule Perf.Runner.RequestWorker do
     }
   end
 
-  defp to_result({request, {:error, error}, {_, end_t}}) do
+  defp to_result(request, {{:error, error}, range}) do
+    {_, end_t} = range
     %Error{
       at: end_t,
       reason: error,
@@ -81,7 +79,7 @@ defmodule Perf.Runner.RequestWorker do
     }
   end
 
-  defp to_result({request, {:ok, response}, range}) do
+  defp to_result(request, {{:ok, response}, range}) do
     {start_t, end_t} = range
     %HTTPoison.Response{body: body, status_code: status} = response
     size = byte_size(body)
@@ -96,30 +94,72 @@ defmodule Perf.Runner.RequestWorker do
     }
   end
 
-  defp to_result(ev), do: ev
 
-  def handle_events(events, _, state) do
-    results = events
-    |> Enum.map(fn event ->
-      event
-      |> on_event
-      |> to_result
-    end)
-    {:noreply, results, state}
+  def handle_info({:DOWN, ref, :process, pid, _reason}, %{producer: {pid, _ref}} = state) do
+    {:noreply, %{state | producer: :none}}
   end
 
-  def handle_info({ref, {:broadcast, event}}, state) do
-    GenStage.async_notify(self, {:broadcast, event})
-    {:noreply, [], state}
+  def handle_info({:DOWN, ref, :process, pid, _reason}, %{consumer: {pid, _ref}} = state) do
+    {:noreply, %{state | consumer: :none}}
   end
 
-  def handle_info(_, state) do
-    {:noreply, [], state}
+  def handle_cast(:schedule, %{request: :none}) do
+    Logger.error("Cannot schedule request when it's none!")
+    {:stop, :no_request}
+  end
+  def handle_cast(:schedule, %{until: :none}) do
+    Logger.error("Cannot schedule request when until is none!")
+    {:stop, :no_until}
+  end
+  def handle_cast(:schedule, %{consumer: :none}) do
+    Logger.error("Cannot schedule request when consumer is none!")
+    {:stop, :no_consumer}
+  end
+  def handle_cast(:schedule, %{producer: :none}) do
+    Logger.error("Cannot schedule request when producer is none!")
+    {:stop, :no_producer}
   end
 
 
-  def stop(pid) do
-    :poolboy.checkin(RequestWorker, pid)
+  def handle_cast(:schedule, %{request: request, until: until} = state) do
+    Logger.info("#{inspect self} worker is scheduled #{until}")
+    if Yams.key > until do
+      {producer_pid, _} = state.producer
+      Producer.on_complete(producer_pid)
+
+      {_, c_ref} = state.consumer
+      Process.demonitor(c_ref)
+      {:noreply, %{state | request: :none, until: :none, consumer: :none}}
+    else
+      result = to_result(request, make_request(request))
+
+      {c_pid, _} = state.consumer
+      Consumer.on_event(c_pid, result)
+
+      schedule(self)
+      {:noreply, state}
+    end
+
+  end
+
+  def handle_cast({:work_on, request, until, consumer_pid, producer_pid}, state) do
+    consumer = {consumer_pid, Process.monitor(consumer_pid)}
+    producer = {producer_pid, Process.monitor(producer_pid)}
+    schedule(self)
+    {:noreply, %{state |
+      request: request,
+      until: until,
+      consumer: consumer,
+      producer: producer
+    }}
+  end
+
+  defp schedule(pid) do
+    GenServer.cast(pid, :schedule)
+  end
+
+  def work_on(pid, request, until, consumer) do
+    GenServer.cast(pid, {:work_on, request, until, consumer, self})
   end
 
 end
