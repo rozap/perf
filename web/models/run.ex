@@ -26,8 +26,8 @@ defmodule Perf.Run do
   defimpl Poison.Encoder, for: Perf.Run do
     @attributes ~W(id inserted_at updated_at finished_at suite yam_ref)a
 
-    def encode(suite, _options) do
-      suite
+    def encode(run, _options) do
+      run
       |> Map.take(@attributes)
       |> Poison.encode!
     end

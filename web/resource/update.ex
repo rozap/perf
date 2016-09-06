@@ -2,6 +2,9 @@
 defmodule Perf.Resource.UpdateAny do
   alias Perf.Resource.State
   alias Perf.Resource.Read
+  alias Ecto.Changeset
+  import Perf.Resource
+
 
   def update(model, %State{params: params, socket: socket} = state) do
     case Read.handle(model, state) do
@@ -13,7 +16,10 @@ defmodule Perf.Resource.UpdateAny do
         )
         case Perf.Repo.update(cset) do
           {:ok, _} -> state
-          {:error, reason} -> struct(state, error: reason)
+          {:error, %Changeset{} = cset} ->
+            value_error(state, cset)
+          {:error, reason} -> 
+            struct(state, kind: :internal, error: reason)
         end
       err -> err
     end

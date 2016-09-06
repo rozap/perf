@@ -66,7 +66,7 @@ defmodule Perf.Runner.Producer do
     })
 
     workers = allocate_workers(request, state.workers)
-    until = Yams.key + Yams.ms_to_key(request.runlength)
+    until = Yams.key + Yams.seconds_to_key(request.runlength)
 
     workers
     |> Enum.each(fn {worker, _} ->

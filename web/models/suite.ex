@@ -18,7 +18,7 @@ defmodule Perf.Suite do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:name, :description, :trigger, :user_id])
-    |> validate_required([:name, :description, :trigger, :user_id])
+    |> validate_required([:name, :trigger, :user_id])
   end
 
   defimpl Poison.Encoder, for: Perf.Suite do

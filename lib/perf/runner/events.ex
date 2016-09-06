@@ -26,6 +26,15 @@ defmodule Perf.Runner.Events do
       ref: :none
   end
 
+  defp to_ms(m) do
+    m
+    |> Enum.map(fn 
+      {k, v} when k in [:start_t, :end_t, :at] -> {k, Perf.Yams.key_to_ms(v)}
+      other -> other
+    end)
+    |> Enum.into(%{})
+  end
+
   def encode(s, _) do
     type = s.__struct__
     |> Atom.to_string
@@ -37,6 +46,7 @@ defmodule Perf.Runner.Events do
     |> Map.from_struct
     |> Map.drop([:ref])
     |> Map.put(:type, type)
+    |> to_ms
     |> Poison.encode!
   end
 
@@ -52,5 +62,4 @@ defmodule Perf.Runner.Events do
   defimpl Poison.Encoder, for: Done do
     defdelegate encode(v, opts), to: Perf.Runner.Events
   end
-
 end

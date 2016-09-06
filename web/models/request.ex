@@ -31,8 +31,8 @@ defmodule Perf.Request do
   defimpl Poison.Encoder, for: Perf.Request do
     @attributes [:id, :suite_id, :method, :path, :body, :params, :body, :headers, :concurrency, :runlength, :timeout, :receive_timeout, :view]
 
-    def encode(suite, _options) do
-      suite
+    def encode(request, _options) do
+      request
       |> Map.take(@attributes)
       |> Poison.encode!
     end

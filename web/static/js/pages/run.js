@@ -6,14 +6,16 @@ import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
 import moment from 'moment';
-import Rickshaw from 'rickshaw';
+import dc from 'dc';
+import crossfilter from 'crossfilter';
+import * as d3 from 'd3';
 
 const defaultFormat = 'MM/DD/YYYY h:mm a'
 
 class Loadable {
   constructor(thing) {
     this._error = false;
-    if(thing) {
+    if (thing) {
       this.load(thing);
     } else {
       this.unload();
@@ -51,39 +53,163 @@ class Loadable {
   }
 }
 
+function dateToSeconds(date) {
+  return moment.utc(date).unix();
+}
+function secondsToDate(seconds) {
+  return moment(seconds * 1000);
+}
+function nanoToSeconds(nanos) {
+  return nanos / (1000 * 1000);
+}
+
+function domainOf(run) {
+  const duration = run.suite.requests.reduce((acc, req) => {
+    return req.runlength + acc;
+  }, 0);
+  const startSeconds = dateToSeconds(run.inserted_at);
+  const endSeconds = startSeconds + duration;
+
+  return {
+    startSeconds,
+    endSeconds,
+    duration
+  }
+}
+
+var i = 0;
+function latencyChart({ndx, run}, send) {
+  const el = document.createElement('div');
+  const chart = dc.seriesChart(el);
+
+
+  const {
+    startSeconds, endSeconds
+  } = domainOf(run)
+
+  // const latencyDimension = ndx.filter((d) => d[0] === 'latency')
+
+  var measureDimension = ndx.dimension((d) => {
+    return d.slice(0, 4);
+  });
+  measureDimension.filter((d) => d[0] === 'latency');
+  const runGroup = measureDimension.group().reduceSum((d) => {
+    return _.last(d)
+  });
+
+  // Domain should be start_time + runlength
+  chart
+    .width(768)
+    .height(480)
+    .chart(function(c) { 
+      return dc
+      .lineChart(c)
+      .interpolate('basis-open');
+    })
+    .x(d3.scale.linear().domain([startSeconds,endSeconds]))
+    .brushOn(false)
+    .yAxisLabel("Latency, ms")
+    .xAxisLabel("Time")
+    .clipPadding(10)
+    .elasticY(true)
+    .dimension(measureDimension)
+    .group(runGroup)
+    .mouseZoomable(false)
+    .seriesAccessor((d) => d.key[3])
+    .keyAccessor((d) => d.key[1])
+    .valueAccessor((d) => d.value)
+
+  chart.xAxis().tickFormat((d) => {
+    return 't' + (d - startSeconds);
+  });
+
+  chart.yAxis().tickFormat((d) => {
+    return d3.format(',d')(d);
+  });
+  chart.margins().left += 40;
+  
+  dc.renderAll();
+
+  return {
+    latencyChart: el
+  };
+}
+
+
+
 function model(api, channelFactory) {
   var yam;
   var onYamChanges;
+  var chart;
 
+  const ndx = crossfilter([]);
+  window.ndx = ndx;
   return {
     state: {
       run: false,
-      hasLoaded: false
+      hasLoaded: false,
+      latencyChart: false,
+      ndx
     },
     namespace: 'run',
     reducers: {
       show,
-      error
+      error,
+      setChart: (chart, state) => {
+        return {...state, ...chart};
+      }
     },
     effects: {
       getRun: _.partial(getRun, api),
       initYam: (run, state, send, done) => {
-        yam = channelFactory.create('yams', {yam_ref: run.yam_ref});
+        yam = channelFactory.create('yams', {
+          run_id: run.id
+        });
+        yam.on('connected', () => {
+          send('run:yamConnected', {}, done)
+        });
       },
+      yamConnected: (_params, state, send, done) => {
+        send('run:initChart', {}, done)
+      },
+      initChart: (_params, state, send, done) => {
+        send('run:onChartInit', latencyChart(state, send), done);
+        
+        const {
+          startSeconds,
+          endSeconds
+        } = domainOf(state.run);
+        send('run:slice', {startSeconds, endSeconds}, done);
+      },
+      onChartInit: (chart, state, send, done) => {
+        send('run:setChart', chart, done);
+      },
+
       slice: (params, state, send, done) => {
-        if(yam) {
+        if (yam) {
           slice(yam, params, state, send, done)
         }
       },
       changes: () => {
         yam.changes(onYamChanges);
+      },
+      change: ({events}, state, send, done) => {
+        const expanded = _.flatten(_.map(events, (measurements, measure) => {
+          return _.flatten(measurements.map((event) => {
+            return _.map(event.stats, (stat, statName) => {
+              return [measure, event.end_t_seconds, event.request_id, statName, stat]
+            })
+          }), true)
+        }), true);
+        state.ndx.add(expanded);
+        dc.redrawAll();
       }
 
     },
     subscriptions: [
       (send, done) => {
         onYamChanges = (c) => {
-          console.log(c)
+          send('run:change', c, done);
         }
       }
     ]
@@ -95,26 +221,31 @@ function isInProgress(run) {
 }
 
 function getRun(api, {id}, state, send, done) {
-  api.get('run', {id})
-  .on('error', (error) => send('run:error', error, done))
-  .on('ok', (resp) => {
-    send('run:show', resp, done);
-    send('run:initYam', resp, done);
-  });
+  api.get('run', {
+    id
+  })
+    .on('error', (error) => send('run:error', error, done))
+    .on('ok', (resp) => {
+      send('run:show', resp, done);
+      send('run:initYam', resp, done);
+    });
 }
 
-function slice(yam, params, state, send, done) {
-  yam.slice(params)
-  .on('error', (error) => send('run:error', error, done))
-  .on('ok', (resp) => {
-    console.log("Got slice", resp);
+function slice(yam, {startSeconds,endSeconds}, state, send, done) {
+  yam.slice({
+    start_t_seconds: startSeconds,
+    end_t_seconds: endSeconds
   })
+    .on('error', (error) => send('run:error', error, done))
+    .on('ok', (resp) => {
+      send('run:change', resp, done);
+    })
 }
 
 
 function show(run, state) {
   return {
-    ...state,
+      ...state,
     hasLoaded: true,
     run
   }
@@ -122,61 +253,31 @@ function show(run, state) {
 
 function error(error, state) {
   return {
-    ...state,
+      ...state,
     hasLoaded: true,
     error: error
   }
 }
 
 
-function chart(state, send) {
-  // function shapes() {
-  //   return shape.line()
-  //   .x((d) => 0)
-  //   .y((d) => 10)
-  //   .curve(shape.curveBasis)
-  // }
-  var div = document.createElement('div')
-
-  var graph = new Rickshaw.Graph({
-    element: div,
-    width: 800,
-    series: [
-      {
-        color: 'steelblue',
-        data: [ { x: 0, y: 23}, { x: 1, y: 15 }, { x: 2, y: 79 } ]
-      }, {
-        color: 'lightblue',
-        data: [ { x: 0, y: 30}, { x: 1, y: 20 }, { x: 2, y: 64 } ]
-      }
-    ]
-  });
-
-  var axes = new Rickshaw.Graph.Axis.Time( {
-    graph: graph
-  });
-  graph.render();
-  axes.render();
-  return div;
-}
-
-
 function runView(state, send) {
-  if(!state.hasLoaded) {
+  if (!state.hasLoaded) {
     return loader('Loading that run...');
   }
-  if(!state.run) {
+  if (!state.run) {
     return;
   }
-  const {run} = state;
+  const {
+    run
+  } = state;
 
-  if(isInProgress(run)) {
+  if (isInProgress(run)) {
     send('run:changes')
   }
 
-  var finished = html`<span>In progress</span>`;
-  if(!isInProgress(run)) {
-    finished = html`<span>
+  var finished = html `<span>In progress</span>`;
+  if (!isInProgress(run)) {
+    finished = html `<span>
       <span class="text-muted">Finished</span>
       <span>
         ${moment.utc(run.finished_at).format(defaultFormat)}
@@ -184,26 +285,28 @@ function runView(state, send) {
     </span>`
   }
 
-  return html`
+  return html `
     <div>
       <h5>
         <span class="text-muted">Started</span>
         <span>${moment.utc(run.inserted_at).format(defaultFormat)}</span>
         ${finished}
-        ${chart(state, send)}
+        ${state.latencyChart}
       </h5>
     </div>
   `
 }
 
 function view(appState, prev, send) {
-  const {params, run: state} = appState;
+  const {
+    params, run: state
+  } = appState;
 
-  if(!state.hasLoaded) {
+  if (!state.hasLoaded) {
     send('run:getRun', params);
   }
 
-  return html`
+  return html `
     <div class="app">
       ${menu(appState, send)}
       ${flash(appState, send)}
@@ -218,6 +321,7 @@ function view(appState, prev, send) {
   `
 }
 
-export default {
+export
+default {
   model, view
 }

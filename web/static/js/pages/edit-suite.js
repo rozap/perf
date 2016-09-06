@@ -1,8 +1,11 @@
 import choo from "choo"
 import html from "choo/html"
 import _ from "underscore";
-import {putIn, updateIn, errorClass} from '../util';
-import queryString from'query-string';
+import {
+  putIn, updateIn, errorClass
+}
+from '../util';
+import queryString from 'query-string';
 import select from "./widgets/select";
 import keyvalue from "./widgets/key-value";
 import loader from './widgets/loader';
@@ -10,6 +13,7 @@ import errorView from './widgets/error';
 import successView from './widgets/success-floating';
 import menu from './widgets/menu';
 import flash from './widgets/flash';
+import fieldError from './widgets/field-error';
 
 
 function emptySuite() {
@@ -32,7 +36,9 @@ function newRequest() {
     method: 'GET',
     verified: true,
     path: "https://foo.com/bar/baz",
-    params: {"qux": 42},
+    params: {
+      "qux": 42
+    },
     body: '',
     headers: {
       'Content-Type': 'application/json'
@@ -49,7 +55,10 @@ function newRequest() {
 
 function model(store) {
   return {
-    state: { suite: false, error: false },
+    state: {
+      suite: false,
+      error: false
+    },
     namespace: 'edit',
     reducers: {
       updateName,
@@ -62,6 +71,7 @@ function model(store) {
       updateReqMethod,
       updateReqBody,
       updateReqPath,
+      updateRunlength,
       toggleHeadersView,
       toggleParamsView,
       toggleBodyView,
@@ -77,57 +87,71 @@ function model(store) {
       createRequest: _.partial(createRequest, store),
       updateRequest: _.partial(updateRequest, store),
       createRun: _.partial(createRun, store),
-      success
     },
   }
 }
 
 function triggerChange(kind, state) {
   let suite = state.suite;
-  let trigger = {kind, opts: {}};
-  suite = {...suite, trigger};
-  return {...state, suite};
+  let trigger = {
+    kind, opts: {}
+  };
+  suite = {...suite, trigger
+  };
+  return {...state, suite
+  };
 }
 
-function getSuite(store, {id}, state, send, done) {
-  store.get('suite', {id})
-  .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (suite) => send('edit:updateSuite', suite, done));
+function getSuite(store, {
+  id
+}, state, send, done) {
+  store.get('suite', {
+    id
+  })
+    .on('error', (e) => send('edit:error', e, done))
+    .on('ok', (suite) => send('edit:updateSuite', suite, done));
 }
 
-function saveSuite(store, _data, {suite}, send, done) {
+function saveSuite(store, _data, {
+  suite
+}, send, done) {
   store.update('suite', suite)
-  .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (suite) => floatySuccess('Your suite has been updated', send, done));
+    .on('error', (e) => send('edit:error', e, done))
+    .on('ok', (suite) => floatySuccess('Your suite has been updated', send, done));
 }
 
 function createRequest(store, request, state, send, done) {
-  store.create('request', {...request, suite_id: state.suite.id})
-  .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (request) => {
-    send('edit:appendRequest', request, done);
-    floatySuccess('Your request has been added', send, done);
-  });
+  store.create('request', {...request, suite_id: state.suite.id
+  })
+    .on('error', (e) => send('edit:error', e, done))
+    .on('ok', (request) => {
+      send('edit:appendRequest', request, done);
+      floatySuccess('Your request has been added', send, done);
+    });
 }
 
 function updateRequest(store, request, state, send, done) {
   store.update('request', request)
-  .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (request) => {
-    floatySuccess('Your request has been updated', send, done);
-  });
+    .on('error', (e) => send('edit:error', e, done))
+    .on('ok', (request) => {
+      floatySuccess('Your request has been updated', send, done);
+    });
 }
 
-function createRun(store, _data, {suite}, send, done) {
-  store.create('run', {suite_id: suite.id})
-  .on('error', (e) => send('edit:error', e, done))
-  .on('ok', (run) => {
-    window.location.href = `/app/runs/${run.id}`;
+function createRun(store, _data, {
+  suite
+}, send, done) {
+  store.create('run', {
+    suite_id: suite.id
   })
+    .on('error', (e) => send('edit:error', e, done))
+    .on('ok', (run) => {
+      window.location.href = `/app/runs/${run.id}`;
+    })
 }
 
 function floatySuccess(message, send, done) {
-  send('edit:success', message, done);
+  send('edit:showSuccess', message, done);
   setTimeout(() => {
     send('edit:clearSuccess', done);
   }, 1500)
@@ -142,23 +166,25 @@ const saveRequest = _.debounce((send, request) => {
 }, 1000);
 
 function updateSuite(suite, state) {
-  return {...state, suite: suite};
+  return {...state, suite: suite
+  };
 }
 
 function error(error, state) {
-  return {...state, error: error};
+  return {...state, error: error
+  };
 }
+
 function showSuccess(title, state) {
-  return {...state, success: title};
+  return {...state,
+    success: title,
+    error: false
+  };
 }
+
 function clearSuccess(_nothing, state) {
-  return {...state, success: false};
-}
-function success(title, state, send, done) {
-  send('edit:showSuccess', title, done);
-  setTimeout(() => {
-    // send('edit:clearSuccess', {}, done);
-  }, 2000)
+  return {...state, success: false
+  };
 }
 
 function intervalChange(interval, state) {
@@ -178,51 +204,74 @@ function updateName(name, state) {
   return putIn(state, 'suite.name', name);
 }
 
-function updateReqMethod({req, to}, state) {
+function updateReqMethod({
+  req, to
+}, state) {
   return updateIn(state, 'suite.requests.method', req, to);
 }
 
-function updateReqHeaders({req, headers}, state) {
+function updateReqHeaders({
+  req, headers
+}, state) {
   return updateIn(state, 'suite.requests.headers', req, headers);
 }
 
-function updateReqParams({req, params}, state) {
+function updateReqParams({
+  req, params
+}, state) {
   return updateIn(state, 'suite.requests.params', req, params);
 }
 
-function updateReqBody({req, body}, state) {
+function updateReqBody({
+  req, body
+}, state) {
   return updateIn(state, 'suite.requests.body', req, body);
 }
 
-function updateReqPath({req, path}, state) {
+function updateReqPath({
+  req, path
+}, state) {
   return updateIn(state, 'suite.requests.path', req, path);
 }
 
-function toggleHeadersView({req}, state) {
+function updateRunlength({
+  req, runlength
+}, state) {
+  return updateIn(state, 'suite.requests.runlength', req, runlength);
+}
+
+function toggleHeadersView({
+  req
+}, state) {
   return updateIn(state, 'suite.requests.headersShowing', req, !req.headersShowing);
 }
 
-function toggleParamsView({req}, state) {
+function toggleParamsView({
+  req
+}, state) {
   return updateIn(state, 'suite.requests.paramsShowing', req, !req.paramsShowing);
 }
 
-function toggleBodyView({req}, state) {
+function toggleBodyView({
+  req
+}, state) {
   return updateIn(state, 'suite.requests.bodyShowing', req, !req.bodyShowing);
 }
 
-function toggleRequestView({req}, state) {
+function toggleRequestView({
+  req
+}, state) {
   return updateIn(state, 'suite.requests.isShowing', req, !req.isShowing);
 }
 
-function manualTriggerView(suite, send) {
-}
+function manualTriggerView(suite, send) {}
 
 function genWebhookUrl(suite) {
   return 'TODO webhook url'
 }
 
 function gitTriggerView(suite, send) {
-  return html`
+  return html `
     <div>
       <h4>Add this webhook url to your github config</h4>
       <div class="mono">
@@ -233,7 +282,7 @@ function gitTriggerView(suite, send) {
 }
 
 function intervalTriggerView(suite, send) {
-  return html`
+  return html `
   <div>
     <label >Run this suite every</label>
     <input
@@ -265,8 +314,10 @@ const triggers = {
 }
 
 function triggerView(state, send) {
-  let {suite: suite} = state;
-  return html`
+  let {
+    suite: suite
+  } = state;
+  return html `
     <div class="pure-control-group">
       <label class="inline ${errorClass('trigger', state)}"
         for="trigger">
@@ -291,10 +342,14 @@ function triggerView(state, send) {
 }
 
 function headersView(req, send) {
-  const {headers} = req;
+  const {
+    headers
+  } = req;
 
   const dispatch = (newHeaders) => {
-    send('edit:updateReqHeaders', {req, headers: newHeaders});
+    send('edit:updateReqHeaders', {
+      req, headers: newHeaders
+    });
     saveRequest(send, req);
   };
 
@@ -302,16 +357,21 @@ function headersView(req, send) {
     'Headers',
     headers,
     dispatch,
-    req.headersShowing,
-    () => send('edit:toggleHeadersView', {req})
+    req.headersShowing, () => send('edit:toggleHeadersView', {
+      req
+    })
   );
 }
 
 function queryParamView(req, send) {
-  const {params} = req;
+  const {
+    params
+  } = req;
 
   const dispatch = (params) => {
-    send('edit:updateReqParams', {req, params});
+    send('edit:updateReqParams', {
+      req, params
+    });
     saveRequest(send, req);
   }
 
@@ -319,27 +379,32 @@ function queryParamView(req, send) {
     'Query Parameters',
     params,
     dispatch,
-    req.paramsShowing,
-    () => send('edit:toggleParamsView', {req})
+    req.paramsShowing, () => send('edit:toggleParamsView', {
+      req
+    })
   );
 }
 
 function bodyView(req, send) {
-  const {method} = req;
-  if(method === 'GET' || method === 'DELETE') return;
+  const {
+    method
+  } = req;
+  if (method === 'GET' || method === 'DELETE') return;
   const render = () => {
     const onchange = (e) => {
-      send('edit:updateReqBody', {req, body: e.target.value});
+      send('edit:updateReqBody', {
+        req, body: e.target.value
+      });
       saveRequest(send, req);
     };
 
-    if(!req.bodyShowing) return '';
-    return html`
+    if (!req.bodyShowing) return '';
+    return html `
       <textarea onchange=${onchange}>${req.body}</textarea>
     `
   };
 
-  return html`
+  return html `
     <div class="request-body">
       <h5>
         <a href="javascript:void(0)"
@@ -353,21 +418,31 @@ function bodyView(req, send) {
   `
 }
 
-function requestView(req, send) {
+function requestView(state, req, send) {
   const qs = queryString.stringify(req.params);
   const toggleRequest = () => {
-    send('edit:toggleRequestView', {req});
+    send('edit:toggleRequestView', {
+      req
+    });
   };
 
   const onPathChange = (e) => {
-    send('edit:updateReqPath', {req, path: e.target.value});
-    saveRequest(send, req)
+    send('edit:updateReqPath', {
+      req, path: e.target.value
+    });
+    saveRequest(send, req);
   };
+  const onRunlengthChange = (e) => {
+    send('edit:updateRunlength', {
+      req, runlength: e.target.value
+    });
+    saveRequest(send, req);
+  }
 
   const render = () => {
-    if(!req.isShowing) return;
+    if (!req.isShowing) return;
 
-    return html`
+    return html `
     <div class="request-options">
       <div class="method-path">
         <div class="method">
@@ -402,6 +477,20 @@ function requestView(req, send) {
           onkeyup=${onPathChange}
         />
       </div>
+      <div class="request-options">
+        <div class="run-length">
+          ${fieldError(state, 'runlength')}
+          <label>Run Length</label>
+          <input
+            min="1"
+            step="1"
+            name="run length"
+            value="${req.runlength}"
+            onkeyup=${onRunlengthChange}
+          />
+        </div>
+      </div>
+
 
       ${headersView(req, send)}
       ${queryParamView(req, send)}
@@ -410,7 +499,7 @@ function requestView(req, send) {
     `;
   };
 
-  return html`
+  return html `
     <div class="request">
       <h4>
         <a href="javascript:void(0)"
@@ -425,12 +514,14 @@ function requestView(req, send) {
   `
 }
 
-function requestListView({requests}, send) {
+function requestListView(state, send) {
+  const requests = state.suite.requests;
+
   const appendRequest = () => {
     send('edit:createRequest', newRequest());
   }
 
-  return html`
+  return html `
     <div class="separated requests">
       <div class="heading">
         <h4 class="text-muted">Run these requests</h4>
@@ -444,19 +535,18 @@ function requestListView({requests}, send) {
       </div>
 
 
-      ${requests.map((req) => requestView(req, send))}
+      ${requests.map((req) => requestView(state, req, send))}
     </div>
   `;
 }
 
 
 function suiteView(state, send) {
-  const {suite: suite} = state;
+  const {
+    suite: suite
+  } = state;
 
-  if(state.error) {
-    return;
-  }
-  if(!suite) {
+  if (!suite) {
     return loader('Loading your suite');
   }
 
@@ -469,10 +559,10 @@ function suiteView(state, send) {
     send('edit:createRun');
   }
 
-  return html`
+  return html `
   <div class="edit-suite">
     ${successView(state, state.success)}
-    ${errorView(state)}
+    ${errorView(state, {hideFieldErrors: true})}
     <div class="heading">
       <h4 class="text-muted">${suite.name}</h4>
 
@@ -495,7 +585,7 @@ function suiteView(state, send) {
         </div>
 
         ${triggerView(state, send)}
-        ${requestListView(suite, send)}
+        ${requestListView(state, send)}
       </fieldset>
     </form>
   </div>
@@ -505,18 +595,21 @@ function suiteView(state, send) {
 
 function view(appState, prev, send) {
 
-  const {params} = appState;
+  const {
+    params
+  } = appState;
   const getSuite = () => {
     send('edit:getSuite', params);
   }
 
-  const {edit: state} = appState;
-  return html`
+  const {
+    edit: state
+  } = appState;
+  return html `
     <div class="app" onload=${getSuite}>
       ${menu(appState, send)}
       <div class="content">
         ${flash(appState, send)}
-        ${flash(appState.edit, send)}
 
         ${suiteView(state, send)}
       </div>
@@ -524,6 +617,7 @@ function view(appState, prev, send) {
   `
 }
 
-export default {
+export
+default {
   model, view, emptySuite
 }

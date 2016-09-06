@@ -11,7 +11,7 @@ var gulp = require('gulp'),
   watchify = require('watchify'),
   babel = require('babelify'),
   colors = require('colors');
-  // elm = require('gulp-elm');
+// elm = require('gulp-elm');
 
 var paths = {
   js: {
@@ -25,7 +25,7 @@ var paths = {
     },
   },
 
-  elm : {
+  elm: {
     src: './web/elm/*.elm',
     dest: './priv/static/js/',
     watch: ['./web/elm/*elm']
@@ -53,29 +53,13 @@ var bundler = watchify(browserify(paths.js.app.src, {
   debug: true
 }).transform(babel));
 
-
-// gulp.task('elm-init', elm.init);
-
-// gulp.task('elm', ['elm-init'], function() {
-//   console.log("-> Compiling elm")
-//   return gulp.src(paths.elm.src)
-//     .pipe(elm.bundle('elm-app.js'))
-//     .on('error', function(err) {
-//       console.error(err.message);
-//       this.emit('end');
-//     })
-//     .pipe(gulp.dest(paths.elm.dest));
-// });
-
-
 gulp.task('app', function() {
   bundler.bundle()
     .on('error', function(err) {
-      // console.log(err);
       var err = "File: " + err.filename +
-       " Line: " + err.loc.line +
-       ":" + err.loc.column +
-       " Frame: " + err.codeFrame;
+        " Line: " + err.loc.line +
+        ":" + err.loc.column +
+        " Frame: " + err.codeFrame;
       console.log(colors.red(err));
       this.emit('end');
     })
@@ -89,8 +73,6 @@ gulp.task('app', function() {
 
   console.log("-> Done compiling js")
 });
-
-
 
 gulp.task('less', function() {
   console.log("Rebuilding less files...");
@@ -112,14 +94,11 @@ gulp.task('images', function() {
     .pipe(gulp.dest(paths.images.dest));
 });
 
-
 gulp.task('rebuild', function() {
   gulp.watch(paths.js.app.watch, ['app']);
   // gulp.watch(paths.elm.watch, ['elm']);
   gulp.watch(paths.less.watch, ['less']);
 });
-
-
 
 gulp.task('watch', ['app', 'less', 'fonts', 'images', 'rebuild']);
 // gulp.task('deploy', ['app', 'less', 'fonts', 'images']);
