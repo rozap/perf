@@ -20,10 +20,6 @@ defmodule Perf.Yams.Query do
     bucket(state, {:nanoseconds, Yams.ms_to_key(ms)})
   end
 
-  defp apply_map(%State{stream: stream}, func) do
-
-  end
-
   def bucket(%State{stream: stream, range: {from_ts, _}} = state, {:nanoseconds, nanoseconds}) do
     chunked = Stream.chunk_by(stream, fn {time, _} = e ->
       Float.floor((time - from_ts) / nanoseconds)
@@ -36,14 +32,12 @@ defmodule Perf.Yams.Query do
     struct(state, stream: chunked)
   end
 
-
   defp reduce(bucket_stream, acc, func) do
     Stream.map(bucket_stream, fn bucket ->
       {key, value} = Enum.reduce(bucket.data, acc, func)
       struct(bucket, aggregations: [{key, value} | bucket.aggregations])
     end)
   end
-
 
   defp group(%State{} = state, field_name, group_name, func) do
     key = "#{group_name}_#{field_name}"
@@ -81,22 +75,6 @@ defmodule Perf.Yams.Query do
     end)
 
     struct(state, stream: new_stream)
-  end
-
-  def percentiles(bucket_stream, places, key_fn) do
-    Stream.map(bucket_stream, fn bucket ->
-      values = Enum.filter_map(
-        bucket,
-        fn {_, event} -> key_fn.(event) end,
-        fn {_, event} -> key_fn.(event) end
-      )
-
-      ps = Enum.map(places, fn p ->
-        Statistics.percentile(values, p)
-      end)
-
-      {bucket, ps}
-    end)
   end
 
   def as_stream!(%State{stream: stream}), do: stream

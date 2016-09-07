@@ -81,7 +81,8 @@ defmodule Perf.Yams.Handle do
   end
 
   def changes(pid) do
-    Stream.resource(
+    start_t = Perf.Yams.key
+    stream = Stream.resource(
       fn ->
         GenServer.call(pid, {:changes, self})
       end,
@@ -93,6 +94,9 @@ defmodule Perf.Yams.Handle do
       end,
       fn _ -> :ok end
     )
+
+
+    %Query.State{range: {start_t, :none}, stream: stream}
   end
 
   def subscribe_changes(pid) do

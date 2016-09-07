@@ -100,6 +100,7 @@ defmodule Perf.Runner.Producer do
   defp apply_new_pool(state, new_pool) do
     state = case MapSet.size(new_pool) do
       0 ->
+        Logger.warn("DONE")
         Consumer.on_event(state.consumer, %Done{
           at: Yams.key,
           ref: make_ref

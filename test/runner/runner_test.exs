@@ -3,7 +3,7 @@ defmodule RunnerTest do
   alias Perf.{Runner, Run, Suite, User, Repo, Request}
   alias Perf.Runner.{Consumer, Producer}
   alias Perf.Runner.Events.{Done, Error, Success}
-  alias Perf.Yams.Handle
+  alias Perf.Yams.{Handle, Query}
 
   setup_all do
     Runner.start_link
@@ -45,6 +45,7 @@ defmodule RunnerTest do
     :ok = with {_, handle} <- Handle.open(run.yam_ref) do
       errors = handle
       |> Handle.changes
+      |> Query.as_stream!
       |> Stream.take_while(fn
         {_, %Done{}} -> false
         _ -> true
@@ -95,6 +96,7 @@ defmodule RunnerTest do
     :ok = with {_, handle} <- Handle.open(run.yam_ref) do
       success = handle
       |> Handle.changes
+      |> Query.as_stream!
       |> Stream.take_while(fn
         {_, %Done{}} -> false
         _ -> true

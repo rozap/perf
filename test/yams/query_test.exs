@@ -1,4 +1,4 @@
-defmodule StatsTest do
+defmodule QueryTest do
   use ExUnit.Case
   alias Perf.Yams
   alias Perf.Yams.Query

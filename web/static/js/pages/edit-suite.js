@@ -138,9 +138,7 @@ function updateRequest(store, request, state, send, done) {
     });
 }
 
-function createRun(store, _data, {
-  suite
-}, send, done) {
+function createRun(store, _data, {suite}, send, done) {
   store.create('run', {
     suite_id: suite.id
   })

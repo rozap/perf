@@ -2,6 +2,7 @@ defmodule YamsTest do
   use ExUnit.Case
   alias Perf.Yams.Handle
   alias Perf.Yams
+  alias Perf.Yams.Query
 
   setup do
     Yams.start_link
@@ -20,7 +21,8 @@ defmodule YamsTest do
     to_ts = Yams.key
 
     values = Handle.stream!(h, {from_ts, to_ts})
-    |> Stream.map(fn {key, value} -> value end)
+    |> Query.as_stream!
+    |> Stream.map(fn {_, v} -> v end)
     |> Enum.into([])
 
     assert values == [
@@ -37,7 +39,8 @@ defmodule YamsTest do
     task = Task.async(fn ->
       {_, pid} = Handle.open(ref)
       Handle.changes(pid)
-      |> Stream.map(fn {key, value} -> value end)
+      |> Query.as_stream!
+      |> Stream.map(fn {_, v} -> v end)
       |> Enum.into([])
     end)
 
@@ -60,20 +63,22 @@ defmodule YamsTest do
     ]
 
     values = Handle.stream!(h, {from_ts, to_ts})
-    |> Stream.map(fn {key, value} -> value end)
+    |> Query.as_stream!
+    |> Stream.map(fn {_, v} -> v end)
     |> Enum.into([])
 
     assert values == changes
   end
 
-  test "can get a shut down a changes stream" do
+  test "can shut down a changes stream" do
 
     ref = UUID.uuid1()
 
     task = Task.async(fn ->
       {_, pid} = Handle.open(ref)
       Handle.changes(pid)
-      |> Stream.map(fn {key, value} -> value end)
+      |> Query.as_stream!
+      |> Stream.map(fn {_, v} -> v end)
       |> Enum.into([])
     end)
 
