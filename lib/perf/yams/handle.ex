@@ -1,5 +1,6 @@
 defmodule Perf.Yams.Handle do
   use GenServer
+  alias Perf.Yams.Query
 
   def init([key: key]) do
     {:ok, ref} = Application.get_env(:perf, :yams)[:space]
@@ -47,7 +48,7 @@ defmodule Perf.Yams.Handle do
       fn {_, ref} -> :eleveldb.iterator_close(ref) end
     )
 
-    {:reply, stream, state}
+    {:reply, {:ok, stream}, state}
   end
 
   def handle_call({:changes, who}, _, state) do
@@ -65,7 +66,10 @@ defmodule Perf.Yams.Handle do
   end
 
   def stream!(pid, range) do
-    GenServer.call(pid, {:stream, range})
+    case GenServer.call(pid, {:stream, range}) do
+      {:ok, stream} -> %Query.State{range: range, stream: stream}
+      err -> err
+    end
   end
 
   def put(pid, key, value) do
