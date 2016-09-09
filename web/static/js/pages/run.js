@@ -101,7 +101,7 @@ function latencyChart({ndx, run}, send) {
   chart
     .width(768)
     .height(480)
-    .chart(function(c) { 
+    .chart(function(c) {
       return dc
       .lineChart(c)
       .interpolate('basis-open');
@@ -127,7 +127,7 @@ function latencyChart({ndx, run}, send) {
     return d3.format(',d')(d);
   });
   chart.margins().left += 40;
-  
+
   dc.renderAll();
 
   return {
@@ -174,20 +174,20 @@ function model(api, channelFactory) {
       },
       initChart: (_params, state, send, done) => {
         send('run:onChartInit', latencyChart(state, send), done);
-        
+
         const {
           startSeconds,
           endSeconds
         } = domainOf(state.run);
-        send('run:slice', {startSeconds, endSeconds}, done);
+        send('run:query', {startSeconds, endSeconds, query: []}, done);
       },
       onChartInit: (chart, state, send, done) => {
         send('run:setChart', chart, done);
       },
 
-      slice: (params, state, send, done) => {
+      query: (params, state, send, done) => {
         if (yam) {
-          slice(yam, params, state, send, done)
+          query(yam, params, state, send, done)
         }
       },
       changes: () => {
@@ -221,9 +221,7 @@ function isInProgress(run) {
 }
 
 function getRun(api, {id}, state, send, done) {
-  api.get('run', {
-    id
-  })
+  api.get('run', {id})
     .on('error', (error) => send('run:error', error, done))
     .on('ok', (resp) => {
       send('run:show', resp, done);
@@ -231,13 +229,11 @@ function getRun(api, {id}, state, send, done) {
     });
 }
 
-function slice(yam, {startSeconds,endSeconds}, state, send, done) {
-  yam.slice({
-    start_t_seconds: startSeconds,
-    end_t_seconds: endSeconds
-  })
+function query(yam, params, state, send, done) {
+  yam.query(params)
     .on('error', (error) => send('run:error', error, done))
     .on('ok', (resp) => {
+      console.log(resp);
       send('run:change', resp, done);
     })
 }

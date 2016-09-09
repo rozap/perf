@@ -149,8 +149,12 @@ class Yams extends Store {
     return this._underlying.on('change:events', cb)
   }
 
-  slice(params) {
-    return this.send('list:events', params);
+  query({startSeconds, endSeconds, query}) {
+    return this.send('query:events', {
+      start_t_seconds: startSeconds,
+      end_t_seconds: endSeconds,
+      query
+    });
   }
 }
 

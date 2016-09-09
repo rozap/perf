@@ -13,14 +13,18 @@ defmodule Perf.Yams.Query do
     defstruct start_t: nil, end_t: nil, aggregations: %{}
   end
 
-  def bucket(state, {:seconds, seconds}) do
-    bucket(state, {:nanoseconds, Yams.seconds_to_key(seconds)})
+
+  ##
+  # Convert tests to use /2 args here instead of tuple for {unit, quant}
+  # will make interpreter easier
+  def bucket(state, seconds, :seconds) do
+    bucket(state, Yams.seconds_to_key(seconds), :seconds)
   end
-  def bucket(state, {:milliseconds, ms}) do
-    bucket(state, {:nanoseconds, Yams.ms_to_key(ms)})
+  def bucket(state, ms, :milliseconds) do
+    bucket(state, Yams.ms_to_key(ms), :nanoseconds)
   end
 
-  def bucket(%State{stream: stream, range: {from_ts, _}} = state, {:nanoseconds, nanoseconds}) do
+  def bucket(%State{stream: stream, range: {from_ts, _}} = state, nanoseconds, :nanoseconds) do
     chunked = Stream.chunk_by(stream, fn {time, _} = e ->
       Float.floor((time - from_ts) / nanoseconds)
     end)
@@ -77,15 +81,66 @@ defmodule Perf.Yams.Query do
     struct(state, stream: new_stream)
   end
 
-  def as_stream!(%State{stream: stream}), do: stream
 
-  def as_aggregate!(%State{stream: stream}) do
-    Stream.map(stream, fn %Bucket{aggregations: aggs} = b ->
+
+  defp replace_bindings([{varname, _, nil} | rest]) do
+    [{
+      {:., [], [
+        {:__aliases__, [alias: false], [:Map]},
+        :get
+      ]}, [],
+      [Macro.var(:row, nil), Atom.to_string(varname)]
+    } | replace_bindings(rest)]
+  end
+
+  defp replace_bindings([{e, m, args} | rest]) do
+    [{e, m, replace_bindings(args)} | replace_bindings(rest)]
+  end
+
+  defp replace_bindings({comparator, meta, args}) do
+    {comparator, meta, replace_bindings(args)}
+  end
+  defp replace_bindings(prim), do: prim
+
+  defmacro where(body, expr) do
+    rowified = replace_bindings(expr)
+
+    quote do
+      func = fn t ->
+        var!(row) = t
+        unquote(rowified)
+      end
+
+      %State{stream: stream} = s = unquote(body)
+      new_stream = Stream.flat_map(stream, fn
+        %Bucket{} = b    ->
+          data = Enum.filter(b.data, fn {_, datum} ->
+            func.(datum)
+          end)
+          [struct(b, data: data)]
+        %Aggregate{} = a ->
+          if func.(a.aggregations) do
+            [a]
+          else
+            []
+          end
+      end)
+      struct(s, stream: new_stream)
+    end
+  end
+
+
+  def aggregates(%State{stream: stream} = state) do
+    new_stream = Stream.map(stream, fn %Bucket{aggregations: aggs} = b ->
       %Aggregate{
         start_t: b.start_t,
         end_t: b.end_t,
         aggregations: Enum.into(aggs, %{})
       }
     end)
+
+    struct(state, stream: new_stream)
   end
+
+  def as_stream!(%State{stream: stream}), do: stream
 end
