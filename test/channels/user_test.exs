@@ -1,4 +1,4 @@
-defmodule Perf.ApiUserTest do
+defmodule ApiUserTest do
   use Phoenix.ChannelTest
   use ExUnit.Case
   @endpoint Perf.Endpoint
@@ -33,12 +33,12 @@ defmodule Perf.ApiUserTest do
 
     assert_reply ref, :error, %{
       error: %{
-        english: "Error! password: should be at least 6 character(s)", 
+        english: "Error! password: should be at least 6 character(s)",
         params: %{
           field_errors: %{
             password: ["should be at least 6 character(s)"]
           }
-        }, 
+        },
         reason: :field_values_invalid
       },
       kind: :bad_request

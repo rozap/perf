@@ -1,4 +1,4 @@
-defmodule RunTest do
+defmodule YamChannelTest do
   use Phoenix.ChannelTest
   use ExUnit.Case
   @endpoint Perf.Endpoint
@@ -13,27 +13,23 @@ defmodule RunTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Perf.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Perf.Repo, {:shared, self()})
 
-    {:ok, _, socket} = socket("api", %{})
-    |> subscribe_and_join(Perf.ApiChannel, "api", %{})
-
     suite = make_suite
+    run = Repo.insert!(%Run{suite: suite})
 
-    {:ok, %{socket: socket, suite: suite}}
+    {:ok, _, socket} = socket("yams", %{})
+    |> subscribe_and_join(Perf.YamsChannel, "yams", %{
+      "run_id" => run.id
+      })
+
+    yam = make_yam_stream
+    {:ok, %{socket: socket, yam: yam, suite: suite, run: run}}
   end
 
-  test "can create a run", %{socket: socket, suite: suite} do
+  test "can get a query", %{socket: socket, suite: suite, run: run} do
     run = push(socket, "create:run", %{
       "suite_id" => suite.id
-    }) |> wait_for
-
-    {_, handle} = Yams.Handle.open(run.yam_ref)
-    Yams.Handle.changes(handle)
-    |> Yams.Query.as_stream!
-    |> Stream.take_while(fn
-      {_, %Done{}} -> false
-      _ -> true
-    end)
-    |> Enum.into([])
+    })
+    |> wait_for
     |> IO.inspect
 
   end

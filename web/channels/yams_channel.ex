@@ -62,7 +62,6 @@ defmodule Perf.YamsChannel do
     |> Enum.into([])
     |> IO.inspect
 
-
     events = []
     {:reply, {:ok, %{events: events}}, socket}
   end

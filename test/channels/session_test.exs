@@ -1,4 +1,4 @@
-defmodule Perf.ApiSessionTest do
+defmodule SessionTest do
   use Phoenix.ChannelTest
   use ExUnit.Case
   @endpoint Perf.Endpoint
