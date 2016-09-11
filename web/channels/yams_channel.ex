@@ -12,16 +12,20 @@ defmodule Perf.YamsChannel do
   def join("yams", %{"run_id" => run_id}, socket) do
     case Repo.get(Run, run_id) do
       %Run{} = run ->
-        {_, handle} = Handle.open(run.yam_ref)
+        case Handle.open(run.yam_ref) do
+          {:error, reason} ->
+            Logger.warn("Failed to join yam, yam handle error #{inspect reason}")
+            {:error, socket}
+          {_, handle} ->
+            socket = socket
+            |> assign(:run, run)
+            |> assign(:event_buf, [])
+            |> assign(:handle, handle)
 
-        socket = socket
-        |> assign(:run, run)
-        |> assign(:event_buf, [])
-        |> assign(:handle, handle)
+            Logger.info("Started yams channel for #{inspect run}")
 
-        Logger.info("Started yams channel for #{inspect run}")
-
-        {:ok, socket}
+            {:ok, socket}
+        end
       error ->
         Logger.warn("Failed to join yam #{inspect error}")
         {:error, socket}
@@ -60,14 +64,12 @@ defmodule Perf.YamsChannel do
     |> Handle.stream!({start_t, end_t})
     |> Query.as_stream!
     |> Enum.into([])
-    |> IO.inspect
 
-    events = []
     {:reply, {:ok, %{events: events}}, socket}
   end
 
   def handle_in(_, _, socket) do
-    {:reply, {:ok, %{}}, socket}
+    {:reply, {:error, %{bind: :bad_request}}, socket}
   end
 
   def handle_info(_, socket) do

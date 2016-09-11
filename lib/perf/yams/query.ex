@@ -17,14 +17,14 @@ defmodule Perf.Yams.Query do
   ##
   # Convert tests to use /2 args here instead of tuple for {unit, quant}
   # will make interpreter easier
-  def bucket(state, seconds, :seconds) do
-    bucket(state, Yams.seconds_to_key(seconds), :seconds)
+  def bucket(state, seconds, "seconds") do
+    bucket(state, Yams.seconds_to_key(seconds), "nanoseconds")
   end
-  def bucket(state, ms, :milliseconds) do
-    bucket(state, Yams.ms_to_key(ms), :nanoseconds)
+  def bucket(state, ms, "milliseconds") do
+    bucket(state, Yams.ms_to_key(ms), "nanoseconds")
   end
 
-  def bucket(%State{stream: stream, range: {from_ts, _}} = state, nanoseconds, :nanoseconds) do
+  def bucket(%State{stream: stream, range: {from_ts, _}} = state, nanoseconds, "nanoseconds") do
     chunked = Stream.chunk_by(stream, fn {time, _} = e ->
       Float.floor((time - from_ts) / nanoseconds)
     end)
@@ -83,27 +83,35 @@ defmodule Perf.Yams.Query do
 
 
 
-  defp replace_bindings([{varname, _, nil} | rest]) do
-    [{
+
+  defp bind_row([{e, m, args} | rest]) do
+    [{e, m, bind_row(args)} | bind_row(rest)]
+  end
+
+  defp bind_row({comparator, meta, args}) do
+    {comparator, meta, bind_row(args)}
+  end
+
+  defp bind_row(str) when is_binary(str) do
+    {
       {:., [], [
         {:__aliases__, [alias: false], [:Map]},
         :get
       ]}, [],
-      [Macro.var(:row, nil), Atom.to_string(varname)]
-    } | replace_bindings(rest)]
+      [Macro.var(:row, nil), str]
+    }
   end
 
-  defp replace_bindings([{e, m, args} | rest]) do
-    [{e, m, replace_bindings(args)} | replace_bindings(rest)]
+  defp bind_row([prim | rest]) do
+    [bind_row(prim) | bind_row(rest)]
   end
 
-  defp replace_bindings({comparator, meta, args}) do
-    {comparator, meta, replace_bindings(args)}
+  defp bind_row(prim) do
+    prim
   end
-  defp replace_bindings(prim), do: prim
 
   defmacro where(body, expr) do
-    rowified = replace_bindings(expr)
+    rowified = bind_row(expr)
 
     quote do
       func = fn t ->

@@ -23,86 +23,86 @@ defmodule QueryTest do
     {:ok, %{one: one, two: two}}
   end
 
+  defp eval!(stream, expr) do
+    with {:ok, stream} <- Interpreter.run(stream, expr) do
+      stream
+      |> Query.as_stream!
+      |> Enum.into([])
+    end
+  end
+
   test "can interpret a simple expr", %{one: one, two: two} do
-    actual = Interpreter.insert_stream(:some_stream, [
-      [:., [], ["bucket", 10, "milliseconds"]],
-      [:., [], ["maximum", "num"]]
+    actual = eval!(one, [
+      [".", ["bucket", 10, "milliseconds"]],
+      [".", ["maximum", "num"]]
     ])
 
-    expected = quote do
-      Perf.Yams.Query.maximum(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), "num")
-    end
-    |> Macro.prewalk(fn node -> Macro.update_meta(node, fn _ -> [] end) end)
+    expected = two
+    |> Query.bucket(10, "milliseconds")
+    |> Query.maximum("num")
+    |> Query.as_stream!
+    |> Enum.into([])
 
     assert actual == expected
   end
 
-  test "can interpret a nested comparison expr", %{one: one, two: two} do
-    actual = Interpreter.insert_stream(:some_stream, [
-      [:., [], ["bucket", 10, "milliseconds"]],
-      [:., [], [
-        "where",
-        [:>, [], [["num", [], nil], 30]]
-      ]]
-    ])
+  # test "can interpret a nested comparison expr", %{one: one, two: two} do
 
-    expected = quote do
-      Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), num > 30)
-    end
-    |> Macro.prewalk(fn
-      {:num, [], _} -> {:num, [], Perf.Yams.Interpreter}
-      node -> Macro.update_meta(node, fn _ -> [] end)
-    end)
+  #   actual = with {:ok, stream} <- Interpreter.run(one, [
+  #     [".", ["bucket", 10, "milliseconds"]],
+  #     [".", ["maximum", "num"]]
+  #   ]) do
+  #     stream
+  #     |> Query.as_stream!
+  #     |> Enum.into([])
+  #   end
 
-    assert actual == expected
-  end
+  #   actual = Interpreter.insert_stream(:some_stream, [
+  #     [".", ["bucket", 10, "milliseconds"]],
+  #     [".", [
+  #       "where",
+  #       [">", ["num", 30]]
+  #     ]]
+  #   ])
 
-  test "can interpret a compound nested comparison expr", %{one: one, two: two} do
-    actual = Interpreter.insert_stream(:some_stream, [
-      [:., [], ["bucket", 10, "milliseconds"]],
-      [:., [], [
-        "where",
-        [
-          :&&,
-          [],
-          [
-            [:>, [], [["num", [], nil], 30]],
-            [:<, [], [["num", [], nil], 40]]
-          ]
-        ]
-      ]]
-    ])
+  #   expected = quote do
+  #     Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), "num" > 30)
+  #   end
+  #   |> remove_meta
 
-    expected = quote do
-      Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), (num > 30) && (num < 40))
-    end
-    |> Macro.prewalk(fn
-      {:num, [], _} -> {:num, [], Perf.Yams.Interpreter}
-      node -> Macro.update_meta(node, fn _ -> [] end)
-    end)
+  #   assert actual == expected
+  # end
 
-    assert actual == expected
-  end
-
-
-  # test "can apply the expression to a stream", %{one: one, two: two} do
-  #   actual = Interpreter.insert_stream(one, [
-  #     [:., [], ["bucket", 10, "milliseconds"]],
-  #     [:., [], [
+  # test "can interpret a compound nested comparison expr", %{one: one, two: two} do
+  #   actual = Interpreter.insert_stream(:some_stream, [
+  #     [".", ["bucket", 10, "milliseconds"]],
+  #     [".", [
   #       "where",
   #       [
-  #         :&&,
-  #         [],
+  #         "&&",
   #         [
-  #           [:>, [], [["num", [], nil], 30]],
-  #           [:<, [], [["num", [], nil], 40]]
+  #           [">", ["num", 30]],
+  #           ["<", ["num", 40]]
   #         ]
   #       ]
   #     ]]
   #   ])
-  #   |> Query.as_stream!
-  #   |> Enum.into([])
-  #   |> IO.inspect
+
+  #   expected = quote do
+  #     Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), ("num" > 30) && ("num" < 40))
+  #   end
+  #   |> remove_meta
+
+  #   assert actual == expected
+  # end
+
+  # test "can apply the expression to a stream", %{one: one, two: two} do
+  #   actual = Interpreter.insert_stream(one, [
+  #     [".", ["bucket", 10, "milliseconds"]],
+  #     [".", ["maximum", "num"]]
+  #   ])
+
+  #   IO.inspect actual
   # end
 
 end

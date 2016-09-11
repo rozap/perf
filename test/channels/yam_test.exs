@@ -14,20 +14,25 @@ defmodule YamChannelTest do
     Ecto.Adapters.SQL.Sandbox.mode(Perf.Repo, {:shared, self()})
 
     suite = make_suite
-    run = Repo.insert!(%Run{suite: suite})
+    run = Repo.insert!(Run.changeset(%Run{suite_id: suite.id}))
+    yam = make_yam_stream(run.yam_ref)
 
     {:ok, _, socket} = socket("yams", %{})
     |> subscribe_and_join(Perf.YamsChannel, "yams", %{
       "run_id" => run.id
       })
 
-    yam = make_yam_stream
     {:ok, %{socket: socket, yam: yam, suite: suite, run: run}}
   end
 
   test "can get a query", %{socket: socket, suite: suite, run: run} do
-    run = push(socket, "create:run", %{
-      "suite_id" => suite.id
+    run = push(socket, "query:events", %{
+      "start_t_seconds" => Yams.key_to_seconds(from_ts),
+      "end_t_seconds" => Yams.key_to_seconds(to_ts),
+      "query" => [
+        [".", ["bucket", 10, "milliseconds"]],
+        [".", ["maximum", "num"]]
+      ]
     })
     |> wait_for
     |> IO.inspect

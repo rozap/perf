@@ -9,15 +9,21 @@ defmodule Perf.TestHelpers do
     end
   end
 
+  def from_ts do
+    1472175016297554068
+  end
+
+  def to_ts do
+    from_ts + Yams.ms_to_key(20)
+  end
+
   def make_yam_stream(ref \\ nil) do
     {:created, h} = Yams.Handle.open(ref || UUID.uuid1())
-    from_ts = 1472175016297554068
     Enum.each(30..60, fn num ->
       t = num - 30
       key = from_ts + Yams.ms_to_key(t)
       :ok = Yams.Handle.put(h, key, %{"num" => num, "str" => "foo_#{num}"})
     end)
-    to_ts = from_ts + Yams.ms_to_key(20)
     range = {from_ts, to_ts}
 
     stream = Yams.Handle.stream!(h, range)

@@ -4,6 +4,7 @@ defmodule QueryTest do
   require Perf.Yams.Query
   alias Perf.Yams.Query
   alias Perf.Yams.Query.Aggregate
+  import Perf.TestHelpers
 
   setup do
     Yams.start_link
@@ -69,7 +70,7 @@ defmodule QueryTest do
   test "can filter raw things in a bucket", %{stream: stream} do
     nums = stream
     |> Query.bucket(10, :milliseconds)
-    |> Query.where(num > 32 && num < 36)
+    |> Query.where("num" > 32 && "num" < 36)
     |> Query.as_stream!
     |> Stream.map(fn bucket -> Enum.map(bucket.data, fn {_, d} -> d["num"] end) end)
     |> Enum.into([])
@@ -83,7 +84,7 @@ defmodule QueryTest do
     |> Query.bucket(10, :milliseconds)
     |> Query.percentile("num", 80)
     |> Query.aggregates
-    |> Query.where(p80_num > 37 && p80_num < 38)
+    |> Query.where("p80_num" > 37 && "p80_num" < 38)
     |> Query.as_stream!
     |> Stream.map(fn a -> a.aggregations["p80_num"] end)
     |> Enum.into([])
