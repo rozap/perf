@@ -3,7 +3,7 @@ defmodule Perf.YamsChannel do
   require Logger
   alias Phoenix.Socket
   alias Perf.Resource.State
-  alias Perf.Yams.{Handle, Query}
+  alias Perf.Yams.{Handle}
   alias Perf.{Repo, Run, Yams, Request}
   alias Perf.Runner.Events.{Success, Error, StartingRequest, Done}
   import Perf.Resource
@@ -34,22 +34,33 @@ defmodule Perf.YamsChannel do
 
 
 
-  # def handle_in("change:events", _, socket) do
-  #   streamer = spawn_link(fn ->
-  #     run = socket.assigns.run
+  def handle_in("change:events", %{"query" => query}, socket) do
+    streamer = spawn_link(fn ->
+      run = socket.assigns.run
 
-  #     Handle.changes(socket.assigns.handle)
-  #     |> aggregate(run)
-  #     |> Stream.each(fn measures ->
-  #       push socket, "change:events", %{events: group_into_measures(measures)}
-  #     end)
-  #     |> Stream.run
-  #   end)
+      changes = socket.assigns.handle
+      |>Handle.changes
+      |> Yams.Interpreter.run(query)
 
-  #   socket = assign(socket, :streamer, streamer)
+      case changes do
+        {:ok, stream} -> 
+          stream
+          |> Yams.Query.as_stream!
+          |> Stream.each(fn events ->
+            push socket, "change:events", %{events: [events]}
+          end)
+          |> Stream.run
+        {:error, other} ->
+          Logger.warn("Failed to run change stream on #{inspect query}")
 
-  #   {:reply, {:ok, %{}}, socket}
-  # end
+      end
+
+    end)
+
+    socket = assign(socket, :streamer, streamer)
+
+    {:reply, {:ok, %{}}, socket}
+  end
 
   def handle_in("query:events", %{
       "start_t_seconds" => start_t_seconds,
@@ -60,16 +71,31 @@ defmodule Perf.YamsChannel do
 
     run = socket.assigns.run
 
-    events = socket.assigns.handle
+    case socket.assigns.handle
     |> Handle.stream!({start_t, end_t})
-    |> Query.as_stream!
-    |> Enum.into([])
+    |> Yams.Interpreter.run(query) do
+      {:ok, stream} ->
 
-    {:reply, {:ok, %{events: events}}, socket}
+        {:ok, quoted} = Yams.Interpreter.compile(query)
+        Logger.info("Ran query #{Macro.to_string(quoted)}")
+
+        events = stream
+        |> Yams.Query.as_stream!
+        |> Enum.into([])
+
+        {:reply, {:ok, %{events: events}}, socket}
+      {:error, reason} ->
+        with {:ok, quoted} <- Yams.Interpreter.compile(query) do
+          Logger.warn("Failed on #{Macro.to_string(quoted)}")
+        end
+
+        {:reply, {:error, %{kind: :bad_request, reason: reason}}, socket}
+    end
   end
 
-  def handle_in(_, _, socket) do
-    {:reply, {:error, %{bind: :bad_request}}, socket}
+  def handle_in(message, params, socket) do
+    Logger.warn("Got bad request #{message} #{inspect params}")
+    {:reply, {:error, %{kind: :bad_request}}, socket}
   end
 
   def handle_info(_, socket) do

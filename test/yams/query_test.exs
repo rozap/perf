@@ -14,7 +14,7 @@ defmodule QueryTest do
 
   test "can get the minimum per bucket", %{stream: stream} do
     mins = stream
-    |> Query.bucket(10, :milliseconds)
+    |> Query.bucket(10, "milliseconds")
     |> Query.minimum("num")
     |> Query.aggregates
     |> Query.as_stream!
@@ -26,7 +26,7 @@ defmodule QueryTest do
 
   test "can get the maximum per bucket", %{stream: stream} do
     maxes = stream
-    |> Query.bucket(10, :milliseconds)
+    |> Query.bucket(10, "milliseconds")
     |> Query.maximum("num")
     |> Query.aggregates
     |> Query.as_stream!
@@ -38,23 +38,35 @@ defmodule QueryTest do
 
   test "can get the percentile per bucket", %{stream: stream} do
     ps = stream
-    |> Query.bucket(10, :milliseconds)
-    |> Query.percentile("num", 80)
+    |> Query.bucket(10, "milliseconds")
+    |> Query.percentile("row.num", 80, "thing")
     |> Query.aggregates
     |> Query.as_stream!
-    |> Stream.map(fn %Aggregate{aggregations: %{"p80_num" => mn}} -> mn end)
+    |> Stream.map(fn %Aggregate{aggregations: %{"thing" => mn}} -> mn end)
     |> Enum.into([])
 
     assert ps == [37.2, 47.2, 50]
   end
 
+  test "can get the percentile of an expr per bucket", %{stream: stream} do
+    ps = stream
+    |> Query.bucket(10, "milliseconds")
+    |> Query.percentile("row.num" / "row.num", 80, "throughput")
+    |> Query.aggregates
+    |> Query.as_stream!
+    |> Stream.map(fn %Aggregate{aggregations: %{"throughput" => tp}} -> tp end)
+    |> Enum.into([])
+
+    assert ps == [1.0, 1.0, 1.0]
+  end
+
   test "can compose aggregations", %{stream: stream} do
     aggs = stream
-    |> Query.bucket(10, :milliseconds)
-    |> Query.percentile("num", 80)
+    |> Query.bucket(10, "milliseconds")
+    |> Query.percentile("row.num", 80, "p80_num")
     |> Query.maximum("num")
     |> Query.minimum("num")
-    |> Query.percentile("num", 99)
+    |> Query.percentile("row.num", 99, "p99_num")
     |> Query.aggregates
     |> Query.as_stream!
     |> Stream.map(fn %Aggregate{aggregations: a} -> a end)
@@ -69,8 +81,8 @@ defmodule QueryTest do
 
   test "can filter raw things in a bucket", %{stream: stream} do
     nums = stream
-    |> Query.bucket(10, :milliseconds)
-    |> Query.where("num" > 32 && "num" < 36)
+    |> Query.bucket(10, "milliseconds")
+    |> Query.where("row.num" > 32 && "row.num" < 36)
     |> Query.as_stream!
     |> Stream.map(fn bucket -> Enum.map(bucket.data, fn {_, d} -> d["num"] end) end)
     |> Enum.into([])
@@ -81,10 +93,10 @@ defmodule QueryTest do
 
   test "can filter aggregates", %{stream: stream} do
     [agg] = stream
-    |> Query.bucket(10, :milliseconds)
-    |> Query.percentile("num", 80)
+    |> Query.bucket(10, "milliseconds")
+    |> Query.percentile("row.num", 80, "p80_num")
     |> Query.aggregates
-    |> Query.where("p80_num" > 37 && "p80_num" < 38)
+    |> Query.where("row.p80_num" > 37 && "row.p80_num" < 38)
     |> Query.as_stream!
     |> Stream.map(fn a -> a.aggregations["p80_num"] end)
     |> Enum.into([])

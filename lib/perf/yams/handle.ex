@@ -37,6 +37,7 @@ defmodule Perf.Yams.Handle do
             t = String.to_integer(key)
             if t <= end_time do
               value = :erlang.binary_to_term(bin)
+
               {[{t, value}], {:next, ref}}
             else
               {:halt, {:done, ref}}

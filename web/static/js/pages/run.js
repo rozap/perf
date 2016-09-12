@@ -87,14 +87,16 @@ function latencyChart({ndx, run}, send) {
     startSeconds, endSeconds
   } = domainOf(run)
 
+  const start = startSeconds*1000;
+  const end = endSeconds*1000;
+
   // const latencyDimension = ndx.filter((d) => d[0] === 'latency')
 
   var measureDimension = ndx.dimension((d) => {
-    return d.slice(0, 4);
+    return [d.at, d.measure]
   });
-  measureDimension.filter((d) => d[0] === 'latency');
   const runGroup = measureDimension.group().reduceSum((d) => {
-    return _.last(d)
+    return d.value;
   });
 
   // Domain should be start_time + runlength
@@ -106,7 +108,7 @@ function latencyChart({ndx, run}, send) {
       .lineChart(c)
       .interpolate('basis-open');
     })
-    .x(d3.scale.linear().domain([startSeconds,endSeconds]))
+    .x(d3.scale.linear().domain([start, end]))
     .brushOn(false)
     .yAxisLabel("Latency, ms")
     .xAxisLabel("Time")
@@ -115,12 +117,12 @@ function latencyChart({ndx, run}, send) {
     .dimension(measureDimension)
     .group(runGroup)
     .mouseZoomable(false)
-    .seriesAccessor((d) => d.key[3])
-    .keyAccessor((d) => d.key[1])
+    .seriesAccessor((d) => d.key[1])
+    .keyAccessor((d) => d.key[0])
     .valueAccessor((d) => d.value)
 
   chart.xAxis().tickFormat((d) => {
-    return 't' + (d - startSeconds);
+    return 't' + (d - start) / 1000;
   });
 
   chart.yAxis().tickFormat((d) => {
@@ -136,6 +138,27 @@ function latencyChart({ndx, run}, send) {
 }
 
 
+const q = [
+  [".", ["bucket", 1000, "milliseconds"]],
+  [".", ["where", ["==", ["row.type", "success"]]]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+  
+  // [".", [
+  //   "percentile", [
+  //     '/', [
+  //       "row.size",
+  //       [
+  //         "-", ["row.end_t", "row.start_t"]]
+  //   ]], 
+  //   75, 
+  //   "p75_throughput"
+  //   ]
+  // ],
+  [".", ["aggregates"]]
+]
+
 
 function model(api, channelFactory) {
   var yam;
@@ -146,6 +169,7 @@ function model(api, channelFactory) {
   window.ndx = ndx;
   return {
     state: {
+      query: q,
       run: false,
       hasLoaded: false,
       latencyChart: false,
@@ -179,7 +203,8 @@ function model(api, channelFactory) {
           startSeconds,
           endSeconds
         } = domainOf(state.run);
-        send('run:query', {startSeconds, endSeconds, query: []}, done);
+
+        send('run:query', {startSeconds, endSeconds, query: state.query}, done);
       },
       onChartInit: (chart, state, send, done) => {
         send('run:setChart', chart, done);
@@ -190,21 +215,23 @@ function model(api, channelFactory) {
           query(yam, params, state, send, done)
         }
       },
-      changes: () => {
-        yam.changes(onYamChanges);
+      changes: (_, state) => {
+        yam.changes(state.query, onYamChanges);
       },
       change: ({events}, state, send, done) => {
-        const expanded = _.flatten(_.map(events, (measurements, measure) => {
-          return _.flatten(measurements.map((event) => {
-            return _.map(event.stats, (stat, statName) => {
-              return [measure, event.end_t_seconds, event.request_id, statName, stat]
-            })
-          }), true)
-        }), true);
-        state.ndx.add(expanded);
+        console.log(events)
+        const records = _.flatten(events.map((e) => {
+          return _.map(e.aggregations, (value, key) => {
+            return {
+              at: e.end_t,
+              measure: key,
+              value: value,
+            }
+          })
+        }))
+        state.ndx.add(records);
         dc.redrawAll();
       }
-
     },
     subscriptions: [
       (send, done) => {

@@ -1,7 +1,4 @@
-* do the login on startup
-* make state refresh on reloading a page
-
-* make yams a genstage
+* make min/max yams macros so expressions can be used
 
 producer -->
   * checkout N processes from Global pool

@@ -1,6 +1,7 @@
-defmodule QueryTest do
+defmodule InterpreterTest do
   use ExUnit.Case
   alias Perf.Yams
+  require Perf.Yams.Query
   alias Perf.Yams.{Query, Interpreter}
   alias Perf.Yams.Query.Aggregate
 
@@ -46,63 +47,64 @@ defmodule QueryTest do
     assert actual == expected
   end
 
-  # test "can interpret a nested comparison expr", %{one: one, two: two} do
+  test "can interpret an aggregated simple expr", %{one: one, two: two} do
+    actual = eval!(one, [
+      [".", ["bucket", 10, "milliseconds"]],
+      [".", ["maximum", "num"]],
+      [".", ["percentile", "row.num", 95, "p95_num"]]
+    ])
 
-  #   actual = with {:ok, stream} <- Interpreter.run(one, [
-  #     [".", ["bucket", 10, "milliseconds"]],
-  #     [".", ["maximum", "num"]]
-  #   ]) do
-  #     stream
-  #     |> Query.as_stream!
-  #     |> Enum.into([])
-  #   end
+    expected = two
+    |> Query.bucket(10, "milliseconds")
+    |> Query.maximum("num")
+    |> Query.percentile("row.num", 95, "p95_num")
+    |> Query.as_stream!
+    |> Enum.into([])
 
-  #   actual = Interpreter.insert_stream(:some_stream, [
-  #     [".", ["bucket", 10, "milliseconds"]],
-  #     [".", [
-  #       "where",
-  #       [">", ["num", 30]]
-  #     ]]
-  #   ])
+    assert actual == expected
+  end
 
-  #   expected = quote do
-  #     Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), "num" > 30)
-  #   end
-  #   |> remove_meta
+  test "can interpret a nested comparison expr", %{one: one, two: two} do
 
-  #   assert actual == expected
-  # end
+    actual = eval!(one, [
+      [".", ["bucket", 10, "milliseconds"]],
+      [".", [
+        "where",
+        [">", ["row.num", 30]]
+      ]]
+    ]) 
 
-  # test "can interpret a compound nested comparison expr", %{one: one, two: two} do
-  #   actual = Interpreter.insert_stream(:some_stream, [
-  #     [".", ["bucket", 10, "milliseconds"]],
-  #     [".", [
-  #       "where",
-  #       [
-  #         "&&",
-  #         [
-  #           [">", ["num", 30]],
-  #           ["<", ["num", 40]]
-  #         ]
-  #       ]
-  #     ]]
-  #   ])
+    expected = two
+    |> Query.bucket(10, "milliseconds")
+    |> Query.where("row.num" > 30)
+    |> Query.as_stream!
+    |> Enum.into([])
 
-  #   expected = quote do
-  #     Perf.Yams.Query.where(Perf.Yams.Query.bucket(:some_stream, 10, "milliseconds"), ("num" > 30) && ("num" < 40))
-  #   end
-  #   |> remove_meta
+    assert actual == expected
+  end
 
-  #   assert actual == expected
-  # end
+  test "can interpret a compound nested comparison expr", %{one: one, two: two} do
+    actual = eval!(one, [
+      [".", ["bucket", 10, "milliseconds"]],
+      [".", [
+        "where",
+        [
+          "&&",
+          [
+            [">", ["row.num", 30]],
+            ["<", ["row.num", 40]]
+          ]
+        ]
+      ]]
+    ])
 
-  # test "can apply the expression to a stream", %{one: one, two: two} do
-  #   actual = Interpreter.insert_stream(one, [
-  #     [".", ["bucket", 10, "milliseconds"]],
-  #     [".", ["maximum", "num"]]
-  #   ])
+    expected = two
+    |> Query.bucket(10, "milliseconds")
+    |> Query.where(("row.num" > 30) && ("row.num" < 40))
+    |> Query.as_stream!
+    |> Enum.into([])
 
-  #   IO.inspect actual
-  # end
+    assert actual == expected
+  end
 
 end

@@ -1,4 +1,5 @@
 defmodule Perf.Yams.Interpreter do
+  require Logger
   @query [:Perf, :Yams, :Query]
 
   defp el_expr([".", [func_name | args]]) do
@@ -12,11 +13,14 @@ defmodule Perf.Yams.Interpreter do
     }
   end
 
+  ##
+  # TODO: make `c` here match only against whitelisted comparators
   defp el_expr([c, args]) when is_list(args) do
+    IO.puts "hit #{c} #{inspect args}"
     {String.to_atom(c), [], Enum.map(args, &el_expr/1)}
   end
 
-  defp el_expr([c, meh]) do
+  defp el_expr([c, _]) do
     {String.to_atom(c), [], __MODULE__}
   end
 
@@ -36,6 +40,7 @@ defmodule Perf.Yams.Interpreter do
     end)
 
     quoted = quote do
+      require Perf.Yams.Query
       fn s ->
         var!(yam_stream) = s
         unquote(compiled)
@@ -51,7 +56,12 @@ defmodule Perf.Yams.Interpreter do
       try do
         {:ok, func.(stream)}
       rescue
-        e -> {:error, e}
+        e in [UndefinedFunctionError] -> 
+          Logger.warn("failed to interpret #{inspect pipeline} #{inspect e}")
+          message = "Undefined function #{e.function}/#{e.arity}"
+          {:error, message}
+        e -> 
+          {:error, e.message}
       end
     end
   end

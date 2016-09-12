@@ -2,7 +2,7 @@ defmodule Perf.Runner.Consumer do
   alias Experimental.GenStage
   use GenStage
   require Logger
-  alias Perf.Runner.Coordinator
+  alias Perf.Runner.Events
   alias Perf.Yams.Handle
   @buf_size 100
 
@@ -21,7 +21,7 @@ defmodule Perf.Runner.Consumer do
   end
 
   defp record(event, %{yams: yam} = state) do
-    Handle.put(yam, event.at, event)
+    Handle.put(yam, event.at, Events.to_row(event))
     state
   end
 

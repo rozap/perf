@@ -1,5 +1,6 @@
 defmodule Perf.Yams.Query do
   alias Perf.Yams
+  require Logger
 
   defmodule State do
     defstruct range: {:none, :none}, stream: nil
@@ -13,6 +14,13 @@ defmodule Perf.Yams.Query do
     defstruct start_t: nil, end_t: nil, aggregations: %{}
   end
 
+  defimpl Poison.Encoder, for: Bucket do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
+
+  defimpl Poison.Encoder, for: Aggregate do
+    defdelegate encode(v, opts), to: Perf.Runner.Events
+  end
 
   ##
   # Convert tests to use /2 args here instead of tuple for {unit, quant}
@@ -66,22 +74,17 @@ defmodule Perf.Yams.Query do
     group(state, field_name, "max", &max/2)
   end
 
-  def percentile(state, field_name, p) do
-    key = "p#{p}_#{field_name}"
-    new_stream = Stream.map(state.stream, fn bucket ->
-      value = case Enum.map(bucket.data, fn {_, datum} -> Map.get(datum, field_name) end) do
-        [] -> 0
-        [n] -> n
-        others -> Statistics.percentile(others, p)
-      end
-
-      struct(bucket, aggregations: [{key, value} | bucket.aggregations])
-    end)
-
-    struct(state, stream: new_stream)
+  def push_aggregate(bucket, key, value) do
+    struct(bucket, aggregations: [{key, value} | bucket.aggregations])
   end
 
-
+  def safe_percentile(data, p) do
+    case data do
+      [] -> 0
+      [n] -> n
+      others -> Statistics.percentile(others, p)
+    end
+  end
 
 
   defp bind_row([{e, m, args} | rest]) do
@@ -92,7 +95,7 @@ defmodule Perf.Yams.Query do
     {comparator, meta, bind_row(args)}
   end
 
-  defp bind_row(str) when is_binary(str) do
+  defp bind_row("row." <> str) do
     {
       {:., [], [
         {:__aliases__, [alias: false], [:Map]},
@@ -110,8 +113,41 @@ defmodule Perf.Yams.Query do
     prim
   end
 
-  defmacro where(body, expr) do
+
+  defmacro percentile(stream, expr, perc, label) do
     rowified = bind_row(expr)
+
+    quote do
+      require Logger
+
+      func = fn t ->
+        var!(row) = t
+        unquote(rowified)
+      end
+   
+      %State{stream: stream} = s = unquote(stream)
+      new_stream = Stream.map(stream, fn
+        %Bucket{} = b    ->
+          data = Enum.map(b.data, fn {_, datum} ->
+            func.(datum)
+          end)
+
+          value = Perf.Yams.Query.safe_percentile(data, unquote(perc))
+
+          Perf.Yams.Query.push_aggregate(b, unquote(label), value)
+        a ->
+          Logger.warn("Cannot make an aggregate on an aggregate stream!")
+          a
+      end)
+
+      struct(s, stream: new_stream)
+    end
+  end
+
+
+  defmacro where(stream, expr) do
+    rowified = bind_row(expr)
+
 
     quote do
       func = fn t ->
@@ -119,7 +155,7 @@ defmodule Perf.Yams.Query do
         unquote(rowified)
       end
 
-      %State{stream: stream} = s = unquote(body)
+      %State{stream: stream} = s = unquote(stream)
       new_stream = Stream.flat_map(stream, fn
         %Bucket{} = b    ->
           data = Enum.filter(b.data, fn {_, datum} ->

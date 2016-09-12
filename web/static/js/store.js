@@ -144,8 +144,8 @@ class Yams extends Store {
     return 'yams';
   }
 
-  changes(cb) {
-    this.send('change:events', {});
+  changes(query, cb) {
+    this.send('change:events', {query});
     return this._underlying.on('change:events', cb)
   }
 

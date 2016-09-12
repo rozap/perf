@@ -9,6 +9,12 @@ defmodule Perf.TestHelpers do
     end
   end
 
+  def wait_for_json(ref) do
+    wait_for(ref)
+    |> Poison.encode!
+    |> Poison.decode!
+  end
+
   def from_ts do
     1472175016297554068
   end
@@ -22,7 +28,13 @@ defmodule Perf.TestHelpers do
     Enum.each(30..60, fn num ->
       t = num - 30
       key = from_ts + Yams.ms_to_key(t)
-      :ok = Yams.Handle.put(h, key, %{"num" => num, "str" => "foo_#{num}"})
+      :ok = Yams.Handle.put(h, key, %{
+        "num" => num, 
+        "str" => "foo_#{num}",
+        "start_t" => Yams.key_to_ms(from_ts),
+        "end_t" => Yams.key_to_ms(from_ts) + num,
+        "size" => num * num * num
+      })
     end)
     range = {from_ts, to_ts}
 
