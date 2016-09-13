@@ -72,6 +72,7 @@ function model(store) {
       updateReqBody,
       updateReqPath,
       updateRunlength,
+      updateConcurrency,
       toggleHeadersView,
       toggleParamsView,
       toggleBodyView,
@@ -236,6 +237,12 @@ function updateRunlength({
   req, runlength
 }, state) {
   return updateIn(state, 'suite.requests.runlength', req, runlength);
+}
+
+function updateConcurrency({
+  req, concurrency
+}, state) {
+  return updateIn(state, 'suite.requests.concurrency', req, concurrency);
 }
 
 function toggleHeadersView({
@@ -436,6 +443,12 @@ function requestView(state, req, send) {
     });
     saveRequest(send, req);
   }
+  const onConcurrencyChange = (e) => {
+    send('edit:updateConcurrency', {
+      req, concurrency: e.target.value
+    });
+    saveRequest(send, req);
+  }
 
   const render = () => {
     if (!req.isShowing) return;
@@ -485,6 +498,17 @@ function requestView(state, req, send) {
             name="run length"
             value="${req.runlength}"
             onkeyup=${onRunlengthChange}
+          />
+        </div>
+        <div class="concurrency">
+          ${fieldError(state, 'concurrency')}
+          <label>Concurrency</label>
+          <input
+            min="1"
+            step="1"
+            name="concurrency"
+            value="${req.concurrency}"
+            onkeyup=${onConcurrencyChange}
           />
         </div>
       </div>

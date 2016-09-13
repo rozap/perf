@@ -65,7 +65,7 @@ function nanoToSeconds(nanos) {
 
 function domainOf(run) {
   const duration = run.suite.requests.reduce((acc, req) => {
-    return req.runlength + acc;
+    return (req.runlength + (req.timeout / 1000) + (req.receive_timeout / 1000)) + acc;
   }, 0);
   const startSeconds = dateToSeconds(run.inserted_at);
   const endSeconds = startSeconds + duration;
@@ -139,23 +139,23 @@ function latencyChart({ndx, run}, send) {
 
 
 const q = [
-  [".", ["bucket", 1000, "milliseconds"]],
+  [".", ["bucket", 500, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
   
-  // [".", [
-  //   "percentile", [
-  //     '/', [
-  //       "row.size",
-  //       [
-  //         "-", ["row.end_t", "row.start_t"]]
-  //   ]], 
-  //   75, 
-  //   "p75_throughput"
-  //   ]
-  // ],
+  [".", [
+    "percentile", [
+      '/', [
+        "row.size",
+        [
+          "-", ["row.end_t", "row.start_t"]]
+    ]], 
+    50, 
+    "p75_throughput"
+    ]
+  ],
   [".", ["aggregates"]]
 ]
 

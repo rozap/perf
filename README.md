@@ -1,4 +1,7 @@
 * make min/max yams macros so expressions can be used
+* figure out error surfacing
+  * ssl errors
+  * etc etc
 
 producer -->
   * checkout N processes from Global pool

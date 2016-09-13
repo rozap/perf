@@ -47,7 +47,7 @@ defmodule Perf.Runner.RequestWorker do
   defp make_request(%Request{} = r) do
     case method_from_request(r.method) do
       {:ok, method} ->
-        Logger.debug("Making a request #{method} #{r.path}")
+        # Logger.debug("Making a request #{method} #{r.path}")
         {result, range} = time fn -> request(method, r) end
         {result, range}
       err ->
@@ -122,7 +122,6 @@ defmodule Perf.Runner.RequestWorker do
 
 
   def handle_cast(:schedule, %{request: request, until: until} = state) do
-    Logger.info("#{inspect self} worker is scheduled #{until}")
     if Yams.key > until do
       {producer_pid, _} = state.producer
       Producer.on_complete(producer_pid)
