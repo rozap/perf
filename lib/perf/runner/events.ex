@@ -1,7 +1,6 @@
 defmodule Perf.Runner.Events do
   defmodule Success do
-    defstruct at: 0,
-      start_t: 0,
+    defstruct start_t: 0,
       end_t: 0,
       size: 0,
       request: :none,
@@ -12,7 +11,8 @@ defmodule Perf.Runner.Events do
     defstruct reason: :none,
       status: :none,
       request: :none,
-      at: 0
+      start_t: 0,
+      end_t: 0
   end
 
   defmodule StartingRequest do
@@ -28,7 +28,7 @@ defmodule Perf.Runner.Events do
 
   defp to_ms(m) do
     m
-    |> Enum.map(fn 
+    |> Enum.map(fn
       {k, v} when k in [:start_t, :end_t, :at] -> {k, Perf.Yams.key_to_ms(v)}
       other -> other
     end)
@@ -55,6 +55,12 @@ defmodule Perf.Runner.Events do
     |> to_row
     |> Poison.encode!
   end
+
+
+  def timeof(%Success{} = s), do: s.end_t
+  def timeof(%Error{} = s), do: s.end_t
+  def timeof(other), do: other.at
+
 
   defimpl Poison.Encoder, for: Success do
     defdelegate encode(v, opts), to: Perf.Runner.Events

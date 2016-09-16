@@ -43,7 +43,7 @@ defmodule Perf.YamsChannel do
       |> Yams.Interpreter.run(query)
 
       case changes do
-        {:ok, stream} -> 
+        {:ok, stream} ->
           stream
           |> Yams.Query.as_stream!
           |> Stream.each(fn events ->
@@ -82,6 +82,10 @@ defmodule Perf.YamsChannel do
         events = stream
         |> Yams.Query.as_stream!
         |> Enum.into([])
+
+        events
+        |> Enum.map(fn a -> {a.start_t, a.end_t} end)
+        |> IO.inspect
 
         {:reply, {:ok, %{events: events}}, socket}
       {:error, reason} ->

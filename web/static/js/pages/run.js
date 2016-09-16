@@ -5,6 +5,8 @@ import errorView from './widgets/error';
 import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
+import queryBuilderView from './widgets/query-builder';
+import {formatTime} from '../util';
 import moment from 'moment';
 import dc from 'dc';
 import crossfilter from 'crossfilter';
@@ -12,46 +14,6 @@ import * as d3 from 'd3';
 
 const defaultFormat = 'MM/DD/YYYY h:mm a'
 
-class Loadable {
-  constructor(thing) {
-    this._error = false;
-    if (thing) {
-      this.load(thing);
-    } else {
-      this.unload();
-    }
-  }
-
-  isLoaded() {
-    return this._isLoaded && !this._error;
-  }
-
-  isFailed() {
-    return !!this.getError();
-  }
-
-  error(e) {
-    this._error = e;
-  }
-
-  load(thing) {
-    this._thing = thing;
-    this._isLoaded = true;
-  }
-
-  unload() {
-    this._thing = false;
-    this._isLoaded = false;
-  }
-
-  get() {
-    return this._thing;
-  }
-
-  getError() {
-    return this._error;
-  }
-}
 
 function dateToSeconds(date) {
   return moment.utc(date).unix();
@@ -77,20 +39,17 @@ function domainOf(run) {
   }
 }
 
-var i = 0;
 function latencyChart({ndx, run}, send) {
+  console.log("LatencyChart!")
   const el = document.createElement('div');
+  window.chartEl = el;
   const chart = dc.seriesChart(el);
-
-
   const {
     startSeconds, endSeconds
   } = domainOf(run)
 
   const start = startSeconds*1000;
   const end = endSeconds*1000;
-
-  // const latencyDimension = ndx.filter((d) => d[0] === 'latency')
 
   var measureDimension = ndx.dimension((d) => {
     return [d.at, d.measure]
@@ -99,10 +58,12 @@ function latencyChart({ndx, run}, send) {
     return d.value;
   });
 
+  const width = document.body.clientWidth - 100;
+
   // Domain should be start_time + runlength
   chart
-    .width(768)
-    .height(480)
+    .width(width)
+    .height(width / 3)
     .chart(function(c) {
       return dc
       .lineChart(c)
@@ -110,7 +71,6 @@ function latencyChart({ndx, run}, send) {
     })
     .x(d3.scale.linear().domain([start, end]))
     .brushOn(false)
-    .yAxisLabel("Latency, ms")
     .xAxisLabel("Time")
     .clipPadding(10)
     .elasticY(true)
@@ -132,56 +92,66 @@ function latencyChart({ndx, run}, send) {
 
   dc.renderAll();
 
-  return {
-    latencyChart: el
-  };
+  return el;
 }
 
 
 const q = [
-  [".", ["bucket", 500, "milliseconds"]],
+  [".", ["bucket", 1000, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
-  
-  [".", [
-    "percentile", [
-      '/', [
-        "row.size",
-        [
-          "-", ["row.end_t", "row.start_t"]]
-    ]], 
-    50, 
-    "p75_throughput"
-    ]
-  ],
+  [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
+  [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
+  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+
+  // [".", [
+  //   "percentile", [
+  //     '/', [
+  //       "row.size",
+  //       [
+  //         "-", ["row.end_t", "row.start_t"]]
+  //   ]],
+  //   50,
+  //   "p75_throughput"
+  //   ]
+  // ],
   [".", ["aggregates"]]
 ]
+
+function summaryQuery(query) {
+  return [
+    [".", ["bucket", 220 * 1000, "milliseconds"]],
+    ...query.slice(1)
+  ]
+}
 
 
 function model(api, channelFactory) {
   var yam;
-  var onYamChanges;
+  var onYamChartChanges;
   var chart;
 
   const ndx = crossfilter([]);
-  window.ndx = ndx;
   return {
     state: {
       query: q,
       run: false,
       hasLoaded: false,
       latencyChart: false,
+      charts: [],
+      records: [],
+      summary: {events: []},
       ndx
     },
     namespace: 'run',
     reducers: {
       show,
       error,
-      setChart: (chart, state) => {
-        return {...state, ...chart};
-      }
+      appendChart,
+      resetChart,
+      records,
+      summary
     },
     effects: {
       getRun: _.partial(getRun, api),
@@ -194,32 +164,24 @@ function model(api, channelFactory) {
         });
       },
       yamConnected: (_params, state, send, done) => {
-        send('run:initChart', {}, done)
+        send('run:initChart', {}, done);
+        send('run:initSummary', {}, done);
       },
-      initChart: (_params, state, send, done) => {
-        send('run:onChartInit', latencyChart(state, send), done);
-
-        const {
-          startSeconds,
-          endSeconds
-        } = domainOf(state.run);
-
-        send('run:query', {startSeconds, endSeconds, query: state.query}, done);
+      initChart: (params, state, send, done) => {
+        if(yam) initChart(yam, params, state, send, done);
       },
-      onChartInit: (chart, state, send, done) => {
-        send('run:setChart', chart, done);
+      initSummary: (params, state, send, done) => {
+        if(yam) initSummary(yam, params, state, send, done);
       },
-
-      query: (params, state, send, done) => {
-        if (yam) {
-          query(yam, params, state, send, done)
-        }
+      chartChanges: (query, state) => {
+        yam.changes(query, onYamChartChanges);
       },
-      changes: (_, state) => {
-        yam.changes(state.query, onYamChanges);
+      summaryChanges: (query, state, send, done) => {
+        yam.changes(query, (summary) => {
+          send('run:summary', summary, done);
+        })
       },
-      change: ({events}, state, send, done) => {
-        console.log(events)
+      metricChange: ({events}, state, send, done) => {
         const records = _.flatten(events.map((e) => {
           return _.map(e.aggregations, (value, key) => {
             return {
@@ -231,12 +193,13 @@ function model(api, channelFactory) {
         }))
         state.ndx.add(records);
         dc.redrawAll();
+        send('run:records', records, done);
       }
     },
     subscriptions: [
       (send, done) => {
-        onYamChanges = (c) => {
-          send('run:change', c, done);
+        onYamChartChanges = (c) => {
+          send('run:metricChange', c, done);
         }
       }
     ]
@@ -250,21 +213,68 @@ function isInProgress(run) {
 function getRun(api, {id}, state, send, done) {
   api.get('run', {id})
     .on('error', (error) => send('run:error', error, done))
-    .on('ok', (resp) => {
-      send('run:show', resp, done);
-      send('run:initYam', resp, done);
+    .on('ok', (run) => {
+      send('run:show', run, done);
+      send('run:initYam', run, done);
     });
 }
 
-function query(yam, params, state, send, done) {
+function initChart(yam, _params, state, send, done) {
+  send('run:resetChart', done);
+  send('run:appendChart', latencyChart(state, send), done);
+
+  const {
+    startSeconds,
+    endSeconds
+  } = domainOf(state.run);
+
+  const params = {startSeconds, endSeconds, query: state.query};
+
   yam.query(params)
-    .on('error', (error) => send('run:error', error, done))
-    .on('ok', (resp) => {
-      console.log(resp);
-      send('run:change', resp, done);
-    })
+  .on('error', (error) => send('run:error', error, done))
+  .on('ok', (resp) => {
+    send('run:metricChange', resp, done);
+  });
+
+  if (isInProgress(state.run)) {
+    send('run:chartChanges', params, done);
+  }
 }
 
+function initSummary(yam, _params, state, send, done) {
+  const {
+    startSeconds,
+    endSeconds,
+  } = domainOf(state.run);
+
+  const params = {startSeconds, endSeconds, query: summaryQuery(state.query)};
+
+  yam.query(params)
+  .on('error', (error) => send('run:error', error, done))
+  .on('ok', (summary) => {
+    send('run:summary', summary, done);
+  });
+
+  if(isInProgress(state.run)) {
+    send('run:summaryChanges', params, done);
+  }
+}
+
+function summary(summary, state) {
+  return {...state, summary};
+}
+
+function records(records, state) {
+  return {...state, records};
+}
+
+function resetChart(_, state) {
+  return {...state, charts: []};
+}
+
+function appendChart(el, state) {
+  return {...state, charts: [...state.charts, el]};
+}
 
 function show(run, state) {
   return {
@@ -282,22 +292,31 @@ function error(error, state) {
   }
 }
 
+function summaryView({summary: {events}}) {
+  if(!events.length) return;
 
-function runView(state, send) {
-  if (!state.hasLoaded) {
-    return loader('Loading that run...');
-  }
-  if (!state.run) {
-    return;
-  }
-  const {
-    run
-  } = state;
+  const agg = events[0].aggregations;
+  return html`
+    <div class="summary">
+      <span class="text-muted">Summary</span>
+      ${
+        _.map(agg, (value, key) => {
+          const name = key.split('_').join(' ');
+          const formatted = formatTime(value);
 
-  if (isInProgress(run)) {
-    send('run:changes')
-  }
+          return html`
+            <span class="stat">
+              ${name} ${formatted}
+            </span>
+          `
+        })
+      }
+    </div>
+  `
+}
 
+
+function statusView({run}, send) {
   var finished = html `<span>In progress</span>`;
   if (!isInProgress(run)) {
     finished = html `<span>
@@ -308,16 +327,30 @@ function runView(state, send) {
     </span>`
   }
 
-  return html `
+  return html`
     <div>
-      <h5>
-        <span class="text-muted">Started</span>
-        <span>${moment.utc(run.inserted_at).format(defaultFormat)}</span>
-        ${finished}
-        ${state.latencyChart}
-      </h5>
+      <span class="text-muted">Started</span>
+      <span>${moment.utc(run.inserted_at).format(defaultFormat)}</span>
     </div>
   `
+}
+
+function runView(state, send) {
+  if (!state.hasLoaded) {
+    return loader('Loading that run...');
+  }
+  if (!state.run) {
+    return;
+  }
+  window.dc = dc;
+  return html `
+    <div>
+      ${statusView}
+      ${summaryView(state)}
+      ${state.charts}
+    </div>
+  `
+  // ${queryBuilderView(state.query)}
 }
 
 function view(appState, prev, send) {

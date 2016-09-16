@@ -12,10 +12,22 @@ defmodule QueryTest do
     {:ok, %{stream: stream}}
   end
 
+  test "can get the count the buckets", %{stream: stream} do
+    mins = stream
+    |> Query.bucket(10, "milliseconds")
+    |> Query.minimum("row.num", "min_num")
+    |> Query.aggregates
+    |> Query.as_stream!
+    |> Stream.map(fn %Aggregate{aggregations: %{"min_num" => mn}} -> mn end)
+    |> Enum.into([])
+
+    assert mins == [30, 40, 50]
+  end
+
   test "can get the minimum per bucket", %{stream: stream} do
     mins = stream
     |> Query.bucket(10, "milliseconds")
-    |> Query.minimum("num")
+    |> Query.minimum("row.num", "min_num")
     |> Query.aggregates
     |> Query.as_stream!
     |> Stream.map(fn %Aggregate{aggregations: %{"min_num" => mn}} -> mn end)
@@ -27,7 +39,7 @@ defmodule QueryTest do
   test "can get the maximum per bucket", %{stream: stream} do
     maxes = stream
     |> Query.bucket(10, "milliseconds")
-    |> Query.maximum("num")
+    |> Query.maximum("row.num", "max_num")
     |> Query.aggregates
     |> Query.as_stream!
     |> Stream.map(fn %Aggregate{aggregations: %{"max_num" => mn}} -> mn end)
@@ -60,12 +72,24 @@ defmodule QueryTest do
     assert ps == [1.0, 1.0, 1.0]
   end
 
+  test "can get the max of an expr per bucket", %{stream: stream} do
+    ps = stream
+    |> Query.bucket(10, "milliseconds")
+    |> Query.maximum("row.num" - 50, "max_num")
+    |> Query.aggregates
+    |> Query.as_stream!
+    |> Stream.map(fn %Aggregate{aggregations: %{"max_num" => tp}} -> tp end)
+    |> Enum.into([])
+
+    assert ps == [-11, -1, 0]
+  end
+
   test "can compose aggregations", %{stream: stream} do
     aggs = stream
     |> Query.bucket(10, "milliseconds")
     |> Query.percentile("row.num", 80, "p80_num")
-    |> Query.maximum("num")
-    |> Query.minimum("num")
+    |> Query.maximum("row.num", "max_num")
+    |> Query.minimum("row.num", "min_num")
     |> Query.percentile("row.num", 99, "p99_num")
     |> Query.aggregates
     |> Query.as_stream!
@@ -103,4 +127,6 @@ defmodule QueryTest do
 
     assert agg == 37.2
   end
+
+
 end

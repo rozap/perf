@@ -38,5 +38,15 @@ function putIn(obj, pathStr, val) {
   return obj;
 }
 
-export {errorClass, putIn, updateIn};
+
+function formatTime(millis) {
+  if(millis > 1000) {
+    const seconds = millis / 1000;
+    return seconds.toFixed(2) + 's';
+  } else {
+    return millis.toFixed(0) + 'ms';
+  }
+}
+
+export {errorClass, putIn, updateIn, formatTime};
 

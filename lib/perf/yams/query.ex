@@ -51,28 +51,8 @@ defmodule Perf.Yams.Query do
     end)
   end
 
-  defp group(%State{} = state, field_name, group_name, func) do
-    key = "#{group_name}_#{field_name}"
-    new_stream = reduce(state.stream, {key, nil}, fn
-      {_, datum}, {_, nil} -> {key, Map.get(datum, field_name)}
-      {_, datum}, {_, group_acc} ->
-        case Map.get(datum, field_name) do
-          nil -> {key, group_acc}
-          other ->
-            {key, func.(other, group_acc)}
-        end
-    end)
 
-    struct(state, stream: new_stream)
-  end
 
-  def minimum(state, field_name) do
-    group(state, field_name, "min", &min/2)
-  end
-
-  def maximum(state, field_name) do
-    group(state, field_name, "max", &max/2)
-  end
 
   def push_aggregate(bucket, key, value) do
     struct(bucket, aggregations: [{key, value} | bucket.aggregations])
@@ -113,8 +93,61 @@ defmodule Perf.Yams.Query do
     prim
   end
 
+  def aggregate_buckets(state, evaluator, aggregator, label) do
+    %State{stream: stream} = state
+    new_stream = Stream.map(stream, fn
+      %Bucket{} = b    ->
+        data = Enum.map(b.data, fn {_, datum} ->
+          evaluator.(datum)
+        end)
 
-  defmacro percentile(stream, expr, perc, label) do
+        value = aggregator.(data)
+
+        Perf.Yams.Query.push_aggregate(b, label, value)
+      a ->
+        Logger.warn("Cannot make an aggregate on an aggregate stream!")
+        a
+    end)
+    struct(state, stream: new_stream)
+
+  end
+
+
+  defp minimax(state, expr, aggregator, label) do
+    rowified = bind_row(expr)
+    quote do
+      require Logger
+      func = fn t ->
+        var!(row) = t
+        unquote(rowified)
+      end
+
+      Perf.Yams.Query.aggregate_buckets(
+        unquote(state),
+        func,
+        unquote(aggregator),
+        unquote(label)
+      )
+    end
+  end
+
+  def safe_min([]), do: 0
+  def safe_min(data), do: Enum.min(data)
+
+  def safe_max([]), do: 0
+  def safe_max(data), do: Enum.max(data)
+
+
+  defmacro minimum(state, expr, label) do
+    minimax(state, expr, &Perf.Yams.Query.safe_min/1, label)
+  end
+
+  defmacro maximum(state, expr, label) do
+    minimax(state, expr, &Perf.Yams.Query.safe_max/1, label)
+  end
+
+
+  defmacro percentile(state, expr, perc, label) do
     rowified = bind_row(expr)
 
     quote do
@@ -124,30 +157,23 @@ defmodule Perf.Yams.Query do
         var!(row) = t
         unquote(rowified)
       end
-   
-      %State{stream: stream} = s = unquote(stream)
-      new_stream = Stream.map(stream, fn
-        %Bucket{} = b    ->
-          data = Enum.map(b.data, fn {_, datum} ->
-            func.(datum)
-          end)
 
-          value = Perf.Yams.Query.safe_percentile(data, unquote(perc))
+      aggregator = fn data ->
+        Perf.Yams.Query.safe_percentile(data, unquote(perc))
+      end
 
-          Perf.Yams.Query.push_aggregate(b, unquote(label), value)
-        a ->
-          Logger.warn("Cannot make an aggregate on an aggregate stream!")
-          a
-      end)
-
-      struct(s, stream: new_stream)
+      Perf.Yams.Query.aggregate_buckets(
+        unquote(state),
+        func,
+        aggregator,
+        unquote(label)
+      )
     end
   end
 
 
-  defmacro where(stream, expr) do
+  defmacro where(state, expr) do
     rowified = bind_row(expr)
-
 
     quote do
       func = fn t ->
@@ -155,7 +181,7 @@ defmodule Perf.Yams.Query do
         unquote(rowified)
       end
 
-      %State{stream: stream} = s = unquote(stream)
+      %State{stream: stream} = s = unquote(state)
       new_stream = Stream.flat_map(stream, fn
         %Bucket{} = b    ->
           data = Enum.filter(b.data, fn {_, datum} ->
@@ -176,6 +202,7 @@ defmodule Perf.Yams.Query do
 
   def aggregates(%State{stream: stream} = state) do
     new_stream = Stream.map(stream, fn %Bucket{aggregations: aggs} = b ->
+      IO.inspect "b.start_t #{b.start_t == b.end_t}"
       %Aggregate{
         start_t: b.start_t,
         end_t: b.end_t,

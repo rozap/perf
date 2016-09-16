@@ -1,5 +1,20 @@
+.summary {
+    padding: @margin 0px;
+    margin: @margin 0px;
+    border-bottom: 1px solid @gray-lighter;
+    border-top: 1px solid @gray-lighter;
+    display: flex;
+
+    .stat {
+        margin: 0px @margin/2 0px 0px;
+        padding: 0px 0px 0px @margin/2;
+        border-left: 1px solid @gray-lighter;
+    }
+}
+
+
 div.dc-chart {
-    float: left;
+    display: block;
 }
 
 .dc-chart rect.bar {

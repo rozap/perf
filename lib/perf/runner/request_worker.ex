@@ -56,10 +56,11 @@ defmodule Perf.Runner.RequestWorker do
   end
 
   defp to_result(request, {{:error, %HTTPoison.Error{reason: reason}}, range}) do
-    {_, end_t} = range
+    {start_t, end_t} = range
 
     %Error{
-      at: end_t,
+      start_t: start_t,
+      end_t: end_t,
       reason: %{
         key: :request_failed,
         params: %{
@@ -70,24 +71,22 @@ defmodule Perf.Runner.RequestWorker do
     }
   end
 
-  defp to_result(request, {{:error, error}, range}) do
-    {_, end_t} = range
+  defp to_result(request, {{:error, error}, {start_t, end_t}}) do
     %Error{
-      at: end_t,
+      start_t: start_t,
+      end_t: end_t,
       reason: error,
       request: request
     }
   end
 
-  defp to_result(request, {{:ok, response}, range}) do
-    {start_t, end_t} = range
+  defp to_result(request, {{:ok, response}, {start_t, end_t}}) do
     %HTTPoison.Response{body: body, status_code: status} = response
     size = byte_size(body)
 
     %Success{
       size: size,
       start_t: start_t,
-      at: end_t,
       end_t: end_t,
       status: status,
       request: request

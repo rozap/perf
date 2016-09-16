@@ -35,12 +35,12 @@ defmodule InterpreterTest do
   test "can interpret a simple expr", %{one: one, two: two} do
     actual = eval!(one, [
       [".", ["bucket", 10, "milliseconds"]],
-      [".", ["maximum", "num"]]
+      [".", ["maximum", "row.num", "max_num"]]
     ])
 
     expected = two
     |> Query.bucket(10, "milliseconds")
-    |> Query.maximum("num")
+    |> Query.maximum("row.num", "max_num")
     |> Query.as_stream!
     |> Enum.into([])
 
@@ -50,13 +50,13 @@ defmodule InterpreterTest do
   test "can interpret an aggregated simple expr", %{one: one, two: two} do
     actual = eval!(one, [
       [".", ["bucket", 10, "milliseconds"]],
-      [".", ["maximum", "num"]],
+      [".", ["maximum", "row.num", "max_num"]],
       [".", ["percentile", "row.num", 95, "p95_num"]]
     ])
 
     expected = two
     |> Query.bucket(10, "milliseconds")
-    |> Query.maximum("num")
+    |> Query.maximum("row.num", "max_num")
     |> Query.percentile("row.num", 95, "p95_num")
     |> Query.as_stream!
     |> Enum.into([])
@@ -72,7 +72,7 @@ defmodule InterpreterTest do
         "where",
         [">", ["row.num", 30]]
       ]]
-    ]) 
+    ])
 
     expected = two
     |> Query.bucket(10, "milliseconds")

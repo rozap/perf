@@ -139,12 +139,14 @@ class Api extends Store {
   }
 }
 
+
+
 class Yams extends Store {
   name() {
     return 'yams';
   }
 
-  changes(query, cb) {
+  changes({query}, cb) {
     this.send('change:events', {query});
     return this._underlying.on('change:events', cb)
   }

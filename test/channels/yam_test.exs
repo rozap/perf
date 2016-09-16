@@ -28,7 +28,7 @@ defmodule YamChannelTest do
       "end_t_seconds" => Yams.key_to_seconds(to_ts),
       "query" => [
         [".", ["bucket", 10, "milliseconds"]],
-        [".", ["maximum", "num"]],
+        [".", ["maximum", "row.num", "max_num"]],
         [".", ["aggregates"]]
       ]
     })
@@ -53,10 +53,10 @@ defmodule YamChannelTest do
     |> wait_for_json
     |> Map.get("events")
     |> Enum.map(fn e -> e["aggregations"] end)
-    
+
     assert aggs ==  [
-      %{"p95_latency" => 39.5, "p95_throughput" => 1560.5}, 
-      %{"p95_latency" => 48.6, "p95_throughput" => 2362.2}, 
+      %{"p95_latency" => 39.5, "p95_throughput" => 1560.5},
+      %{"p95_latency" => 48.6, "p95_throughput" => 2362.2},
       %{"p95_latency" => 50.0, "p95_throughput" => 2.5e3}
     ]
 
