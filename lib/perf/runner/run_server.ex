@@ -17,7 +17,7 @@ defmodule Perf.Runner.RunServer do
     {:reply, :ok, state}
   end
 
-  def handle_info({:'DOWN', ref, :process, pid, reason}, state) do
+  def handle_info({:'DOWN', _ref, :process, pid, reason}, state) do
     Logger.info("Run execution #{inspect pid} has finished #{inspect reason}")
     {:noreply, state}
   end

@@ -1,6 +1,6 @@
 defmodule Perf.Resource.Suite do
   use Perf.Resource
-  alias Perf.{User, Suite, Request, Repo}
+  alias Perf.{User, Suite, Repo}
 
   defimpl Perf.Resource.List, for: Perf.Suite do
     use Perf.Resource

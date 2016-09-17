@@ -1,10 +1,8 @@
 defmodule Perf.Runner.Producer do
   use GenServer
   require Logger
-  alias Perf.Request
   alias Perf.Yams
-  alias Perf.{Suite, Run, Repo}
-  alias Perf.Runner.{RequestWorker, RequestTracker, Consumer}
+  alias Perf.Runner.{RequestWorker, Consumer}
   alias Perf.Runner.Events.{StartingRequest, Done}
 
 

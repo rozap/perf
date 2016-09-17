@@ -1,8 +1,7 @@
 defmodule Perf.Resource.Run do
   use Perf.Resource
   import Ecto.Query
-  alias Perf.{User, Suite, Request, Repo, Run, Runner}
-  alias Perf.Yams.Handle
+  alias Perf.{User, Repo, Run, Runner}
   require Logger
 
   defimpl Perf.Resource.Create, for: Run do
