@@ -14,7 +14,7 @@ defmodule Perf.Runner do
     pool = [
       name: {:local, RequestWorker},
       worker_module: RequestWorker,
-      size: 10000,
+      size: 5000,
       max_overflow: 80
     ]
 

@@ -107,4 +107,31 @@ defmodule InterpreterTest do
     assert actual == expected
   end
 
+  test "can interpret a count where", %{one: one, two: two} do
+    actual = eval!(one, [
+      [".", ["bucket", 10, "milliseconds"]],
+      [".", [
+        "count_where",
+        [
+          "&&",
+          [
+            [">=", ["row.num", 30]],
+            ["<=", ["row.num", 40]]
+          ]
+        ],
+        "something"
+      ]],
+      [".", ["aggregates"]]
+    ])
+
+    expected = two
+    |> Query.bucket(10, "milliseconds")
+    |> Query.count_where(("row.num" >= 30) && ("row.num" <= 40), "something")
+    |> Query.aggregates
+    |> Query.as_stream!
+    |> Enum.into([])
+
+    assert actual == expected
+  end
+
 end

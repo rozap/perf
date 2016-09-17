@@ -15,13 +15,25 @@ defmodule QueryTest do
   test "can get the count the buckets", %{stream: stream} do
     mins = stream
     |> Query.bucket(10, "milliseconds")
-    |> Query.minimum("row.num", "min_num")
+    |> Query.count("row.num", "count_num")
     |> Query.aggregates
     |> Query.as_stream!
-    |> Stream.map(fn %Aggregate{aggregations: %{"min_num" => mn}} -> mn end)
+    |> Stream.map(fn %Aggregate{aggregations: %{"count_num" => mn}} -> mn end)
     |> Enum.into([])
 
-    assert mins == [30, 40, 50]
+    assert mins == [10, 10, 1]
+  end
+
+  test "can count where a predicate is true the buckets", %{stream: stream} do
+    mins = stream
+    |> Query.bucket(10, "milliseconds")
+    |> Query.count_where("row.num" > 30 && "row.num" < 33, "count_num")
+    |> Query.aggregates
+    |> Query.as_stream!
+    |> Stream.map(fn %Aggregate{aggregations: %{"count_num" => mn}} -> mn end)
+    |> Enum.into([])
+
+    assert mins == [2, 0, 0]
   end
 
   test "can get the minimum per bucket", %{stream: stream} do

@@ -1,6 +1,7 @@
 import Emitter from 'tiny-emitter';
 import {Socket} from "phoenix";
 import _ from "underscore";
+import createHash from "sha.js";
 
 function getToken() {
   const {token} = JSON.parse(localStorage['session']);
@@ -147,8 +148,12 @@ class Yams extends Store {
   }
 
   changes({query}, cb) {
-    this.send('change:events', {query});
-    return this._underlying.on('change:events', cb)
+    var sha256 = createHash('sha256');
+    const ref = sha256.update(JSON.stringify(query)).digest("hex");
+    this.send(`change:events:${ref}`, {query});
+
+    console.log("Sub to", `change:events:${ref}`)
+    return this._underlying.on(`change:events:${ref}`, cb)
   }
 
   query({startSeconds, endSeconds, query}) {

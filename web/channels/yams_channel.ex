@@ -34,12 +34,13 @@ defmodule Perf.YamsChannel do
 
 
 
-  def handle_in("change:events", %{"query" => query}, socket) do
-    streamer = spawn_link(fn ->
+  def handle_in("change:events:" <> ref, %{"query" => query}, socket) do
+    Logger.info("Starting a #{ref} changestream")
+    spawn_link(fn ->
       run = socket.assigns.run
 
       changes = socket.assigns.handle
-      |>Handle.changes
+      |> Handle.changes
       |> Yams.Interpreter.run(query)
 
       case changes do
@@ -47,7 +48,7 @@ defmodule Perf.YamsChannel do
           stream
           |> Yams.Query.as_stream!
           |> Stream.each(fn events ->
-            push socket, "change:events", %{events: [events]}
+            push socket, "change:events:#{ref}", %{events: [events]}
           end)
           |> Stream.run
         {:error, other} ->
@@ -56,8 +57,6 @@ defmodule Perf.YamsChannel do
       end
 
     end)
-
-    socket = assign(socket, :streamer, streamer)
 
     {:reply, {:ok, %{}}, socket}
   end
@@ -82,10 +81,6 @@ defmodule Perf.YamsChannel do
         events = stream
         |> Yams.Query.as_stream!
         |> Enum.into([])
-
-        events
-        |> Enum.map(fn a -> {a.start_t, a.end_t} end)
-        |> IO.inspect
 
         {:reply, {:ok, %{events: events}}, socket}
       {:error, reason} ->

@@ -1,15 +1,23 @@
-.summary {
-    padding: @margin 0px;
-    margin: @margin 0px;
+.suite-progress, .summary, .statii {
     border-bottom: 1px solid @gray-lighter;
-    border-top: 1px solid @gray-lighter;
     display: flex;
+    margin-bottom: @margin/2;
+    padding-bottom: @margin/2;
+
+    .toplevel {
+        border-right: none;
+        padding-right: @margin/2;
+    }
 
     .stat {
         margin: 0px @margin/2 0px 0px;
-        padding: 0px 0px 0px @margin/2;
+        padding-left: @margin/2;
         border-left: 1px solid @gray-lighter;
     }
+    .stat:first-of-type {
+        border-left: none;
+    }
+
 }
 
 

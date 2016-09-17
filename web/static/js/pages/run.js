@@ -40,9 +40,7 @@ function domainOf(run) {
 }
 
 function latencyChart({ndx, run}, send) {
-  console.log("LatencyChart!")
   const el = document.createElement('div');
-  window.chartEl = el;
   const chart = dc.seriesChart(el);
   const {
     startSeconds, endSeconds
@@ -104,32 +102,67 @@ const q = [
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
-
-  // [".", [
-  //   "percentile", [
-  //     '/', [
-  //       "row.size",
-  //       [
-  //         "-", ["row.end_t", "row.start_t"]]
-  //   ]],
-  //   50,
-  //   "p75_throughput"
-  //   ]
-  // ],
   [".", ["aggregates"]]
 ]
 
-function summaryQuery(query) {
+function summaryQuery(run, query) {
+  const {duration} = domainOf(run);
   return [
-    [".", ["bucket", 220 * 1000, "milliseconds"]],
+    [".", ["bucket", duration, "seconds"]],
     ...query.slice(1)
   ]
 }
 
 
+function statusQuery(run) {
+  const {duration} = domainOf(run);
+  return [
+    [".", ["bucket", duration, "seconds"]],
+    [".", ["count_where", ["==", ["row.type", "success"]], "success_count"]],
+    [".", ["count_where", ["==", ["row.type", "error"]], "error_count"]],
+    [".", [
+      "count_where", [
+        "&&", [
+          [">=", ["row.status", 200]], 
+          ["<", ["row.status", 300]]
+        ]
+      ], 
+      "2xx_count"]
+    ],
+    [".", [
+      "count_where", [
+        "&&", [
+          [">=", ["row.status", 400]], 
+          ["<", ["row.status", 500]]
+        ]
+      ], 
+      "4xx_count"]
+    ],
+    [".", [
+      "count_where", [
+        "&&", [
+          [">=", ["row.status", 500]], 
+          ["<", ["row.status", 600]]
+        ]
+      ], 
+      "5xx_count"]
+    ],
+    [".", ["aggregates"]]
+  ]
+}
+
+function rolling(query) {
+  return [
+    [".", ["bucket", 5000, "milliseconds"]],
+    ...query.slice(1)
+  ]
+}
+
 function model(api, channelFactory) {
   var yam;
   var onYamChartChanges;
+  var onYamSummaryChanges;
+  var onYamStatusChanges;
   var chart;
 
   const ndx = crossfilter([]);
@@ -137,11 +170,12 @@ function model(api, channelFactory) {
     state: {
       query: q,
       run: false,
-      hasLoaded: false,
+      isLoading: false,
       latencyChart: false,
       charts: [],
       records: [],
       summary: {events: []},
+      status: {events: []},
       ndx
     },
     namespace: 'run',
@@ -151,7 +185,8 @@ function model(api, channelFactory) {
       appendChart,
       resetChart,
       records,
-      summary
+      summary,
+      status
     },
     effects: {
       getRun: _.partial(getRun, api),
@@ -164,8 +199,10 @@ function model(api, channelFactory) {
         });
       },
       yamConnected: (_params, state, send, done) => {
+        console.log("Yam is connected!")
         send('run:initChart', {}, done);
         send('run:initSummary', {}, done);
+        send('run:initStatii', {}, done);
       },
       initChart: (params, state, send, done) => {
         if(yam) initChart(yam, params, state, send, done);
@@ -173,13 +210,17 @@ function model(api, channelFactory) {
       initSummary: (params, state, send, done) => {
         if(yam) initSummary(yam, params, state, send, done);
       },
+      initStatii: (params, state, send, done) => {
+        if(yam) initStatii(yam, params, state, send, done);
+      },
       chartChanges: (query, state) => {
         yam.changes(query, onYamChartChanges);
       },
       summaryChanges: (query, state, send, done) => {
-        yam.changes(query, (summary) => {
-          send('run:summary', summary, done);
-        })
+        yam.changes(query, onYamSummaryChanges);
+      },
+      statusChanges: (query, state, send, done) => {
+        yam.changes(query, onYamStatusChanges);
       },
       metricChange: ({events}, state, send, done) => {
         const records = _.flatten(events.map((e) => {
@@ -198,9 +239,9 @@ function model(api, channelFactory) {
     },
     subscriptions: [
       (send, done) => {
-        onYamChartChanges = (c) => {
-          send('run:metricChange', c, done);
-        }
+        onYamChartChanges = (c) => send('run:metricChange', c, done);
+        onYamSummaryChanges = (c) => send('run:summary', c, done);
+        onYamStatusChanges = (c) => send('run:status', c, done);
       }
     ]
   };
@@ -247,7 +288,7 @@ function initSummary(yam, _params, state, send, done) {
     endSeconds,
   } = domainOf(state.run);
 
-  const params = {startSeconds, endSeconds, query: summaryQuery(state.query)};
+  const params = {startSeconds, endSeconds, query: summaryQuery(state.run, state.query)};
 
   yam.query(params)
   .on('error', (error) => send('run:error', error, done))
@@ -256,13 +297,39 @@ function initSummary(yam, _params, state, send, done) {
   });
 
   if(isInProgress(state.run)) {
-    send('run:summaryChanges', params, done);
+    send('run:summaryChanges', {startSeconds, endSeconds, query: rolling(summaryQuery(state.run, state.query))}, done);
   }
 }
+
+function initStatii(yam, _params, state, send, done) {
+  const {
+    startSeconds,
+    endSeconds,
+  } = domainOf(state.run);
+
+  const params = {startSeconds, endSeconds, query: statusQuery(state.run)};
+
+  yam.query(params)
+  .on('error', (error) => send('run:error', error, done))
+  .on('ok', (status) => {
+    send('run:status', status, done);
+  });
+
+  if(isInProgress(state.run)) {
+    send('run:statusChanges', {startSeconds, endSeconds, query: rolling(statusQuery(state.run))}, done);
+  }
+}
+
 
 function summary(summary, state) {
   return {...state, summary};
 }
+
+function status(status, state) {
+  console.log("Got a new status", status);
+  return {...state, status};
+}
+
 
 function records(records, state) {
   return {...state, records};
@@ -279,7 +346,7 @@ function appendChart(el, state) {
 function show(run, state) {
   return {
       ...state,
-    hasLoaded: true,
+    isLoading: false,
     run
   }
 }
@@ -287,9 +354,30 @@ function show(run, state) {
 function error(error, state) {
   return {
       ...state,
-    hasLoaded: true,
+    isLoading: false,
     error: error
   }
+}
+
+function statiiView({status: {events}}) {
+  if(!events.length) return;
+  const agg = events[0].aggregations;
+
+  return html`
+  <div class="statii">
+    <label class="toplevel text-muted">Statii</label>
+    ${
+      _.map(agg, (value, key) => {
+        const name = key.split('_').join(' ');
+        return html`
+          <span class="stat">
+            ${name} ${value}
+          </span>
+        `
+      })
+    }
+  </div>
+  `
 }
 
 function summaryView({summary: {events}}) {
@@ -298,7 +386,7 @@ function summaryView({summary: {events}}) {
   const agg = events[0].aggregations;
   return html`
     <div class="summary">
-      <span class="text-muted">Summary</span>
+      <label class="toplevel text-muted">Summary</label>
       ${
         _.map(agg, (value, key) => {
           const name = key.split('_').join(' ');
@@ -316,36 +404,36 @@ function summaryView({summary: {events}}) {
 }
 
 
-function statusView({run}, send) {
+function progressView({run}, send) {
   var finished = html `<span>In progress</span>`;
   if (!isInProgress(run)) {
     finished = html `<span>
-      <span class="text-muted">Finished</span>
-      <span>
+      <label class="toplevel text-muted">Finished</label>
+      <span class="stat">
         ${moment.utc(run.finished_at).format(defaultFormat)}
       </span>
     </span>`
   }
 
   return html`
-    <div>
-      <span class="text-muted">Started</span>
-      <span>${moment.utc(run.inserted_at).format(defaultFormat)}</span>
+    <div class="suite-progress">
+      <label class="toplevel text-muted">Started</label>
+      <span class="stat">${moment.utc(run.inserted_at).format(defaultFormat)}</span>
     </div>
   `
 }
 
 function runView(state, send) {
-  if (!state.hasLoaded) {
+  if (state.shouldLoad) {
     return loader('Loading that run...');
   }
   if (!state.run) {
     return;
   }
-  window.dc = dc;
   return html `
     <div>
-      ${statusView}
+      ${progressView(state)}
+      ${statiiView(state)}
       ${summaryView(state)}
       ${state.charts}
     </div>
@@ -353,12 +441,17 @@ function runView(state, send) {
   // ${queryBuilderView(state.query)}
 }
 
+//TODO: make this match the route nav
+function shouldLoad(appState) {
+  return !appState.run.run && !appState.run.isLoading;
+}
+
 function view(appState, prev, send) {
   const {
     params, run: state
   } = appState;
 
-  if (!state.hasLoaded) {
+  if (shouldLoad(appState)) {
     send('run:getRun', params);
   }
 

@@ -109,7 +109,6 @@ defmodule Perf.Yams.Query do
         a
     end)
     struct(state, stream: new_stream)
-
   end
 
 
@@ -146,6 +145,61 @@ defmodule Perf.Yams.Query do
     minimax(state, expr, &Perf.Yams.Query.safe_max/1, label)
   end
 
+  defmacro count(state, expr, label) do
+    rowified = bind_row(expr)
+
+    quote do
+      require Logger
+
+      func = fn t ->
+        var!(row) = t
+        unquote(rowified)
+      end
+
+      aggregator = fn data -> length(data) end
+
+      Perf.Yams.Query.aggregate_buckets(
+        unquote(state),
+        func,
+        aggregator,
+        unquote(label)
+      )
+    end
+  end
+
+  defmacro count_where(state, expr, label) do
+    rowified = bind_row(expr)
+
+    quote do
+      require Logger
+
+      predicate = fn t ->
+        var!(row) = t
+        unquote(rowified)
+      end
+
+      aggregator = fn data -> length(data) end
+
+      %State{stream: stream} = unquote(state)
+      new_stream = Stream.map(stream, fn
+        %Bucket{} = b ->
+          value = Enum.reduce(b.data, 0, fn {_t, x}, acc -> 
+            if(predicate.(x)) do
+              acc + 1
+            else 
+              acc
+            end
+          end)
+
+          Perf.Yams.Query.push_aggregate(b, unquote(label), value)
+        a ->
+          Logger.warn("Cannot make an aggregate on an aggregate stream!")
+          a
+      end)
+      struct(unquote(state), stream: new_stream)
+    end
+  end
+
 
   defmacro percentile(state, expr, perc, label) do
     rowified = bind_row(expr)
@@ -176,7 +230,7 @@ defmodule Perf.Yams.Query do
     rowified = bind_row(expr)
 
     quote do
-      func = fn t ->
+      predicate = fn t ->
         var!(row) = t
         unquote(rowified)
       end
@@ -185,11 +239,11 @@ defmodule Perf.Yams.Query do
       new_stream = Stream.flat_map(stream, fn
         %Bucket{} = b    ->
           data = Enum.filter(b.data, fn {_, datum} ->
-            func.(datum)
+            predicate.(datum)
           end)
           [struct(b, data: data)]
         %Aggregate{} = a ->
-          if func.(a.aggregations) do
+          if predicate.(a.aggregations) do
             [a]
           else
             []
@@ -202,7 +256,6 @@ defmodule Perf.Yams.Query do
 
   def aggregates(%State{stream: stream} = state) do
     new_stream = Stream.map(stream, fn %Bucket{aggregations: aggs} = b ->
-      IO.inspect "b.start_t #{b.start_t == b.end_t}"
       %Aggregate{
         start_t: b.start_t,
         end_t: b.end_t,

@@ -18,8 +18,8 @@ defmodule Perf.Yams.Handle do
     serialized = :erlang.term_to_binary(value)
     result = :eleveldb.put(state.db, "#{key}", serialized, [])
 
-    Enum.each(state.subscribers, fn who ->
-      send who, {:change, {key, value}, {:from, self}}
+    Enum.each(state.subscribers, fn {who, ref} ->
+      send who, {:change, {key, value}, {:from, self, ref}}
     end)
 
     {:reply, result, state}
@@ -52,9 +52,9 @@ defmodule Perf.Yams.Handle do
     {:reply, {:ok, stream}, state}
   end
 
-  def handle_call({:changes, who}, _, state) do
+  def handle_call({:changes, who, ref}, _, state) do
     Process.monitor(who)
-    {:reply, :ok, Map.put(state, :subscribers, [who | state.subscribers])}
+    {:reply, :ok, Map.put(state, :subscribers, [{who, ref} | state.subscribers])}
   end
 
   def handle_call(:listeners, _, state) do
@@ -62,7 +62,7 @@ defmodule Perf.Yams.Handle do
   end
 
   def handle_info({:DOWN, ref, :process, who, _reason}, state) do
-    subs = Enum.reject(state.subscribers, fn s -> s == who end)
+    subs = Enum.reject(state.subscribers, fn {sub, _} -> sub == who end)
     {:noreply, Map.put(state, :subscribers, subs)}
   end
 
@@ -83,13 +83,14 @@ defmodule Perf.Yams.Handle do
 
   def changes(pid) do
     start_t = Perf.Yams.key
+    ref = make_ref
     stream = Stream.resource(
       fn ->
-        GenServer.call(pid, {:changes, self})
+        GenServer.call(pid, {:changes, self, ref})
       end,
       fn state ->
         receive do
-          {:change, row, {:from, ^pid}} -> {[row], state}
+          {:change, row, {:from, ^pid, ^ref}} -> {[row], state}
           :done -> {:halt, state}
         end
       end,

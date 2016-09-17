@@ -16,7 +16,6 @@ defmodule Perf.Yams.Interpreter do
   ##
   # TODO: make `c` here match only against whitelisted comparators
   defp el_expr([c, args]) when is_list(args) do
-    IO.puts "hit #{c} #{inspect args}"
     {String.to_atom(c), [], Enum.map(args, &el_expr/1)}
   end
 

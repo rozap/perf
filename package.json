@@ -31,6 +31,7 @@
         "moment": "2.14.1",
         "dc": "latest",
         "crossfilter": "latest",
-        "d3": "3.5.17"
+        "d3": "3.5.17",
+        "sha.js": "latest"
     }
 }
