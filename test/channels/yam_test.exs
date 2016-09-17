@@ -3,7 +3,7 @@ defmodule YamChannelTest do
   use ExUnit.Case
   @endpoint Perf.Endpoint
   import Perf.TestHelpers
-  alias Perf.{Repo, Suite, Request, Run, User}
+  alias Perf.{Repo, Run}
   alias Perf.Yams
 
   setup do
@@ -22,7 +22,7 @@ defmodule YamChannelTest do
     {:ok, %{socket: socket, yam: yam, suite: suite, run: run}}
   end
 
-  test "can get a simple aggregate", %{socket: socket, suite: suite, run: run} do
+  test "can get a simple aggregate", %{socket: socket} do
     aggs = push(socket, "query:events", %{
       "start_t_seconds" => Yams.key_to_seconds(from_ts),
       "end_t_seconds" => Yams.key_to_seconds(to_ts),
@@ -36,10 +36,10 @@ defmodule YamChannelTest do
     |> Map.get("events")
     |> Enum.map(fn e -> e["aggregations"] end)
 
-    assert aggs = [%{"max_num" => 40}, %{"max_num" => 49}, %{"max_num" => 50}]
+    assert aggs == [%{"max_num" => 40}, %{"max_num" => 49}, %{"max_num" => 50}]
   end
 
-  test "can get a more complex aggregate", %{socket: socket, suite: suite, run: run} do
+  test "can get a more complex aggregate", %{socket: socket, suite: suite} do
     aggs = push(socket, "query:events", %{
       "start_t_seconds" => Yams.key_to_seconds(from_ts),
       "end_t_seconds" => Yams.key_to_seconds(to_ts),

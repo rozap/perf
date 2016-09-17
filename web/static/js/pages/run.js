@@ -123,28 +123,28 @@ function statusQuery(run) {
     [".", [
       "count_where", [
         "&&", [
-          [">=", ["row.status", 200]], 
+          [">=", ["row.status", 200]],
           ["<", ["row.status", 300]]
         ]
-      ], 
+      ],
       "2xx_count"]
     ],
     [".", [
       "count_where", [
         "&&", [
-          [">=", ["row.status", 400]], 
+          [">=", ["row.status", 400]],
           ["<", ["row.status", 500]]
         ]
-      ], 
+      ],
       "4xx_count"]
     ],
     [".", [
       "count_where", [
         "&&", [
-          [">=", ["row.status", 500]], 
+          [">=", ["row.status", 500]],
           ["<", ["row.status", 600]]
         ]
-      ], 
+      ],
       "5xx_count"]
     ],
     [".", ["aggregates"]]

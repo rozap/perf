@@ -1,7 +1,7 @@
 defmodule Perf.TestHelpers do
   alias Phoenix.Socket.Reply
   alias Perf.Yams
-  alias Perf.{Repo, Run, Request, Suite, User}
+  alias Perf.{Repo, Request, Suite, User}
 
   def wait_for(ref) do
     receive do
@@ -29,7 +29,7 @@ defmodule Perf.TestHelpers do
       t = num - 30
       key = from_ts + Yams.ms_to_key(t)
       :ok = Yams.Handle.put(h, key, %{
-        "num" => num, 
+        "num" => num,
         "str" => "foo_#{num}",
         "start_t" => Yams.key_to_ms(from_ts),
         "end_t" => Yams.key_to_ms(from_ts) + num,
@@ -38,7 +38,7 @@ defmodule Perf.TestHelpers do
     end)
     range = {from_ts, to_ts}
 
-    stream = Yams.Handle.stream!(h, range)
+    Yams.Handle.stream!(h, range)
   end
 
   def make_suite do

@@ -4,7 +4,7 @@ defmodule Perf.Api.Session do
   import Perf.Api
   def init(_), do: :ok
 
-  def call(conn, opts) do
+  def call(conn, _) do
     %Session{}
     |> Resource.Create.handle(%State{params: conn.params, conn: conn})
     |> to_http

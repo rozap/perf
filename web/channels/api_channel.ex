@@ -45,7 +45,7 @@ defmodule Perf.ApiChannel do
   ]
 
 
-  def join("api", args, socket) do
+  def join("api", _, socket) do
     {:ok, socket}
   end
 

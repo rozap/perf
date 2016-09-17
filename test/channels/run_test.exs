@@ -3,7 +3,6 @@ defmodule RunTest do
   use ExUnit.Case
   @endpoint Perf.Endpoint
   import Perf.TestHelpers
-  alias Perf.{Repo, Suite, Request, Run, User}
 
   alias Perf.Yams
   alias Perf.Runner.Events.Done
@@ -21,22 +20,22 @@ defmodule RunTest do
     {:ok, %{socket: socket, suite: suite}}
   end
 
-  test "can create a run", %{socket: socket, suite: suite} do
-    run = push(socket, "create:run", %{
-      "suite_id" => suite.id
-    }) |> wait_for
+  # test "can create a run", %{socket: socket, suite: suite} do
+  #   run = push(socket, "create:run", %{
+  #     "suite_id" => suite.id
+  #   }) |> wait_for
 
-    {_, handle} = Yams.Handle.open(run.yam_ref)
-    Yams.Handle.changes(handle)
-    |> Yams.Query.as_stream!
-    |> Stream.take_while(fn
-      {_, %Done{}} -> false
-      _ -> true
-    end)
-    |> Enum.into([])
-    |> IO.inspect
+  #   {_, handle} = Yams.Handle.open(run.yam_ref)
+  #   Yams.Handle.changes(handle)
+  #   |> Yams.Query.as_stream!
+  #   |> Stream.take_while(fn
+  #     {_, %Done{}} -> false
+  #     _ -> true
+  #   end)
+  #   |> Enum.into([])
+  #   |> IO.inspect
 
-  end
+  # end
 
 
 end

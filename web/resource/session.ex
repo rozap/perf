@@ -36,14 +36,13 @@ defmodule Perf.Resource.Session do
 
     on(%{"token" => token}) do
       case Guardian.revoke!(token) do
-        result -> ok(state, %{})
+        _ -> ok(state, %{})
       end
     end
   end
 
   defimpl Perf.Resource.Read, for: Perf.Session do
     use Perf.Resource
-    import Guardian.Phoenix.Socket
 
     on(%{"token" => token}) do
       case Guardian.decode_and_verify(token) do

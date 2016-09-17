@@ -94,11 +94,11 @@ defmodule Perf.Runner.RequestWorker do
   end
 
 
-  def handle_info({:DOWN, ref, :process, pid, _reason}, %{producer: {pid, _ref}} = state) do
+  def handle_info({:DOWN, _, :process, pid, _reason}, %{producer: {pid, _ref}} = state) do
     {:noreply, %{state | producer: :none}}
   end
 
-  def handle_info({:DOWN, ref, :process, pid, _reason}, %{consumer: {pid, _ref}} = state) do
+  def handle_info({:DOWN, _, :process, pid, _reason}, %{consumer: {pid, _ref}} = state) do
     {:noreply, %{state | consumer: :none}}
   end
 

@@ -10,7 +10,7 @@ defmodule Perf.UserSocket do
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
 
-  def connect(%{"token" => jwt} = params, socket) do
+  def connect(%{"token" => jwt}, socket) do
     case sign_in(socket, jwt) do
       {:ok, authed_socket, _guardian_params} ->
         IO.inspect authed_socket.assigns

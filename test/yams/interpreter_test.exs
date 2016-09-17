@@ -3,7 +3,6 @@ defmodule InterpreterTest do
   alias Perf.Yams
   require Perf.Yams.Query
   alias Perf.Yams.{Query, Interpreter}
-  alias Perf.Yams.Query.Aggregate
 
   setup do
     Yams.start_link

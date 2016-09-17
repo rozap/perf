@@ -1,9 +1,7 @@
 defmodule Perf.Runner do
   use Supervisor
   alias Perf.Runner.{RunServer, RequestWorker}
-  alias Perf.{Suite, Run, Repo, Yams, Request}
-  alias Experimental.GenStage
-  alias Perf.Runner.{Producer, RequestWorker, RequestTracker, Consumer}
+  alias Perf.Runner.{Producer, RequestWorker, Consumer}
   require Logger
 
   def start_link do
@@ -27,7 +25,7 @@ defmodule Perf.Runner do
   end
 
   def execute(run) do
-    suite = Repo.preload(run.suite, :requests)
+    # suite = Repo.preload(run.suite, :requests)
     yam_ref = run.yam_ref
 
     {_, handle} = Perf.Yams.Handle.open(yam_ref)

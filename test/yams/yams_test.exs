@@ -87,14 +87,11 @@ defmodule YamsTest do
     assert Handle.listeners(h) == {:ok, 1}
 
     send task.pid, :done
-    changes = Task.await(task)
+    Task.await(task)
 
-
-    from_ts = Yams.key
     :ok = Handle.put(h, Yams.key, [:a, :b, :c])
     :ok = Handle.put(h, Yams.key, [:d, :e, :f])
     :ok = Handle.put(h, Yams.key, [:g, :h, :i])
-    to_ts = Yams.key
 
     assert Handle.listeners(h) == {:ok, 0}
   end

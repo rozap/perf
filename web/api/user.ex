@@ -5,7 +5,7 @@ defmodule Perf.Api.User do
 
   def init(_), do: :ok
 
-  def call(conn, opts) do
+  def call(conn, _) do
     %User{}
     |> Resource.Create.handle(%State{params: conn.params, conn: conn})
     |> to_http

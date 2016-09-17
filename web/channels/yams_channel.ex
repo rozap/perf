@@ -1,13 +1,8 @@
 defmodule Perf.YamsChannel do
   use Phoenix.Channel
   require Logger
-  alias Phoenix.Socket
-  alias Perf.Resource.State
   alias Perf.Yams.{Handle}
-  alias Perf.{Repo, Run, Yams, Request}
-  alias Perf.Runner.Events.{Success, Error, StartingRequest, Done}
-  import Perf.Resource
-
+  alias Perf.{Repo, Run, Yams}
 
   def join("yams", %{"run_id" => run_id}, socket) do
     case Repo.get(Run, run_id) do
@@ -37,8 +32,6 @@ defmodule Perf.YamsChannel do
   def handle_in("change:events:" <> ref, %{"query" => query}, socket) do
     Logger.info("Starting a #{ref} changestream")
     spawn_link(fn ->
-      run = socket.assigns.run
-
       changes = socket.assigns.handle
       |> Handle.changes
       |> Yams.Interpreter.run(query)
@@ -51,8 +44,8 @@ defmodule Perf.YamsChannel do
             push socket, "change:events:#{ref}", %{events: [events]}
           end)
           |> Stream.run
-        {:error, other} ->
-          Logger.warn("Failed to run change stream on #{inspect query}")
+        {:error, err} ->
+          Logger.warn("Failed to run change stream on #{inspect query} #{inspect err}")
 
       end
 
@@ -67,8 +60,6 @@ defmodule Perf.YamsChannel do
       "query" => query}, socket) do
     start_t = Yams.seconds_to_key(start_t_seconds)
     end_t = Yams.seconds_to_key(end_t_seconds)
-
-    run = socket.assigns.run
 
     case socket.assigns.handle
     |> Handle.stream!({start_t, end_t})

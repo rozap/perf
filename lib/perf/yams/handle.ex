@@ -25,7 +25,7 @@ defmodule Perf.Yams.Handle do
     {:reply, result, state}
   end
 
-  def handle_call({:stream, {start_time, end_time}}, _, state) do
+  def handle_call({:stream, {_, end_time}}, _, state) do
     stream = Stream.resource(
       fn ->
         {:ok, ref} = :eleveldb.iterator(state.db, [])
@@ -42,7 +42,7 @@ defmodule Perf.Yams.Handle do
             else
               {:halt, {:done, ref}}
             end
-          {:error, err} ->
+          {:error, _} ->
             {:halt, {:done, ref}}
         end
       end,
@@ -61,7 +61,7 @@ defmodule Perf.Yams.Handle do
     {:reply, {:ok, length(state.subscribers)}, state}
   end
 
-  def handle_info({:DOWN, ref, :process, who, _reason}, state) do
+  def handle_info({:DOWN, _ref, :process, who, _reason}, state) do
     subs = Enum.reject(state.subscribers, fn {sub, _} -> sub == who end)
     {:noreply, Map.put(state, :subscribers, subs)}
   end
