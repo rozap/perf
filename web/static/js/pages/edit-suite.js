@@ -71,8 +71,10 @@ function model(store) {
       updateReqMethod,
       updateReqBody,
       updateReqPath,
-      updateRunlength,
-      updateConcurrency,
+      updateStepDuration,
+      updateMinConcurrency,
+      updateStepSize,
+      updateMaxConcurrency,
       toggleHeadersView,
       toggleParamsView,
       toggleBodyView,
@@ -203,69 +205,55 @@ function updateName(name, state) {
   return putIn(state, 'suite.name', name);
 }
 
-function updateReqMethod({
-  req, to
-}, state) {
+function updateReqMethod({req, to}, state) {
   return updateIn(state, 'suite.requests.method', req, to);
 }
 
-function updateReqHeaders({
-  req, headers
-}, state) {
+function updateReqHeaders({req, headers}, state) {
   return updateIn(state, 'suite.requests.headers', req, headers);
 }
 
-function updateReqParams({
-  req, params
-}, state) {
+function updateReqParams({req, params}, state) {
   return updateIn(state, 'suite.requests.params', req, params);
 }
 
-function updateReqBody({
-  req, body
-}, state) {
+function updateReqBody({req, body}, state) {
   return updateIn(state, 'suite.requests.body', req, body);
 }
 
-function updateReqPath({
-  req, path
-}, state) {
+function updateReqPath({req, path}, state) {
   return updateIn(state, 'suite.requests.path', req, path);
 }
 
-function updateRunlength({
-  req, runlength
-}, state) {
-  return updateIn(state, 'suite.requests.runlength', req, runlength);
+function updateStepDuration({req, stepDuration}, state) {
+  return updateIn(state, 'suite.requests.step_duration', req, stepDuration);  
 }
 
-function updateConcurrency({
-  req, concurrency
-}, state) {
-  return updateIn(state, 'suite.requests.concurrency', req, concurrency);
+function updateMinConcurrency({req, minConcurrency}, state) {
+  return updateIn(state, 'suite.requests.min_concurrency', req, minConcurrency);
 }
 
-function toggleHeadersView({
-  req
-}, state) {
+function updateStepSize({req, stepSize}, state) {
+  return updateIn(state, 'suite.requests.step_size', req, stepSize);
+}
+
+function updateMaxConcurrency({req, maxConcurrency}, state) {
+  return updateIn(state, 'suite.requests.max_concurrency', req, maxConcurrency);
+}
+
+function toggleHeadersView({req}, state) {
   return updateIn(state, 'suite.requests.headersShowing', req, !req.headersShowing);
 }
 
-function toggleParamsView({
-  req
-}, state) {
+function toggleParamsView({req}, state) {
   return updateIn(state, 'suite.requests.paramsShowing', req, !req.paramsShowing);
 }
 
-function toggleBodyView({
-  req
-}, state) {
+function toggleBodyView({req}, state) {
   return updateIn(state, 'suite.requests.bodyShowing', req, !req.bodyShowing);
 }
 
-function toggleRequestView({
-  req
-}, state) {
+function toggleRequestView({req}, state) {
   return updateIn(state, 'suite.requests.isShowing', req, !req.isShowing);
 }
 
@@ -437,15 +425,27 @@ function requestView(state, req, send) {
     });
     saveRequest(send, req);
   };
-  const onRunlengthChange = (e) => {
-    send('edit:updateRunlength', {
-      req, runlength: e.target.value
+  const onStepDurationChange = (e) => {
+    send('edit:updateStepDuration', {
+      req, stepDuration: (e.target.value * 1000)
     });
     saveRequest(send, req);
   }
-  const onConcurrencyChange = (e) => {
-    send('edit:updateConcurrency', {
-      req, concurrency: e.target.value
+  const onMinConcurrencyChange = (e) => {
+    send('edit:updateMinConcurrency', {
+      req, minConcurrency: e.target.value
+    });
+    saveRequest(send, req);
+  }
+  const onStepSizeChange = (e) => {
+    send('edit:updateStepSize', {
+      req, stepSize: e.target.value
+    });
+    saveRequest(send, req);
+  }
+  const onMaxConcurrencyChange = (e) => {
+    send('edit:updateMaxConcurrency', {
+      req, maxConcurrency: e.target.value
     });
     saveRequest(send, req);
   }
@@ -454,9 +454,9 @@ function requestView(state, req, send) {
     if (!req.isShowing) return;
 
     return html `
-    <div class="request-options">
+    <div class="request-options pure-form pure-form-aligned">
       <div class="method-path">
-        <div class="method">
+        <div class="method pure-control-group">
           <label>Method</label>
           ${
             select({
@@ -479,36 +479,56 @@ function requestView(state, req, send) {
               }
             )
           }
-        </div>
-
-        <input
-          name="path"
-          class="path"
-          value="${req.path}"
-          onkeyup=${onPathChange}
-        />
-      </div>
-      <div class="request-options">
-        <div class="run-length">
-          ${fieldError(state, 'runlength')}
-          <label>Run Length</label>
           <input
-            min="1"
-            step="1"
-            name="run length"
-            value="${req.runlength}"
-            onkeyup=${onRunlengthChange}
+            name="path"
+            class="path"
+            value="${req.path}"
+            onkeyup=${onPathChange}
           />
         </div>
-        <div class="concurrency">
-          ${fieldError(state, 'concurrency')}
-          <label>Concurrency</label>
+      </div>
+      <div class="request-options">
+        <div class="run-length pure-control-group">
+          ${fieldError(state, 'runlength')}
+          <label>Run each level of concurrency for</label>
           <input
             min="1"
             step="1"
-            name="concurrency"
-            value="${req.concurrency}"
-            onkeyup=${onConcurrencyChange}
+            name="concurrency run length"
+            value="${req.step_duration / 1000}"
+            onkeyup=${onStepDurationChange}
+          />
+          <label>seconds</label>
+
+        </div>
+        <div class="min-concurrency pure-control-group">
+          <label>Min Concurrency</label>
+          <input
+            min="1"
+            step="1"
+            name="min concurrency"
+            value="${req.min_concurrency}"
+            onkeyup=${onMinConcurrencyChange}
+          />
+        </div>
+        <div class="concurrency-step pure-control-group">
+          <label>Concurrency step size</label>
+          <input
+            min="1"
+            step="1"
+            name="concurrency step size"
+            value="${req.step_size}"
+            onkeyup=${onStepSizeChange}
+          />
+        </div>
+        <div class="max-concurrency pure-control-group">
+          <label>Max Concurrency</label>
+          <input
+            min="1"
+            step="1"
+            name="max concurrency"
+            value="${req.max_concurrency}"
+            onkeyup=${onMaxConcurrencyChange}
           />
         </div>
       </div>
@@ -535,6 +555,8 @@ function requestView(state, req, send) {
     </div>
   `
 }
+
+
 
 function requestListView(state, send) {
   const requests = state.suite.requests;

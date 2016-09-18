@@ -21,9 +21,9 @@ defmodule Perf.Runner.Producer do
     {:ok, state}
   end
 
-  defp allocate_workers(run, workers) do
-    if run.concurrency > MapSet.size(workers) do
-      (MapSet.size(workers)..run.concurrency)
+  defp allocate_workers(concurrency, run, workers) do
+    if concurrency > MapSet.size(workers) do
+      (MapSet.size(workers)..concurrency)
       |> Enum.map(fn _ ->
         pid = :poolboy.checkout(RequestWorker)
         {pid, Process.monitor(pid)}
@@ -33,7 +33,7 @@ defmodule Perf.Runner.Producer do
     else
       {keep, free} = workers
       |> MapSet.to_list
-      |> Enum.split(run.concurrency)
+      |> Enum.split(concurrency)
 
       remove = free
       |> Enum.map(fn {pid, _ref} ->
@@ -54,17 +54,20 @@ defmodule Perf.Runner.Producer do
     {:noreply, apply_new_pool(state, new_pool)}
   end
 
-  def handle_cast({:next_request, consumer}, %{requests: [request | rest]} = state) do
+  def handle_cast({:step, consumer}, %{requests: [request | rest]} = state) do
     Logger.info("Moving to request #{inspect request}")
+
+    concurrency = request.min_concurrency
 
     Consumer.on_event(consumer, %StartingRequest{
       at: Yams.key,
       request: request,
+      concurrency: concurrency,
       ref: make_ref
     })
 
-    workers = allocate_workers(request, state.workers)
-    until = Yams.key + Yams.seconds_to_key(request.runlength)
+    workers = allocate_workers(concurrency, request, state.workers)
+    until = Yams.key + Yams.ms_to_key(request.step_duration)
 
     workers
     |> Enum.each(fn {worker, _} ->
@@ -99,6 +102,10 @@ defmodule Perf.Runner.Producer do
     state = case MapSet.size(new_pool) do
       0 ->
         Logger.warn("DONE")
+
+        ## TODO: this should be next step
+
+
         Consumer.on_event(state.consumer, %Done{
           at: Yams.key,
           ref: make_ref
@@ -111,8 +118,8 @@ defmodule Perf.Runner.Producer do
     Map.put(state, :wait_pool, new_pool)
   end
 
-  def next_request(pid, consumer) do
-    GenServer.cast(pid, {:next_request, consumer})
+  def step(pid, consumer) do
+    GenServer.cast(pid, {:step, consumer})
   end
 
   def on_complete(pid) do

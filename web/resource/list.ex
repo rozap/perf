@@ -1,5 +1,4 @@
 defmodule Perf.Resource.ListAny do
-  import Perf.Resource.Helpers
   import Ecto.Query
   alias Perf.Resource.State
 
@@ -10,6 +9,24 @@ defmodule Perf.Resource.ListAny do
 
     struct(state, query: query)
   end
+
+
+  def filter(query, {name, value}) do
+    case String.split(name, ".") do
+      [name] ->
+        fname = String.to_atom(name)
+        query |> where([m], field(m, ^fname) == ^value)
+      _ -> query
+    end
+  end
+
+  def apply_filters(query, %{"where" => wheres}) do
+    Enum.reduce(wheres, query, fn clause, q ->
+      filter(q, clause)
+    end)
+  end
+
+  def apply_filters(query, _), do: query
 
   def evaluate(_, %State{query: query, params: params} = state) do
     offset = Dict.get(params, "offset", 0)

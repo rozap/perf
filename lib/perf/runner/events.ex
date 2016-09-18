@@ -18,6 +18,7 @@ defmodule Perf.Runner.Events do
   defmodule StartingRequest do
     defstruct at: 0,
       request: :none,
+      concurrency: 0,
       ref: :none
   end
 
