@@ -3,7 +3,7 @@ defmodule Perf.Resource.ReadAny do
   alias Perf.Resource.State
   import Perf.Resource
 
-  def read(model, %State{params: params, socket: socket} = state) do
+  def read(model, %State{params: params} = state) do
     query = from(m in model.__struct__)
     [id_name] = model.__struct__.__schema__(:primary_key)
     case Map.get(params, Atom.to_string(id_name)) do

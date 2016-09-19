@@ -14,7 +14,7 @@ defmodule Perf.Resource.Session do
       end
     end
 
-    def handle(model, state) do
+    def handle(_model, state) do
       case Perf.Session.validate(state.params) do
         {:ok, %{"email" => email, "password" => password}} ->
           query = from u in User, where: u.email == ^email
@@ -31,7 +31,6 @@ defmodule Perf.Resource.Session do
     use Perf.Resource
     alias Perf.{Repo, User, Session}
     import Ecto.Query
-    import Guardian.Phoenix.Socket
     alias Perf.Resource.State
 
     on(%{"token" => token}) do

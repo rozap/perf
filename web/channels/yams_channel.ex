@@ -30,7 +30,7 @@ defmodule Perf.YamsChannel do
 
 
   def handle_in("change:events:" <> ref, %{"query" => query}, socket) do
-    Logger.info("Starting a #{ref} changestream")
+    Logger.warn("Starting a #{ref} changestream")
     spawn_link(fn ->
       changes = socket.assigns.handle
       |> Handle.changes
@@ -57,7 +57,7 @@ defmodule Perf.YamsChannel do
   def handle_in("query:events", %{
       "start_t_seconds" => start_t_seconds,
       "end_t_seconds" => end_t_seconds,
-      "query" => query}, socket) do
+      "query" => query}, socket) when is_number(start_t_seconds) and is_number(end_t_seconds) do
     start_t = Yams.seconds_to_key(start_t_seconds)
     end_t = Yams.seconds_to_key(end_t_seconds)
 

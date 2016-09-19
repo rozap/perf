@@ -9,6 +9,17 @@ defmodule Perf.TestHelpers do
     end
   end
 
+  def wait_for_run_completion(run) do
+    {_, handle} = Yams.Handle.open(run.yam_ref)
+    Yams.Handle.changes(handle)
+    |> Yams.Query.as_stream!
+    |> Stream.take_while(fn
+      {_, %{"type" => "done"}} -> false
+      _ -> true
+    end)
+    |> Enum.into([])
+  end
+
   def wait_for_json(ref) do
     wait_for(ref)
     |> Poison.encode!
@@ -55,10 +66,12 @@ defmodule Perf.TestHelpers do
             headers: %{
               "Content-Type": "application/json"
             },
-            concurrency: 2,
-            runlength: 1,
-            timeout: 750,
-            receive_timeout: 750
+            min_concurrency: 2,
+            max_concurrency: 4,
+            step_size: 1,
+            step_duration: 1000,
+            timeout: 2,
+            receive_timeout: 2
           }
         ],
         user: %User{

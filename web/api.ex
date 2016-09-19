@@ -18,7 +18,6 @@ defmodule Perf.Api.Helper do
 end
 
 defmodule Perf.Api do
-  alias Perf.Resource.State
   import Plug.Conn
   import Perf.Api.Helper
 

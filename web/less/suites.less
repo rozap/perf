@@ -49,19 +49,22 @@
       }
 
       .request-options {
-        .method-path {
+        .pure-control-group {
           display: flex;
+          label {
+            min-width: 200px;
+          }
+        }
+        input {
+          flex-grow: 1;
+          margin-left: @margin/2;
+          margin-top: -1px;
+        }
 
-          .method {
-            width: 33%;
-            label {
-              flex-grow: 1;
-            }
-          }
-          .path {
-            flex-grow: 1;
-            margin-left: @margin;
-          }
+        .path {
+
+        }
+        label {
         }
       }
     }

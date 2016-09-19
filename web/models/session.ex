@@ -7,7 +7,7 @@ defmodule Perf.Session do
         {:ok, login}
       {_, missing} -> 
         error = missing 
-        |> Enum.map(fn k, v -> {k, ["can't be blank"]} end) 
+        |> Enum.map(fn k, _ -> {k, ["can't be blank"]} end) 
         |> Enum.into(%{})
         {:error, error}
     end

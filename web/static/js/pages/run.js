@@ -26,16 +26,13 @@ function nanoToSeconds(nanos) {
 }
 
 function domainOf(run) {
-  const duration = run.suite.requests.reduce((acc, req) => {
-    return (req.runlength + (req.timeout / 1000) + (req.receive_timeout / 1000)) + acc;
-  }, 0);
-  const startSeconds = dateToSeconds(run.inserted_at);
-  const endSeconds = startSeconds + duration;
+  const startSeconds = dateToSeconds(run.started_at);
+  const endSeconds = startSeconds + (run.duration / 1000);
 
   return {
     startSeconds,
     endSeconds,
-    duration
+    duration: run.duration
   }
 }
 

@@ -33,7 +33,7 @@ defmodule Perf.Yams.Query do
   end
 
   def bucket(%State{stream: stream, range: {from_ts, _}} = state, nanoseconds, "nanoseconds") do
-    chunked = Stream.chunk_by(stream, fn {time, _} = e ->
+    chunked = Stream.chunk_by(stream, fn {time, _} ->
       Float.floor((time - from_ts) / nanoseconds)
     end)
     |> Stream.map(fn bucket ->
@@ -43,16 +43,6 @@ defmodule Perf.Yams.Query do
 
     struct(state, stream: chunked)
   end
-
-  defp reduce(bucket_stream, acc, func) do
-    Stream.map(bucket_stream, fn bucket ->
-      {key, value} = Enum.reduce(bucket.data, acc, func)
-      struct(bucket, aggregations: [{key, value} | bucket.aggregations])
-    end)
-  end
-
-
-
 
   def push_aggregate(bucket, key, value) do
     struct(bucket, aggregations: [{key, value} | bucket.aggregations])

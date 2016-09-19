@@ -39,7 +39,7 @@ defmodule YamChannelTest do
     assert aggs == [%{"max_num" => 40}, %{"max_num" => 49}, %{"max_num" => 50}]
   end
 
-  test "can get a more complex aggregate", %{socket: socket, suite: suite} do
+  test "can get a more complex aggregate", %{socket: socket} do
     aggs = push(socket, "query:events", %{
       "start_t_seconds" => Yams.key_to_seconds(from_ts),
       "end_t_seconds" => Yams.key_to_seconds(to_ts),

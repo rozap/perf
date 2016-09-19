@@ -1,13 +1,10 @@
 defmodule Perf.Yams do
   use Supervisor
-  alias Perf.Yams.{Registry, Handle}
-
   def start_link do
     Supervisor.start_link(__MODULE__, [])
   end
 
-  def init(opts) do
-    IO.puts "Supervisor #{inspect self}"
+  def init(_) do
     children = [
       # worker(Registry, [])
     ]

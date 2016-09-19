@@ -1,5 +1,5 @@
 defmodule Perf.Api.Session do
-  alias Perf.{User, Session, Resource}
+  alias Perf.{Session, Resource}
   alias Perf.Resource.State
   import Perf.Api
   def init(_), do: :ok

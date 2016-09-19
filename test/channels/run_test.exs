@@ -4,6 +4,7 @@ defmodule RunTest do
   @endpoint Perf.Endpoint
   import Perf.TestHelpers
 
+  alias Perf.{Repo, Run}
   alias Perf.Yams
   alias Perf.Runner.Events.Done
 
@@ -20,22 +21,35 @@ defmodule RunTest do
     {:ok, %{socket: socket, suite: suite}}
   end
 
-  # test "can create a run", %{socket: socket, suite: suite} do
-  #   run = push(socket, "create:run", %{
-  #     "suite_id" => suite.id
-  #   }) |> wait_for
+  test "can create a run", %{socket: socket, suite: suite} do
+    events = push(socket, "create:run", %{
+      "suite_id" => suite.id
+    }) 
+    |> wait_for
+    |> wait_for_run_completion
 
-  #   {_, handle} = Yams.Handle.open(run.yam_ref)
-  #   Yams.Handle.changes(handle)
-  #   |> Yams.Query.as_stream!
-  #   |> Stream.take_while(fn
-  #     {_, %Done{}} -> false
-  #     _ -> true
-  #   end)
-  #   |> Enum.into([])
-  #   |> IO.inspect
+    assert length(events) > 0
+  end
 
-  # end
+  test "can list runs", %{socket: socket, suite: suite} do
+    Enum.each(1..30, fn _ -> 
+      Repo.insert!(%Run{suite: suite})
+    end)
 
+    resp = push(socket, "list:run", %{
+      "suite_id" => suite.id
+    }) 
+    |> wait_for_json
+
+    assert resp["count"] == 30
+    assert length(resp["items"]) == 16
+
+    resp
+    |> Map.get("items")
+    |> Enum.each(fn run -> 
+      assert run["suite"]["id"] == suite.id
+      assert length(run["suite"]["requests"]) > 0
+    end)
+  end
 
 end
