@@ -1,0 +1,5 @@
+2016-09-18 17:59:01.214 [error] <0.954.0> Supervisor 'Elixir.Logger.Supervisor' had child undefined started with 'Elixir.Logger.Watcher':watcher(error_logger, 'Elixir.Logger.ErrorHandler', {true,false,500}, link) at <0.959.0> exit with reason normal in context child_terminated
+2016-09-18 17:59:01.319 [info] <0.7.0> Application lager started on node nonode@nohost
+2016-09-18 17:59:01.323 [info] <0.7.0> Application getopt started on node nonode@nohost
+2016-09-18 17:59:01.531 [info] <0.7.0> Application perf started on node nonode@nohost
+2016-09-18 17:59:01.647 [info] <0.7.0> Application ex_unit started on node nonode@nohost

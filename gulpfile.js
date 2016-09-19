@@ -11,7 +11,6 @@ var gulp = require('gulp'),
   watchify = require('watchify'),
   babel = require('babelify'),
   colors = require('colors');
-// elm = require('gulp-elm');
 
 var paths = {
   js: {
@@ -24,13 +23,6 @@ var paths = {
       ]
     },
   },
-
-  elm: {
-    src: './web/elm/*.elm',
-    dest: './priv/static/js/',
-    watch: ['./web/elm/*elm']
-  },
-
   less: {
     src: './web/less/app.less',
     dest: './priv/static/css/',
@@ -49,9 +41,9 @@ var paths = {
 };
 
 
-var bundler = watchify(browserify(paths.js.app.src, {
+var bundler = browserify(paths.js.app.src, {
   debug: true
-}).transform(babel));
+}).transform(babel);
 
 gulp.task('app', function() {
   bundler.bundle()
@@ -70,8 +62,6 @@ gulp.task('app', function() {
     }))
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(paths.js.app.dest));
-
-  console.log("-> Done compiling js")
 });
 
 gulp.task('less', function() {
@@ -96,9 +86,8 @@ gulp.task('images', function() {
 
 gulp.task('rebuild', function() {
   gulp.watch(paths.js.app.watch, ['app']);
-  // gulp.watch(paths.elm.watch, ['elm']);
   gulp.watch(paths.less.watch, ['less']);
 });
 
 gulp.task('watch', ['app', 'less', 'fonts', 'images', 'rebuild']);
-// gulp.task('deploy', ['app', 'less', 'fonts', 'images']);
+gulp.task('deploy', ['app', 'less', 'fonts', 'images']);

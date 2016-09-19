@@ -1,0 +1,10 @@
+build-essential
+git-core
+htop
+tmux
+vim
+tree
+jq
+postgresql-9.4
+postgresql-client-9.4
+postgresql-contrib-9.4

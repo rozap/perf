@@ -13,11 +13,21 @@ use Mix.Config
 # which you typically run after static files are built.
 config :perf, Perf.Endpoint,
   http: [port: {:system, "PORT"}],
-  url: [host: "example.com", port: 80],
+  url: [host: "load.fail", port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
 # Do not print debug messages in production
 config :logger, level: :info
+
+# Configure your database
+config :perf, Perf.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "perf",
+  hostname: "10.138.0.3",
+  pool_size: 10
+
 
 # ## SSL Support
 #

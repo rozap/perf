@@ -3,7 +3,7 @@ defmodule Perf.Mixfile do
 
   def project do
     [app: :perf,
-     version: "0.0.3",
+     version: "0.0.6",
      elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
