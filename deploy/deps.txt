@@ -1,0 +1,7 @@
+build-essential
+git-core
+htop
+tmux
+vim
+tree
+jq
