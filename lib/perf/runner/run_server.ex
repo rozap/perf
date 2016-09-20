@@ -33,9 +33,6 @@ defmodule Perf.Runner.RunServer do
 
   def handle_info({:'DOWN', ref, :process, pid, :normal}, state) do
     {run, in_progress} = pop_progress(state.in_progress, pid, ref)
-    Logger.info("Run execution #{inspect pid} has finished successfully")
-
-    # Run.write_succeeded!(run)
 
     new_state = %{state | in_progress: in_progress}
     {:noreply, new_state}

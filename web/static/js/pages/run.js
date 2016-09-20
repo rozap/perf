@@ -92,13 +92,13 @@ function latencyChart({ndx, run}, send) {
 
 
 const q = [
-  [".", ["bucket", 1000, "milliseconds"]],
+  [".", ["bucket", 60 * 1000, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
   [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
-  [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+  // [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 99, "p95_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
   [".", ["aggregates"]]
 ]
 

@@ -4,6 +4,8 @@ defmodule Perf.Resource.Suite do
 
   defimpl Perf.Resource.List, for: Perf.Suite do
     use Perf.Resource
+    stage :check_auth, mod: Perf.Resource.Stages
+    stage :filter_by_user, mod: Perf.Resource.Suite
     stage :query,    mod: Perf.Resource.ListAny
     stage :evaluate, mod: Perf.Resource.ListAny
     stage :meta,     mod: Perf.Resource.ListAny
@@ -19,6 +21,8 @@ defmodule Perf.Resource.Suite do
 
   defimpl Perf.Resource.Read, for: Perf.Suite do
     use Perf.Resource
+    stage :check_auth, mod: Perf.Resource.Stages
+    stage :filter_by_user, mod: Perf.Resource.Suite
     stage :read, mod: Perf.Resource.ReadAny
     stage :load_requests, mod: Perf.Resource.Suite
   end
@@ -34,13 +38,12 @@ defmodule Perf.Resource.Suite do
     struct(state, resp: joined)
   end
 
-  def check_auth(_, %State{socket: socket, params: params} = state) do
-    case socket.assigns do
-      %{user: %User{} = user} ->
-        params = Map.put(params, "user_id", user.id)
-        struct(state, params: params)
-      _ -> forbidden(state)
-    end
+  def filter_by_user(_, %State{params: %{"user_id" => user_id} = params} = state) do
+    wheres = params
+    |> Map.get("where", %{})    
+    |> Map.put("user_id", user_id)
+
+    struct(state, params: %{"where" => wheres})
   end
 
 end

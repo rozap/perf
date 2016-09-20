@@ -16,11 +16,14 @@ defmodule Perf.Resource.ListAny do
       [name] ->
         fname = String.to_atom(name)
         query |> where([m], field(m, ^fname) == ^value)
-      _ -> query
+      nested -> 
+        # IO.inspect
+        query
     end
   end
 
   def apply_filters(query, %{"where" => wheres}) do
+    IO.puts "wheres.. #{inspect wheres}"
     Enum.reduce(wheres, query, fn clause, q ->
       filter(q, clause)
     end)

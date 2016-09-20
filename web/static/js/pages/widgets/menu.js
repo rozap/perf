@@ -4,7 +4,7 @@ function current({user}, send) {
   if(user) {
     return html`
     <ul class="auths">
-      <li>
+      <li class="${routeActive('profile')}">
         <a href="/app/profile">${user.email}</a>
       </li>
       <li>
@@ -35,7 +35,7 @@ function actions(user) {
   return html`
     <ul class="actions">
       <li class="${routeActive('suites')}"><a href="/app/suites">Suites</a></li>
-      <li><a href="/app/runs">Runs</a></li>
+      <li class="${routeActive('runs')}"><a href="/app/runs">Runs</a></li>
     </ul>
   `
 }
@@ -43,7 +43,7 @@ function actions(user) {
 function view({user}, send) {
   return html`
     <div class="top-menu">
-      <a class="title" href="/app">perf.fail</a>
+      <a class="title" href="/">load.fail</a>
       ${actions(user)}
       ${current(user, send)}
     </div>

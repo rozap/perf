@@ -1,7 +1,7 @@
 defmodule Perf.Runner.Producer do
   use GenServer
   require Logger
-  alias Perf.Yams
+  alias Perf.{Run, Request, Yams}
   alias Perf.Runner.{RequestWorker, Consumer}
   alias Perf.Runner.Events.{StartingRequest, Done}
 
@@ -16,7 +16,8 @@ defmodule Perf.Runner.Producer do
       requests: run.suite.requests,
       workers: MapSet.new,
       wait_pool: MapSet.new,
-      consumer: :none
+      consumer: :none, 
+      concurrency: List.first(run.suite.requests).min_concurrency
     }
     {:ok, state}
   end
@@ -36,9 +37,10 @@ defmodule Perf.Runner.Producer do
       |> Enum.split(concurrency)
 
       remove = free
-      |> Enum.map(fn {pid, _ref} ->
+      |> Enum.map(fn {pid, ref} ->
         :poolboy.checkin(RequestWorker, pid)
-        {pid, Process.demonitor(pid)}
+        Process.demonitor(ref)
+        {pid, ref}
       end)
       |> MapSet.new
 
@@ -49,15 +51,46 @@ defmodule Perf.Runner.Producer do
 
   end
 
-  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
-    new_pool = MapSet.delete(state.wait_pool, ref)
-    {:noreply, apply_new_pool(state, new_pool)}
+
+  def handle_cast({:start, consumer}, state) do
+    new_state = %{state | consumer: consumer}
+    step()
+    {:noreply, new_state}
   end
 
-  def handle_cast({:step, consumer}, %{requests: [request | rest]} = state) do
-    Logger.info("Moving to request #{inspect request}")
+  def handle_cast(:step, %{requests: []} = state) do
+    Logger.warn("Step called on finished producer")
+    {:noreply, state}
+  end
 
-    concurrency = request.min_concurrency
+  def handle_cast(:step, %{requests: [%Request{max_concurrency: max_c} | []], concurrency: c} = state) when max_c < c do
+    Run.write_succeeded!(state.run)
+
+    Consumer.on_event(state.consumer, %Done{
+      at: Yams.key,
+      ref: make_ref
+    })
+
+    new_state = Map.put(state, :requests, [])
+    {:noreply, new_state}
+  end
+
+
+  def handle_cast(:step, %{requests: [%Request{max_concurrency: max_c} | rest], concurrency: c} = state) when max_c < c do
+    [next | _] = rest
+
+    new_state = state
+    |> Map.put(:concurrency, next.min_concurrency)
+    |> Map.put(:requests, rest)
+
+    step()
+
+    {:noreply, new_state}
+  end
+
+
+  def handle_cast(:step, %{requests: [request | rest], consumer: consumer, concurrency: concurrency} = state) do
+    Logger.info("Moving to c:#{concurrency} request #{request.path}")
 
     Consumer.on_event(consumer, %StartingRequest{
       at: Yams.key,
@@ -77,10 +110,16 @@ defmodule Perf.Runner.Producer do
     new_state = state
     |> Map.put(:wait_pool, workers)
     |> Map.put(:workers, workers)
-    |> Map.put(:requests, rest)
-    |> Map.put(:consumer, consumer)
+    |> Map.put(:concurrency, concurrency + request.step_size)
 
     {:noreply, new_state}
+  end
+
+
+
+  def handle_info({:DOWN, ref, :process, pid, _reason}, state) do
+    new_pool = MapSet.delete(state.wait_pool, {pid, ref})
+    {:noreply, maybe_advance(state, new_pool)}
   end
 
   def handle_cast({:on_complete, worker_pid}, state) do
@@ -93,23 +132,18 @@ defmodule Perf.Runner.Producer do
     end)
     |> MapSet.new
 
-    new_state = apply_new_pool(state, new_pool)
+    new_state = maybe_advance(state, new_pool)
 
     {:noreply, new_state}
   end
 
-  defp apply_new_pool(state, new_pool) do
+  defp maybe_advance(state, new_pool) do
     state = case MapSet.size(new_pool) do
       0 ->
         Logger.warn("DONE")
 
         ## TODO: this should be next step
-
-
-        Consumer.on_event(state.consumer, %Done{
-          at: Yams.key,
-          ref: make_ref
-        })
+        step()
         state
       _ ->
         state
@@ -118,8 +152,12 @@ defmodule Perf.Runner.Producer do
     Map.put(state, :wait_pool, new_pool)
   end
 
-  def step(pid, consumer) do
-    GenServer.cast(pid, {:step, consumer})
+  def start(pid, consumer) do
+    GenServer.cast(pid, {:start, consumer})
+  end
+
+  defp step do
+    GenServer.cast(self, :step)
   end
 
   def on_complete(pid) do

@@ -17,7 +17,7 @@ defmodule Perf.Router do
   scope "/", Perf do
     pipe_through :browser # Use the default browser stack
 
-    get "/app/*page", PageController, :index
+    get "/*page", AppController, :index
   end
 
   scope "/api", Perf do

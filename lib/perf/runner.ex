@@ -36,7 +36,7 @@ defmodule Perf.Runner do
     {:ok, producer} = Producer.start_link(run)
     {:ok, consumer} = Consumer.start_link(handle, run)
 
-    Producer.step(producer, consumer)
+    Producer.start(producer, consumer)
   end
 
   def pool_used do

@@ -43,8 +43,10 @@ function newRequest() {
     headers: {
       'Content-Type': 'application/json'
     },
-    concurrency: 47,
-    runlength: 60,
+    min_concurrency: 20,
+    max_concurrency: 100,
+    step_size: 10,
+    step_duration: 30 * 1000,
 
     isShowing: true,
     headersShowing: false,
