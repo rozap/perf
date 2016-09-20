@@ -71,6 +71,7 @@ defmodule Perf.YamsChannel do
 
         events = stream
         |> Yams.Query.as_stream!
+        |> Stream.take(500)
         |> Enum.into([])
 
         {:reply, {:ok, %{events: events}}, socket}

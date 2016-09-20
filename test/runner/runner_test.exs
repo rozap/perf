@@ -25,7 +25,7 @@ defmodule RunnerTest do
 
     run = Repo.get!(Run, run.id)
 
-    IO.inspect run
+    assert run.finished_at > run.started_at
 
 
   end

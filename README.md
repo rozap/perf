@@ -2,13 +2,8 @@
 * figure out error surfacing
   * ssl errors
   * etc etc
+* surface meta events in run.js
+* suite should be copied into a run, because it is mutable and fucks up how it works
 
-producer -->
-  * checkout N processes from Global pool
-    * monitor each one
-    * tell each one to execute request in a loop
-      until X time
-    * each request results in send to workex consumer
-    * should all report back when they're done
 
 

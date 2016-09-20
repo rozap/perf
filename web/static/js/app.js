@@ -12,6 +12,7 @@ import editSuite from './pages/edit-suite';
 import newSuite from './pages/new-suite';
 import register from './pages/register';
 import login from './pages/login';
+import home from './pages/home';
 
 const app = choo({
   onError: function (err, state, createSend) {
@@ -96,6 +97,7 @@ function startApp() {
 
 
   app.router((route) => [
+    route('/', home.view),
     route('/app/register', register.view),
     route('/app/login', login.view),
 
