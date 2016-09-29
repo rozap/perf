@@ -92,7 +92,7 @@ function latencyChart({ndx, run}, send) {
 
 
 const q = [
-  [".", ["bucket", 60 * 1000, "milliseconds"]],
+  [".", ["bucket", 1000, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
   [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
   // [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],

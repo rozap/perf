@@ -1,6 +1,5 @@
 defmodule Perf.TestHelpers do
   alias Phoenix.Socket.Reply
-  alias Perf.Yams
   alias Perf.{Repo, Request, Suite, User}
 
   def wait_for(ref) do
@@ -10,8 +9,8 @@ defmodule Perf.TestHelpers do
   end
 
   def wait_for_run_completion(run) do
-    {_, handle} = Yams.Handle.open(run.yam_ref)
-    Yams.Handle.changes(handle)
+    {_, handle} = Yams.Session.open(run.yam_ref)
+    Yams.Session.changes(handle)
     |> Yams.Query.as_stream!
     |> Stream.take_while(fn
       {_, %{"type" => "done"}} -> false
@@ -35,11 +34,11 @@ defmodule Perf.TestHelpers do
   end
 
   def make_yam_stream(ref \\ nil) do
-    {:created, h} = Yams.Handle.open(ref || UUID.uuid1())
+    {:created, h} = Yams.Session.open(ref || UUID.uuid1())
     Enum.each(30..60, fn num ->
       t = num - 30
       key = from_ts + Yams.ms_to_key(t)
-      :ok = Yams.Handle.put(h, key, %{
+      :ok = Yams.Session.put(h, key, %{
         "num" => num,
         "str" => "foo_#{num}",
         "start_t" => Yams.key_to_ms(from_ts),
@@ -49,7 +48,7 @@ defmodule Perf.TestHelpers do
     end)
     range = {from_ts, to_ts}
 
-    Yams.Handle.stream!(h, range)
+    Yams.Session.stream!(h, range)
   end
 
   def make_suite do

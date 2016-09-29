@@ -4,7 +4,6 @@ defmodule YamChannelTest do
   @endpoint Perf.Endpoint
   import Perf.TestHelpers
   alias Perf.{Repo, Run}
-  alias Perf.Yams
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Perf.Repo)

@@ -14,7 +14,7 @@ defmodule Perf.Resource.Suite do
 
   defimpl Perf.Resource.Create, for: Perf.Suite do
     use Perf.Resource
-    stage :check_auth, mod: Perf.Resource.Suite
+    stage :check_auth, mod: Perf.Resource.Stages
     stage :create, mod: Perf.Resource.CreateAny
     stage :load_requests, mod: Perf.Resource.Suite
   end
@@ -22,6 +22,7 @@ defmodule Perf.Resource.Suite do
   defimpl Perf.Resource.Read, for: Perf.Suite do
     use Perf.Resource
     stage :check_auth, mod: Perf.Resource.Stages
+    #TODO filter by user id here
     stage :filter_by_user, mod: Perf.Resource.Suite
     stage :read, mod: Perf.Resource.ReadAny
     stage :load_requests, mod: Perf.Resource.Suite
@@ -40,10 +41,11 @@ defmodule Perf.Resource.Suite do
 
   def filter_by_user(_, %State{params: %{"user_id" => user_id} = params} = state) do
     wheres = params
-    |> Map.get("where", %{})    
+    |> Map.get("where", %{})
     |> Map.put("user_id", user_id)
 
-    struct(state, params: %{"where" => wheres})
+    params = Map.put(params, "where", wheres)
+    struct(state, params: params)
   end
 
 end

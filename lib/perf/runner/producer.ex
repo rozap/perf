@@ -1,7 +1,7 @@
 defmodule Perf.Runner.Producer do
   use GenServer
   require Logger
-  alias Perf.{Run, Request, Yams}
+  alias Perf.{Run, Request}
   alias Perf.Runner.{RequestWorker, Consumer}
   alias Perf.Runner.Events.{StartingRequest, Done}
 
@@ -16,7 +16,7 @@ defmodule Perf.Runner.Producer do
       requests: run.suite.requests,
       workers: MapSet.new,
       wait_pool: MapSet.new,
-      consumer: :none, 
+      consumer: :none,
       concurrency: List.first(run.suite.requests).min_concurrency
     }
     {:ok, state}

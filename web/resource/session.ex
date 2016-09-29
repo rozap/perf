@@ -42,11 +42,13 @@ defmodule Perf.Resource.Session do
 
   defimpl Perf.Resource.Read, for: Perf.Session do
     use Perf.Resource
+    require Logger
 
     on(%{"token" => token}) do
       case Guardian.decode_and_verify(token) do
         {:ok, %{"aud" => "User:" <> uid} = claims} ->
           user = Repo.get(User, uid)
+
           socket = Phoenix.Socket.assign(state.socket, :user, user)
 
           state

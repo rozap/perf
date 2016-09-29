@@ -3,7 +3,7 @@ defmodule Perf.Runner.Consumer do
   use GenStage
   require Logger
   alias Perf.Runner.Events
-  alias Perf.Yams.Handle
+  alias Yams.Session
   @buf_size 100
 
   def start_link(yams, run) do
@@ -21,7 +21,7 @@ defmodule Perf.Runner.Consumer do
   end
 
   defp record(event, %{yams: yam} = state) do
-    Handle.put(yam, Events.timeof(event), Events.to_row(event))
+    Session.put(yam, Events.timeof(event), Events.to_row(event))
     state
   end
 

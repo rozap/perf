@@ -16,6 +16,24 @@ defmodule RunTest do
     {:ok, _, socket} = socket("api", %{})
     |> subscribe_and_join(Perf.ApiChannel, "api", %{})
 
+    user_attempt = push(socket, "create:user", %{
+      "email" => "baz@buzz.com",
+      "password" => "foobarbaz"
+    })
+    user = wait_for(user_attempt)
+
+    login_attempt = push(socket, "create:session", %{
+      "email" => "baz@buzz.com",
+      "password" => "foobarbaz"
+    })
+    session = wait_for(login_attempt)
+
+    auth_attempt = push(socket, "read:session", %{
+      "token" => session.token
+    })
+
+    auth = wait_for(auth_attempt)
+
     suite = make_suite
 
     {:ok, %{socket: socket, suite: suite}}
@@ -24,7 +42,7 @@ defmodule RunTest do
   test "can create a run", %{socket: socket, suite: suite} do
     events = push(socket, "create:run", %{
       "suite_id" => suite.id
-    }) 
+    })
     |> wait_for
     |> wait_for_run_completion
 
@@ -32,13 +50,13 @@ defmodule RunTest do
   end
 
   test "can list runs", %{socket: socket, suite: suite} do
-    Enum.each(1..30, fn _ -> 
+    Enum.each(1..30, fn _ ->
       Repo.insert!(%Run{suite: suite})
     end)
 
     resp = push(socket, "list:run", %{
       "suite_id" => suite.id
-    }) 
+    })
     |> wait_for_json
 
     assert resp["count"] == 30
@@ -46,7 +64,7 @@ defmodule RunTest do
 
     resp
     |> Map.get("items")
-    |> Enum.each(fn run -> 
+    |> Enum.each(fn run ->
       assert run["suite"]["id"] == suite.id
       assert length(run["suite"]["requests"]) > 0
     end)

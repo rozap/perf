@@ -23,6 +23,7 @@
   "idna": {:hex, :idna, "1.2.0", "ac62ee99da068f43c50dc69acf700e03a62a348360126260e87f2b54eced86b2", [:rebar3], []},
   "jose": {:hex, :jose, "1.7.8", "cb9463b80bc26901bcfed80053a2c394f024ca7ec779f34091e285bbf02bdb89", [:mix, :rebar], [{:base64url, "~> 0.0.1", [hex: :base64url, optional: false]}]},
   "lager": {:git, "git://github.com/basho/lager.git", "f65dde85523b6aa6a259db1c93518187ae366515", [tag: "2.2.0"]},
+  "logger_file_backend": {:hex, :logger_file_backend, "0.0.9", "5c2f7d4a28431e695cdf94d191523dbafe609321a67bb654254897f546c393db", [:mix], []},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], []},
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
   "neotoma": {:git, "git://github.com/seancribbs/neotoma.git", "6ac6007c7713712a80096de5c7cdf5b85b01374e", [tag: "1.7.3"]},
@@ -39,4 +40,5 @@
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.0", "edee20847c42e379bf91261db474ffbe373f8acb56e9079acb6038d4e0bf414f", [:rebar, :make], []},
   "statistics": {:hex, :statistics, "0.4.1", "e9bfe6649f70842d9ebce69aa31ac8b6928e096bde43b683d7d673057237d028", [:mix], []},
   "uuid": {:hex, :uuid, "1.1.4", "36c7734e4c8e357f2f67ba57fb61799d60c20a7f817b104896cca64b857e3686", [:mix], []},
-  "workex": {:hex, :workex, "0.10.0", "9e06b19fa976bb0378848b247183a038f0e7dc3bae17196ef0c52a2263633a55", [:mix], [{:exactor, "~> 2.2.0", [hex: :exactor, optional: false]}]}}
+  "workex": {:hex, :workex, "0.10.0", "9e06b19fa976bb0378848b247183a038f0e7dc3bae17196ef0c52a2263633a55", [:mix], [{:exactor, "~> 2.2.0", [hex: :exactor, optional: false]}]},
+  "yams": {:hex, :yams, "0.1.0", "a93f88b96df36db499e3073ce934ecad7696aef2c2096302109643af80fdb3fd", [:mix], [{:statistics, "~> 0.4.1", [hex: :statistics, optional: false]}, {:uuid, "~> 1.1.4", [hex: :uuid, optional: false]}]}}

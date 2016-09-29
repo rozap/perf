@@ -76,6 +76,16 @@ defmodule Perf.ApiChannel do
       end
     end
   end)
+  def handle_in(other, params, socket) do
+    bad_request(
+      %State{params: params, socket: socket},
+      %{
+        reason: :invalid_resource_action,
+        english: "#{other} action is not something I know about",
+        params: %{}
+      }
+    ) |> r
+  end
 
 
   def handle_info(_, socket) do

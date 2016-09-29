@@ -30,7 +30,7 @@ defmodule Perf.Runner.Events do
   defp to_ms(m) do
     m
     |> Enum.map(fn
-      {k, v} when k in [:start_t, :end_t, :at] -> {k, Perf.Yams.key_to_ms(v)}
+      {k, v} when k in [:start_t, :end_t, :at] -> {k, Yams.key_to_ms(v)}
       other -> other
     end)
   end

@@ -133,7 +133,15 @@ def list():
 
 def make_phx(index):
     name = 'phx%s' % index
-    [out] = json.loads(str(gcloud(['compute', 'instances', 'create', name, '--disk', 'name=phx-disk-0,boot=yes', '--format', 'json'])))
+    [out] = json.loads(str(gcloud([
+        'compute',
+        'instances',
+        'create', name,
+        '--machine-type', 'n1-standard-2',
+        '--disk', 'name=phx-disk-0,boot=yes',
+        '--tags', 'phx',
+        '--format', 'json'
+    ])))
     print(green("created {name} with public ip {ip} disk {disk}".format(
         ip = public_ip(out),
         name = name,
@@ -155,7 +163,7 @@ def build_pg(ip):
 
     # sudo('id -u {username} &>/dev/null || adduser {username}'.format(
     #     username='postgres'
-    # ))
+    # ))up
     # sudo('echo "{username}:{password}" | chpasswd'.format(
     #     username='postgres',
     #     password='postgres'))

@@ -50,7 +50,7 @@ defmodule Perf.Resource.Run do
 
   def filter_by_user(_, %State{params: %{"user_id" => user_id} = params} = state) do
     wheres = params
-    |> Map.get("where", %{})    
+    |> Map.get("where", %{})
     |> Map.put("suite.user_id", user_id)
 
     struct(state, params: %{"where" => wheres})

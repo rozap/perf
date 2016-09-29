@@ -1,13 +1,13 @@
 defmodule Perf.YamsChannel do
   use Phoenix.Channel
   require Logger
-  alias Perf.Yams.{Handle}
-  alias Perf.{Repo, Run, Yams}
+  alias Yams.Session
+  alias Perf.{Repo, Run}
 
   def join("yams", %{"run_id" => run_id}, socket) do
     case Repo.get(Run, run_id) do
       %Run{} = run ->
-        case Handle.open(run.yam_ref) do
+        case Session.open(run.yam_ref) do
           {:error, reason} ->
             Logger.warn("Failed to join yam, yam handle error #{inspect reason}")
             {:error, socket}
@@ -33,7 +33,7 @@ defmodule Perf.YamsChannel do
     Logger.warn("Starting a #{ref} changestream")
     spawn_link(fn ->
       changes = socket.assigns.handle
-      |> Handle.changes
+      |> Session.changes
       |> Yams.Interpreter.run(query)
 
       case changes do
@@ -62,7 +62,7 @@ defmodule Perf.YamsChannel do
     end_t = Yams.seconds_to_key(end_t_seconds)
 
     case socket.assigns.handle
-    |> Handle.stream!({start_t, end_t})
+    |> Session.stream!({start_t, end_t})
     |> Yams.Interpreter.run(query) do
       {:ok, stream} ->
 

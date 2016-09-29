@@ -3,7 +3,7 @@ defmodule Perf.Mixfile do
 
   def project do
     [app: :perf,
-     version: "0.0.6",
+     version: "0.0.15",
      elixir: "~> 1.3",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
@@ -23,7 +23,7 @@ defmodule Perf.Mixfile do
                     :exleveldb, :eleveldb, :poolboy, :httpoison,
                     :gen_stage, :cuttlefish, :guardian, :guardian_db,
                     :uuid, :phoenix_pubsub, :statistics, :neotoma,
-                    :lager, :getopt]]
+                    :lager, :getopt, :logger_file_backend, :yams]]
   end
 
   # Specifies which paths to compile per environment.
@@ -50,7 +50,9 @@ defmodule Perf.Mixfile do
      {:poolboy, "~> 1.5"},
      {:httpoison, "~> 0.9.0"},
      {:statistics, "~> 0.4.1"},
-     {:distillery, "~> 0.9"}
+     {:distillery, "~> 0.9"},
+     {:logger_file_backend, "0.0.9"},
+     {:yams, "~> 0.1.0"}
    ]
   end
 

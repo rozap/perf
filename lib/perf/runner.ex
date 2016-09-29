@@ -32,7 +32,7 @@ defmodule Perf.Runner do
 
     Run.write_start!(run)
 
-    {_, handle} = Perf.Yams.Handle.open(yam_ref)
+    {_, handle} = Yams.Session.open(yam_ref)
     {:ok, producer} = Producer.start_link(run)
     {:ok, consumer} = Consumer.start_link(handle, run)
 

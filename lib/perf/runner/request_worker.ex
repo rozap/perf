@@ -1,7 +1,7 @@
 defmodule Perf.Runner.RequestWorker do
   use GenServer
   alias Perf.Request
-  alias Perf.Yams
+  alias Yams
   require Logger
   alias Perf.Runner.Events.{Success, Error}
   alias Perf.Runner.{Producer, Consumer}
