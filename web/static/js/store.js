@@ -12,6 +12,7 @@ class Store extends Emitter {
 
   constructor(socket, params) {
     super();
+    this.i = 0;
 
     const makeChannel = () => {
       let channel = socket.channel(this.name(), params);
@@ -71,13 +72,16 @@ class Store extends Emitter {
   }
 
   _doSend({op, params, em}) {
+    var i = this.i;
+    this.i = i + 1;
+    console.log(i, ">>>", op, params)
     this._underlying.push(op, params)
     .receive('ok', (payload) => {
-      console.log("Channel -->", op, params, payload);
+      console.log(i, "<<<", payload);
       em.emit('ok', payload)
     })
     .receive('error', (payload) => {
-      console.error("Channel -->", op, params, payload);
+      console.error(i, "<<<", payload);
       em.emit('error', payload)
     });
   }
@@ -147,21 +151,23 @@ class Yams extends Store {
     return 'yams';
   }
 
-  changes({query}, cb) {
+  _asyncStream(op, payload, cb) {
     var sha256 = createHash('sha256');
-    const ref = sha256.update(JSON.stringify(query)).digest("hex");
-    this.send(`change:events:${ref}`, {query});
-
-    console.log("Sub to", `change:events:${ref}`)
-    return this._underlying.on(`change:events:${ref}`, cb)
+    const ref = sha256.update(JSON.stringify(payload)).digest("hex");
+    this.send(`${op}:${ref}`, payload);
+    return this._underlying.on(`change:events:${ref}`, cb);
   }
 
-  query({startSeconds, endSeconds, query}) {
-    return this.send('query:events', {
+  changes({query}, cb) {
+    this._asyncStream('change:events', {query}, cb);
+  }
+
+  query({startSeconds, endSeconds, query}, cb) {
+    this._asyncStream('query:events', {
       start_t_seconds: startSeconds,
       end_t_seconds: endSeconds,
       query
-    });
+    }, cb);
   }
 }
 

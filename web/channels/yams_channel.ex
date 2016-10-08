@@ -3,6 +3,9 @@ defmodule Perf.YamsChannel do
   require Logger
   alias Yams.Session
   alias Perf.{Repo, Run}
+  import Perf.Metrics
+
+  @chunk 300
 
   def join("yams", %{"run_id" => run_id}, socket) do
     case Repo.get(Run, run_id) do
@@ -46,15 +49,13 @@ defmodule Perf.YamsChannel do
           |> Stream.run
         {:error, err} ->
           Logger.warn("Failed to run change stream on #{inspect query} #{inspect err}")
-
       end
-
     end)
 
     {:reply, {:ok, %{}}, socket}
   end
 
-  def handle_in("query:events", %{
+  def handle_in("query:events:" <> ref, %{
       "start_t_seconds" => start_t_seconds,
       "end_t_seconds" => end_t_seconds,
       "query" => query}, socket) when is_number(start_t_seconds) and is_number(end_t_seconds) do
@@ -65,16 +66,23 @@ defmodule Perf.YamsChannel do
     |> Session.stream!({start_t, end_t})
     |> Yams.Interpreter.run(query) do
       {:ok, stream} ->
+        spawn_link(fn ->
+          {events, elapsed} = timer do
+            Logger.info("Running the query...")
+            {:ok, quoted} = Yams.Interpreter.compile(query)
+            events = stream
+            |> Yams.Query.as_stream!
+            |> Stream.chunk(@chunk, @chunk, [])
+            |> Stream.each(fn events ->
+              Logger.info("Sending a batch of events")
+              push socket, "change:events:#{ref}", %{events: events}
+            end)
+            |> Stream.run
+          end
+        end)
 
-        {:ok, quoted} = Yams.Interpreter.compile(query)
-        Logger.info("Ran query #{Macro.to_string(quoted)}")
+        {:reply, {:ok, %{}}, socket}
 
-        events = stream
-        |> Yams.Query.as_stream!
-        |> Stream.take(500)
-        |> Enum.into([])
-
-        {:reply, {:ok, %{events: events}}, socket}
       {:error, reason} ->
         with {:ok, quoted} <- Yams.Interpreter.compile(query) do
           Logger.warn("Failed on #{Macro.to_string(quoted)}")

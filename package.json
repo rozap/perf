@@ -26,13 +26,13 @@
     "gulp-babel": "latest",
     "gulp": "latest",
     "elm": "^0.16.0",
-    "dc": "latest",
-    "d3": "3.5.17",
-    "crossfilter": "latest",
     "colors": "latest",
     "choo": "latest",
     "browserify": "latest",
     "babelify": "6.1.2",
-    "babel": "latest"
+    "babel": "latest",
+    "chart.js": "latest",
+    "Chart.Zoom.js": "latest",
+    "cache-element": "latest"
   }
 }
