@@ -6,38 +6,20 @@ import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
 import queryBuilderView from './widgets/query-builder';
-import {formatTime} from '../util';
 import moment from 'moment';
-
+import {utcFormat, domainOf, timeFormat, millisFormat} from '../time';
 import cjs from 'chart.js';
-const defaultFormat = 'MM/DD/YYYY h:mm a'
 
-
-function dateToSeconds(date) {
-  return moment.utc(date).unix();
-}
-function secondsToDate(seconds) {
-  return moment(seconds * 1000);
-}
-function nanoToSeconds(nanos) {
-  return nanos / (1000 * 1000);
-}
-
-function domainOf(run) {
-  const startSeconds = dateToSeconds(run.started_at);
-  const endSeconds = startSeconds + (run.duration / 1000);
-
-  return {
-    startSeconds,
-    endSeconds,
-    duration: run.duration
-  }
-}
 
 function latencyChart({run}, send) {
   const el = document.createElement('div');
   el.setAttribute('class', 'chart-container')
   var canvas = document.createElement('canvas');
+
+  el.isSameNode = (other) => {
+    // console.log("Is same", el, other);
+    return other.className === el.className;
+  }
 
   var w = document.body.clientWidth - 32;
   var h = 500;
@@ -58,19 +40,26 @@ function latencyChart({run}, send) {
         duration: 500,
       },
       tooltips: {
-        mode: "x-axis"
+        mode: "x-axis",
+        callbacks: {
+          label: ({yLabel}) => millisFormat(yLabel)
+        }
       },
       scales: {
         yAxes: [{
-          stacked: true
+          ticks: {
+            callback: (value) => millisFormat(value)
+          }
         }],
         xAxes: [{
           ticks: {
-            max: 2500,
-            min: 0,
-            stepSize: 1,
+            maxTicksLimit: 16,
             callback: (value, index) => {
-              return "foo"
+              const point = chart.data.datasets[0].data[index];
+              if(point) {
+                return timeFormat(point.x);
+              }
+              return false;
             }
           }
         }]
@@ -137,7 +126,7 @@ function latencyChart({run}, send) {
 
 
 const defaultQuery = () => ([
-  [".", ["bucket", 2000, "milliseconds"]],
+  [".", ["bucket", 5000, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
   [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
   [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],
@@ -154,7 +143,6 @@ function summaryQuery(run, query) {
     ...query.slice(1)
   ]
 }
-
 
 function statusQuery(run) {
   const {duration} = domainOf(run);
@@ -195,7 +183,7 @@ function statusQuery(run) {
 
 function rolling(query) {
   return [
-    [".", ["bucket", 5000, "milliseconds"]],
+    [".", ["bucket", 1000, "milliseconds"]],
     ...query.slice(1)
   ]
 }
@@ -242,7 +230,6 @@ function model(api, channelFactory) {
       addExpr,
       delExpr,
       updateExpr,
-      // setData,
       appendData
     },
     effects: {
@@ -252,9 +239,49 @@ function model(api, channelFactory) {
           run_id: run.id
         });
         yam.on('connected', () => {
-          initChart(yam, onYamChartChanges, {}, state, send, done);
-          // initSummary(yam, {}, state, send, done);
-          // initStatii(yam, {}, state, send, done);
+          send('run:resetChart', done);
+          send('run:appendChart', latencyChart(state, send), done);
+
+          const {
+            startSeconds,
+            endSeconds,
+          } = domainOf(state.run);
+
+          const chartQ = {
+            startSeconds,
+            endSeconds,
+            query: state.query
+          };
+
+          yam.query(chartQ, onYamChartChanges)
+
+          if (isInProgress(state.run)) {
+            send('run:chartChanges', chartQ, done);
+
+            send('run:summaryChanges', {
+              startSeconds,
+              endSeconds,
+              query: rolling(summaryQuery(state.run, state.query))
+            }, done);
+
+            send('run:statusChanges', {
+              startSeconds,
+              endSeconds,
+              query: rolling(statusQuery(state.run))
+            }, done);
+          } else {
+            yam.query({
+              startSeconds,
+              endSeconds,
+              query: summaryQuery(state.run, state.query)
+            }, onYamSummaryChanges);
+
+            yam.query({
+              startSeconds,
+              endSeconds,
+              query: statusQuery(state.run)
+            }, onYamStatusChanges);
+          }
         });
       },
       chartChanges: (query, state) => {
@@ -290,23 +317,6 @@ function getRun(api, {id}, state, send, done) {
     });
 }
 
-function initChart(yam, onYamChartChanges, _params, state, send, done) {
-  send('run:resetChart', done);
-  send('run:appendChart', latencyChart(state, send), done);
-
-  const {
-    startSeconds,
-    endSeconds
-  } = domainOf(state.run);
-
-  const params = {startSeconds, endSeconds, query: state.query};
-  yam.query(params, onYamChartChanges)
-
-  // if (isInProgress(state.run)) {
-  //   send('run:chartChanges', params, done);
-  // }
-}
-
 function appendData({events}, state, send, done) {
   const measures = eventsToMeasures(events);
 
@@ -323,45 +333,6 @@ function appendData({events}, state, send, done) {
 
   return {...state, datasets}
 }
-
-function initSummary(yam, _params, state, send, done) {
-  const {
-    startSeconds,
-    endSeconds,
-  } = domainOf(state.run);
-
-  const params = {startSeconds, endSeconds, query: summaryQuery(state.run, state.query)};
-
-  yam.query(params)
-  .on('error', (error) => send('run:error', error, done))
-  .on('ok', (summary) => {
-    send('run:summary', summary, done);
-  });
-
-  if(isInProgress(state.run)) {
-    send('run:summaryChanges', {startSeconds, endSeconds, query: rolling(summaryQuery(state.run, state.query))}, done);
-  }
-}
-
-function initStatii(yam, _params, state, send, done) {
-  const {
-    startSeconds,
-    endSeconds,
-  } = domainOf(state.run);
-
-  const params = {startSeconds, endSeconds, query: statusQuery(state.run)};
-
-  yam.query(params)
-  .on('error', (error) => send('run:error', error, done))
-  .on('ok', (status) => {
-    send('run:status', status, done);
-  });
-
-  if(isInProgress(state.run)) {
-    send('run:statusChanges', {startSeconds, endSeconds, query: rolling(statusQuery(state.run))}, done);
-  }
-}
-
 
 function summary(summary, state) {
   return {...state, summary};
@@ -406,19 +377,29 @@ function error(error, state) {
   }
 }
 
-function statiiView({status: {events}}) {
-  if(!events.length) return;
+function statiiView({run, status: {events}}) {
+  if(!events.length) return html`<div class="statii"></div>`;
   const agg = events[0].aggregations;
+
+  var label,
+    unit;
+  if(isInProgress(run)) {
+    label = 'Response rates';
+    unit = '/s'
+  } else {
+    label = 'Responses';
+    unit = '';
+  }
 
   return html`
   <div class="statii">
-    <label class="toplevel text-muted">Statii</label>
+    <label class="toplevel text-muted">${label}</label>
     ${
       _.map(agg, (value, key) => {
         const name = key.split('_').join(' ');
         return html`
           <span class="stat">
-            ${name} ${value}
+            ${name} ${value}${unit}
           </span>
         `
       })
@@ -428,7 +409,7 @@ function statiiView({status: {events}}) {
 }
 
 function summaryView({summary: {events}}) {
-  if(!events.length) return;
+  if(!events.length) return html`<div class="summary"></div>`;
 
   const agg = events[0].aggregations;
   return html`
@@ -437,7 +418,7 @@ function summaryView({summary: {events}}) {
       ${
         _.map(agg, (value, key) => {
           const name = key.split('_').join(' ');
-          const formatted = formatTime(value);
+          const formatted = millisFormat(value);
 
           return html`
             <span class="stat">
@@ -457,7 +438,7 @@ function progressView({run}, send) {
     finished = html `<span>
       <label class="toplevel text-muted">Finished</label>
       <span class="stat">
-        ${moment.utc(run.finished_at).format(defaultFormat)}
+        ${utcFormat(run.finished_at)}
       </span>
     </span>`
   }
@@ -465,7 +446,7 @@ function progressView({run}, send) {
   return html`
     <div class="suite-progress">
       <label class="toplevel text-muted">Started</label>
-      <span class="stat">${moment.utc(run.inserted_at).format(defaultFormat)}</span>
+      <span class="stat">${utcFormat(run.inserted_at)}</span>
     </div>
   `
 }

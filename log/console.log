@@ -31,3 +31,27 @@
 2016-10-08 11:30:12.952 [warning] <0.6.0> lager_error_logger_h dropped 72 messages in the last second that exceeded the limit of 50 messages/sec
 2016-10-08 11:30:12.953 [info] <0.7.0> Application fs started on node nonode@nohost
 2016-10-08 11:30:12.954 [info] <0.7.0> Application phoenix_live_reload started on node nonode@nohost
+2016-10-09 22:18:40.138 [error] <0.194.0> Supervisor 'Elixir.Logger.Supervisor' had child undefined started with 'Elixir.Logger.Watcher':watcher(error_logger, 'Elixir.Logger.ErrorHandler', {true,false,500}, link) at <0.199.0> exit with reason normal in context child_terminated
+2016-10-09 22:18:40.241 [info] <0.7.0> Application lager started on node nonode@nohost
+2016-10-09 22:18:40.245 [info] <0.7.0> Application getopt started on node nonode@nohost
+2016-10-09 22:18:40.251 [info] <0.7.0> Application logger_file_backend started on node nonode@nohost
+2016-10-09 22:18:40.254 [info] <0.7.0> Application yams started on node nonode@nohost
+2016-10-09 22:18:50.438 [warning] <0.6.0> lager_error_logger_h dropped 70 messages in the last second that exceeded the limit of 50 messages/sec
+2016-10-09 22:18:50.438 [info] <0.7.0> Application fs started on node nonode@nohost
+2016-10-09 22:18:50.438 [info] <0.7.0> Application phoenix_live_reload started on node nonode@nohost
+2016-10-09 23:17:19.515 [error] <0.194.0> Supervisor 'Elixir.Logger.Supervisor' had child undefined started with 'Elixir.Logger.Watcher':watcher(error_logger, 'Elixir.Logger.ErrorHandler', {true,false,500}, link) at <0.199.0> exit with reason normal in context child_terminated
+2016-10-09 23:17:19.580 [info] <0.7.0> Application lager started on node nonode@nohost
+2016-10-09 23:17:19.584 [info] <0.7.0> Application getopt started on node nonode@nohost
+2016-10-09 23:17:19.589 [info] <0.7.0> Application logger_file_backend started on node nonode@nohost
+2016-10-09 23:17:19.591 [info] <0.7.0> Application yams started on node nonode@nohost
+2016-10-09 23:17:23.467 [warning] <0.6.0> lager_error_logger_h dropped 70 messages in the last second that exceeded the limit of 50 messages/sec
+2016-10-09 23:17:23.470 [info] <0.7.0> Application fs started on node nonode@nohost
+2016-10-09 23:17:23.470 [info] <0.7.0> Application phoenix_live_reload started on node nonode@nohost
+2016-10-09 23:35:23.131 [error] <0.194.0> Supervisor 'Elixir.Logger.Supervisor' had child undefined started with 'Elixir.Logger.Watcher':watcher(error_logger, 'Elixir.Logger.ErrorHandler', {true,false,500}, link) at <0.199.0> exit with reason normal in context child_terminated
+2016-10-09 23:35:23.182 [info] <0.7.0> Application lager started on node nonode@nohost
+2016-10-09 23:35:23.185 [info] <0.7.0> Application getopt started on node nonode@nohost
+2016-10-09 23:35:23.191 [info] <0.7.0> Application logger_file_backend started on node nonode@nohost
+2016-10-09 23:35:23.194 [info] <0.7.0> Application yams started on node nonode@nohost
+2016-10-09 23:35:36.369 [warning] <0.6.0> lager_error_logger_h dropped 69 messages in the last second that exceeded the limit of 50 messages/sec
+2016-10-09 23:35:36.370 [info] <0.7.0> Application fs started on node nonode@nohost
+2016-10-09 23:35:36.370 [info] <0.7.0> Application phoenix_live_reload started on node nonode@nohost
