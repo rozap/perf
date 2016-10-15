@@ -5,6 +5,7 @@ import errorView from './widgets/error';
 import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
+import {fromAst, toAst} from './widgets/yams/funcs';
 import queryBuilderView from './widgets/query-builder';
 import moment from 'moment';
 import {utcFormat, domainOf, timeFormat, millisFormat} from '../time';
@@ -240,7 +241,7 @@ function throughputChart({run}, send) {
 }
 
 
-const defaultQuery = () => ([
+const defaultQuery = () => fromAst([
   [".", ["bucket", 5000, "milliseconds"]],
   [".", ["where", ["==", ["row.type", "success"]]]],
   [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
@@ -254,8 +255,6 @@ const defaultQuery = () => ([
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
-
-
 
   [".", ["aggregates"]]
 ])
@@ -341,7 +340,8 @@ function model(api, channelFactory) {
       charts: [],
       datasets: {},
       summary: {events: []},
-      status: {events: []}
+      status: {events: []},
+      qb: {}
     },
     namespace: 'run',
     reducers: {
@@ -351,9 +351,7 @@ function model(api, channelFactory) {
       resetChart,
       summary,
       status,
-      addExpr,
-      delExpr,
-      updateExpr,
+      onChangeExpr,
       appendData
     },
     effects: {
@@ -375,7 +373,7 @@ function model(api, channelFactory) {
           const chartQ = {
             startSeconds,
             endSeconds,
-            query: state.query
+            query: toAst(state.query)
           };
 
           yam.query(chartQ, onYamChartChanges)
@@ -386,7 +384,7 @@ function model(api, channelFactory) {
             send('run:summaryChanges', {
               startSeconds,
               endSeconds,
-              query: rolling(summaryQuery(state.run, state.query))
+              query: rolling(summaryQuery(state.run, toAst(state.query)))
             }, done);
 
             send('run:statusChanges', {
@@ -398,7 +396,7 @@ function model(api, channelFactory) {
             yam.query({
               startSeconds,
               endSeconds,
-              query: summaryQuery(state.run, state.query)
+              query: summaryQuery(state.run, toAst(state.query))
             }, onYamSummaryChanges);
 
             yam.query({
@@ -410,7 +408,7 @@ function model(api, channelFactory) {
         });
       },
       chartChanges: (query, state) => {
-        yam.changes(query, onYamChartChanges);
+      yam.changes(query, onYamChartChanges);
       },
       summaryChanges: (query, state, send, done) => {
         yam.changes(query, onYamSummaryChanges);
@@ -475,16 +473,10 @@ function appendChart(el, state) {
   return {...state, charts: [...state.charts, el]};
 }
 
-function addExpr({expr}, state) {
+function onChangeExpr(queryBuilderState, state) {
+  return {...state, qb: queryBuilderState}
 }
 
-function delExpr({expr}, state) {
-  const q = _.without(state.query, expr)
-  return {...state, query: q};
-}
-
-function updateExpr({expr}, state) {
-}
 
 function show(run, state) {
   return {
@@ -584,9 +576,7 @@ function runView(state, send) {
     return;
   }
 
-  const onExprAdded   = (expr) => send('run:addExpr', {expr})
-  const onExprDeleted = (expr) => send('run:delExpr', {expr})
-  const onExprUpdated = (expr) => send('run:updateExpr', {expr})
+  const onChangeExpr = (queryBuilderState) => send('run:onChangeExpr', queryBuilderState)
 
   return html `
     <div>
@@ -598,17 +588,11 @@ function runView(state, send) {
       </div>
       ${queryBuilderView(
         state.query,
-        onExprAdded,
-        onExprDeleted,
-        onExprUpdated
+        onChangeExpr
       )}
 
     </div>
   `
-
-
-
-
 }
 
 //TODO: make this match the route nav

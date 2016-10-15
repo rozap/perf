@@ -1,21 +1,150 @@
 import chai from 'chai';
 import should from 'should';
-import {fromAst} from '../../web/static/js/pages/widgets/yams/funcs'
+import {
+  Any, Num, Text, Row, Bool, Func, Timeunit, YamFunc, Infix, Gt, Lt, Gte, Lte, Eq, Neq, Bucket, Where} from '../../web/static/js/pages/widgets/yams/funcs'
 var expect = chai.expect;
 
+const ok = {
+  errors: [],
+  warnings: []
+}
 
-describe('from ast', function() {
+function error(reason) {
+  return {errors: [reason], warnings: []}
+}
 
-  it('can make a bucket', () => {
-    const b = fromAst([".", ["bucket", 5000, "milliseconds"]]);
-    expect(b.name()).to.eql('Bucket');
+
+describe('funcs', () => {
+
+  describe('fromAst', () => {
+    it('can make a num', () => {
+      const node = Any.fromAst(5000);
+      expect(node.id()).to.eql('num');
+    });
+
+    it('can convert an row.accessor to Row', () => {
+      const node = Any.fromAst("row.type");
+      expect(node.id()).to.eql('row');
+    });
+
+    it('can make a timeunit', () => {
+      const node = Any.fromAst('milliseconds');
+      expect(node.id()).to.eql('timeunit');
+    });
+
+    it('can make a bucket', () => {
+      const node = Any.fromAst([".", ["bucket", 5000, "milliseconds"]]);
+      expect(node.id()).to.eql('bucket');
+    });
+
+    it('can make a where', () => {
+      const node = Any.fromAst([".", ["where", ["==", ["row.type", "success"]]]]);
+      expect(node.id()).to.eql('where');
+    });
+
+    it('can make a percentile', () => {
+      const node = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]]);
+      expect(node.id()).to.eql('percentile');
+    });
+  })
+
+  describe('toAst', () => {
+    it('can make a num', () => {
+      const node = Any.fromAst(5000);
+      expect(node.toAst()).to.eql(5000)
+    });
+
+    it('can convert an row.accessor to Row', () => {
+      const node = Any.fromAst("row.type");
+      expect(node.toAst()).to.eql("row.type");
+    });
+
+    it('can make a timeunit', () => {
+      const node = Any.fromAst('milliseconds');
+      expect(node.toAst()).to.eql('milliseconds');
+    });
+
+    it('can make a bucket', () => {
+      const ast = [".", ["bucket", 5000, "milliseconds"]];
+      const node = Any.fromAst(ast);
+      expect(node.toAst()).to.eql(ast)
+    });
+
+    it('can make a where', () => {
+      const ast = [".", ["where", ["==", ["row.type", "success"]]]];
+      const node = Any.fromAst(ast);
+      expect(node.toAst()).to.eql(ast);
+    });
+
+    it('can make a percentile', () => {
+      const ast = [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]];
+      const node = Any.fromAst(ast);
+      expect(node.toAst()).to.eql(ast);
+    });
+  })
+
+  describe('type checked', () => {
+    it('can check an ok ==', () => {
+      const node = Any.fromAst(["==", [5, "success"]]);
+      const checked = node.check()
+      expect(checked).to.eql(ok);
+    });
+
+    it('bucket typecheck', () => {
+      const node = Any.fromAst([".", ["bucket", 5000, "milliseconds"]]);
+      expect(node.check()).to.eql(ok);
+      const bad = Any.fromAst([".", ["bucket", 5000, "fooey"]]);
+      expect(bad.check()).to.eql(error(
+        "Invocation of function 'bucket' expected 'timeunit' but got 'text'"
+      ));
+    });
+
+    it('where typecheck', () => {
+      const node = Any.fromAst([".", ["where", ["==", ["row.type", "success"]]]]);
+      expect(node.check()).to.eql(ok);
+      const bad = Any.fromAst([".", ["where", "foo"]]);
+      expect(bad.check()).to.eql(error(
+        "Invocation of function 'where' expected 'bool' but got 'text'"
+      ));
+
+      const badFunc = Any.fromAst([".", ["where", ["+", ["row.start_t", 5]]]]);
+      expect(badFunc.check()).to.eql(error(
+        "Invocation of function 'where' expected 'bool' but got 'num'"
+      ));
+    });
+
+    it('percentile typecheck', () => {
+      const node = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]]);
+      expect(node.check()).to.eql(ok);
+
+      var bad = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], "foo", 28]]);
+      expect(bad.check()).to.eql(error(
+        "Invocation of function 'percentile' expected 'num' but got 'text'"
+      ));
+      bad = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 28, 28]]);
+      expect(bad.check()).to.eql(error(
+        "Invocation of function 'percentile' expected 'text' but got 'num'"
+      ));
+      bad = Any.fromAst([".", ["percentile", ["==", ["row.end_t", 28]], 28, "foo"]]);
+      expect(bad.check()).to.eql(error(
+        "Invocation of function 'percentile' expected 'num' but got 'bool'"
+      ));
+    });
+  })
+
+  describe('tree operations', () => {
+    it('isInstanceOf num', () => {
+      const node = Any.fromAst(5);
+      expect(node.isInstanceOf(Any)).to.be.true
+      expect(node.isInstanceOf(Num)).to.be.true
+      expect(node.isInstanceOf(Func)).to.be.false
+    });
   });
 
+  // describe('suggestions', () => {
+  //   it('for bucket', () => {
+  //     const node = fromAst([".", ["bucket", 5000, "milliseconds"]]);
+  // });
 
-  // it('can make a where', () => {
-  //   const w = fromAst([".", ["where", ["==", ["row.type", "success"]]]])
-  //   console.log(w.children);
-
-  // })
 
 });
