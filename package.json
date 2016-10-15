@@ -33,5 +33,10 @@
     "chart.js": "latest",
     "Chart.Zoom.js": "latest",
     "cache-element": "latest"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2",
+    "should": "^11.1.1"
   }
 }

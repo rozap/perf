@@ -48,11 +48,16 @@ var bundler = browserify(paths.js.app.src, {
 gulp.task('app', function() {
   bundler.bundle()
     .on('error', function(err) {
-      var err = "File: " + err.filename +
-        " Line: " + err.loc.line +
-        ":" + err.loc.column +
-        " Frame: " + err.codeFrame;
-      console.log(colors.red(err));
+      try {
+        err = "File: " + err.filename +
+          " Line: " + err.loc.line +
+          ":" + err.loc.column +
+          " Frame: " + err.codeFrame;
+        console.log(colors.red(err));
+
+      } catch(e) {
+        console.error(colors.red(err));
+      }
       this.emit('end');
     })
     .pipe(source('app.js'))

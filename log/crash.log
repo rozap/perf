@@ -1,42 +1,316 @@
-2016-10-08 10:59:58 =SUPERVISOR REPORT====
+2016-10-14 15:39:47 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-08 11:25:04 =SUPERVISOR REPORT====
+2016-10-14 15:41:00 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-08 11:26:11 =SUPERVISOR REPORT====
+2016-10-14 15:42:16 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-08 11:30:07 =SUPERVISOR REPORT====
+2016-10-14 16:25:01 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-09 22:18:40 =SUPERVISOR REPORT====
+2016-10-14 20:47:32 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-09 23:17:19 =SUPERVISOR REPORT====
+2016-10-14 20:47:48 =SUPERVISOR REPORT====
      Supervisor: {local,'Elixir.Logger.Supervisor'}
      Context:    child_terminated
      Reason:     normal
      Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
 
-2016-10-09 23:35:23 =SUPERVISOR REPORT====
-     Supervisor: {local,'Elixir.Logger.Supervisor'}
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5428.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20179,null => nil,parameters => #Ref<0.0.3.6984>,postgres => idle,queries => 151611,sock => {gen_tcp,#Port<0.13297>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20179,null => nil,parameters => #Ref<0.0.3.6984>,postgres => idle,queries => 151611,sock => {gen_tcp,#Port<0.13297>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5430.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20177,null => nil,parameters => #Ref<0.0.3.6986>,postgres => idle,queries => 155708,sock => {gen_tcp,#Port<0.13295>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20177,null => nil,parameters => #Ref<0.0.3.6986>,postgres => idle,queries => 155708,sock => {gen_tcp,#Port<0.13295>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5428.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20179,null => nil,parameters => #Ref<0.0.3.6984>,postgres => idle,queries => 151611,sock => {gen_tcp,#Port<0.13297>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13297>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 208120
+  neighbours:
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5430.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20177,null => nil,parameters => #Ref<0.0.3.6986>,postgres => idle,queries => 155708,sock => {gen_tcp,#Port<0.13295>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13295>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 1598
+    stack_size: 27
+    reductions: 206177
+  neighbours:
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5427.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20180,null => nil,parameters => #Ref<0.0.3.6981>,postgres => idle,queries => 147514,sock => {gen_tcp,#Port<0.13298>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20180,null => nil,parameters => #Ref<0.0.3.6981>,postgres => idle,queries => 147514,sock => {gen_tcp,#Port<0.13298>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5427.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20180,null => nil,parameters => #Ref<0.0.3.6981>,postgres => idle,queries => 147514,sock => {gen_tcp,#Port<0.13298>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13298>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 208139
+  neighbours:
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5434.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20175,null => nil,parameters => #Ref<0.0.3.6990>,postgres => idle,queries => 163902,sock => {gen_tcp,#Port<0.13293>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20175,null => nil,parameters => #Ref<0.0.3.6990>,postgres => idle,queries => 163902,sock => {gen_tcp,#Port<0.13293>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5434.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20175,null => nil,parameters => #Ref<0.0.3.6990>,postgres => idle,queries => 163902,sock => {gen_tcp,#Port<0.13293>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13293>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 206086
+  neighbours:
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5436.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20172,null => nil,parameters => #Ref<0.0.2.1463>,postgres => idle,queries => 176193,sock => {gen_tcp,#Port<0.13290>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20172,null => nil,parameters => #Ref<0.0.2.1463>,postgres => idle,queries => 176193,sock => {gen_tcp,#Port<0.13290>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5436.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20172,null => nil,parameters => #Ref<0.0.2.1463>,postgres => idle,queries => 176193,sock => {gen_tcp,#Port<0.13290>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13290>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 1598
+    stack_size: 27
+    reductions: 208559
+  neighbours:
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5429.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20178,null => nil,parameters => #Ref<0.0.3.6993>,postgres => idle,queries => 172096,sock => {gen_tcp,#Port<0.13296>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20178,null => nil,parameters => #Ref<0.0.3.6993>,postgres => idle,queries => 172096,sock => {gen_tcp,#Port<0.13296>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5431.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20176,null => nil,parameters => #Ref<0.0.1.139>,postgres => idle,queries => 184387,sock => {gen_tcp,#Port<0.13294>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20176,null => nil,parameters => #Ref<0.0.1.139>,postgres => idle,queries => 184387,sock => {gen_tcp,#Port<0.13294>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5429.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20178,null => nil,parameters => #Ref<0.0.3.6993>,postgres => idle,queries => 172096,sock => {gen_tcp,#Port<0.13296>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13296>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 205339
+  neighbours:
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5431.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20176,null => nil,parameters => #Ref<0.0.1.139>,postgres => idle,queries => 184387,sock => {gen_tcp,#Port<0.13294>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13294>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 206270
+  neighbours:
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5432.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20173,null => nil,parameters => #Ref<0.0.3.6987>,postgres => idle,queries => 159805,sock => {gen_tcp,#Port<0.13291>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20173,null => nil,parameters => #Ref<0.0.3.6987>,postgres => idle,queries => 159805,sock => {gen_tcp,#Port<0.13291>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5435.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20174,null => nil,parameters => #Ref<0.0.1.140>,postgres => idle,queries => 180290,sock => {gen_tcp,#Port<0.13292>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20174,null => nil,parameters => #Ref<0.0.1.140>,postgres => idle,queries => 180290,sock => {gen_tcp,#Port<0.13292>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5432.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20173,null => nil,parameters => #Ref<0.0.3.6987>,postgres => idle,queries => 159805,sock => {gen_tcp,#Port<0.13291>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13291>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 10958
+    stack_size: 27
+    reductions: 1055402
+  neighbours:
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5435.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20174,null => nil,parameters => #Ref<0.0.1.140>,postgres => idle,queries => 180290,sock => {gen_tcp,#Port<0.13292>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13292>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 1598
+    stack_size: 27
+    reductions: 208724
+  neighbours:
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
      Context:    child_terminated
-     Reason:     normal
-     Offender:   [{pid,<0.199.0>},{id,'Elixir.Logger.ErrorHandler'},{mfargs,{'Elixir.Logger.Watcher',watcher,[error_logger,'Elixir.Logger.ErrorHandler',{true,false,500},link]}},{restart_type,permanent},{shutdown,5000},{child_type,worker}]
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20179,null => nil,parameters => #Ref<0.0.3.6984>,postgres => idle,queries => 151611,sock => {gen_tcp,#Port<0.13297>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5428.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =ERROR REPORT====
+** Generic server <0.5433.0> terminating 
+** Last message in was timeout
+** When Server state == {'Elixir.Postgrex.Protocol',#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => <<>>,connection_id => 20171,null => nil,parameters => #Ref<0.0.3.6992>,postgres => idle,queries => 167999,sock => {gen_tcp,#Port<0.13289>},timeout => 15000,transactions => naive,types => 143417}}
+** Reason for termination == 
+** {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20171,null => nil,parameters => #Ref<0.0.3.6992>,postgres => idle,queries => 167999,sock => {gen_tcp,#Port<0.13289>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20177,null => nil,parameters => #Ref<0.0.3.6986>,postgres => idle,queries => 155708,sock => {gen_tcp,#Port<0.13295>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5430.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =CRASH REPORT====
+  crasher:
+    initial call: Elixir.DBConnection.Connection:init/1
+    pid: <0.5433.0>
+    registered_name: []
+    exception exit: {{function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20171,null => nil,parameters => #Ref<0.0.3.6992>,postgres => idle,queries => 167999,sock => {gen_tcp,#Port<0.13289>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]},[{gen_server,terminate,7,[{file,"gen_server.erl"},{line,826}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+    ancestors: [<0.5426.0>,'Elixir.Perf.Repo.Pool','Elixir.Perf.Repo','Elixir.Perf.Supervisor',<0.303.0>]
+    messages: []
+    links: [<0.5425.0>,<0.5426.0>,#Port<0.13289>,<0.232.0>]
+    dictionary: []
+    trap_exit: false
+    status: running
+    heap_size: 2586
+    stack_size: 27
+    reductions: 206386
+  neighbours:
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20180,null => nil,parameters => #Ref<0.0.3.6981>,postgres => idle,queries => 147514,sock => {gen_tcp,#Port<0.13298>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5427.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20175,null => nil,parameters => #Ref<0.0.3.6990>,postgres => idle,queries => 163902,sock => {gen_tcp,#Port<0.13293>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5434.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20172,null => nil,parameters => #Ref<0.0.2.1463>,postgres => idle,queries => 176193,sock => {gen_tcp,#Port<0.13290>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5436.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20178,null => nil,parameters => #Ref<0.0.3.6993>,postgres => idle,queries => 172096,sock => {gen_tcp,#Port<0.13296>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5429.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20176,null => nil,parameters => #Ref<0.0.1.139>,postgres => idle,queries => 184387,sock => {gen_tcp,#Port<0.13294>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5431.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20173,null => nil,parameters => #Ref<0.0.3.6987>,postgres => idle,queries => 159805,sock => {gen_tcp,#Port<0.13291>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5432.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20174,null => nil,parameters => #Ref<0.0.1.140>,postgres => idle,queries => 180290,sock => {gen_tcp,#Port<0.13292>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5435.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
+
+2016-10-15 09:56:46 =SUPERVISOR REPORT====
+     Supervisor: {<0.5426.0>,poolboy_sup}
+     Context:    child_terminated
+     Reason:     {function_clause,[{'Elixir.Postgrex.Protocol',handle_msg,[#{'__struct__' => 'Elixir.Postgrex.Protocol',buffer => nil,connection_id => 20171,null => nil,parameters => #Ref<0.0.3.6992>,postgres => idle,queries => 167999,sock => {gen_tcp,#Port<0.13289>},timeout => 15000,transactions => naive,types => 143417},#{mode => transaction,notify => #Fun<Elixir.Postgrex.Protocol.19.103984769>,sync => sync},{msg_error,[{severity,<<"FATAL">>},{code,<<"57P01">>},{message,<<"terminating connection due to administrator command">>},{file,<<"postgres.c">>},{line,<<"2872">>},{routine,<<"ProcessInterrupts">>}]}],[{file,"lib/postgrex/protocol.ex"},{line,1576}]},{'Elixir.Postgrex.Protocol',do_sync_recv,4,[{file,"lib/postgrex/protocol.ex"},{line,1670}]},{'Elixir.DBConnection.Connection',handle_info,2,[{file,"lib/db_connection/connection.ex"},{line,358}]},{'Elixir.Connection',handle_async,3,[{file,"lib/connection.ex"},{line,812}]},{gen_server,try_dispatch,4,[{file,"gen_server.erl"},{line,615}]},{gen_server,handle_msg,5,[{file,"gen_server.erl"},{line,681}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,240}]}]}
+     Offender:   [{pid,<0.5433.0>},{id,'Elixir.DBConnection.Poolboy.Worker'},{mfargs,{'Elixir.DBConnection.Poolboy.Worker',start_link,undefined}},{restart_type,temporary},{shutdown,5000},{child_type,worker}]
 

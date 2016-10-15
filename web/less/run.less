@@ -19,28 +19,52 @@
 }
 .expr {
   font-family: monospace;
-  font-size: 110%;
-  padding: @margin/4 @margin/2;
+  padding: @margin;
   margin: @margin/4 0px;
   display: inline-block;
+
+  .expr {
+    margin: 0px;
+    padding: 0px @margin/2;
+  }
+
+  &.infix {
+    .infix {
+      padding: 0px 0px;
+    }
+  }
 }
-.yam-func {
+.expr.yam-func {
   display: block;
-  border-left: 2px solid @blue;
   border-bottom: 1px solid @gray-lighter;
   border-top: 1px solid @gray-lighter;
   border-right: 1px solid @gray-lighter;
+  border-left: 2px solid @gray;
 
+  &:hover {
+    background: @white;
+  }
+  &.editable {
+    border-left: 2px solid @blue;
 
+    .expr {
+      &:hover {
+        background: @gray-lighter;
+      }
+    }
+  }
+  &.frozen {
+    .expr {
+      &:hover {
+        background: @white;
+      }
+    }
+  }
   .remove {
     float: right;
   }
   .func-name {
     font-weight: bold;
-  }
-  &:hover {
-    background: lighten(@gray-lighter, 5%);
-    transition: .5s all;
   }
 }
 

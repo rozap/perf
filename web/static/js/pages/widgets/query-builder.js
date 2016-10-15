@@ -1,55 +1,69 @@
 import html from "choo/html"
 import _ from "underscore";
+import {signatureOf} from './yams/funcs';
 
-function isYamFunc(expr) {
-  return _.first(expr) === '.';
-}
 
-const infixOperators = ['-', '+', '*', '/', '==']
-function isInfix(expr) {
-  if(!_.isArray(expr)) return;
-  const operator = _.first(expr);
-  return _.contains(infixOperators, operator);
-}
-
-function yamsFuncView(expr, which, actions) {
-  const params = _.last(expr);
-  const funcName = _.first(params);
-  const args = params.slice(1);
+function atomView([types, expr], actions) {
+  types = [types]
   return html`
-    <div class="expr yam-func">
-      <span class="func-name">${funcName}</span>
-      ${args.map(exprView)}
+    <span class="expr atom">${expr} (${types.join('|')})</span>
+  `
+}
 
-      <a class="remove"
-        onclick=${() => actions.onExprDeleted(expr, which)}
-        href="javascript:void(0)">
-        <i class="ion-ios-close"></i>
-      </a>
+function isYamFuncEditable(funcName) {
+  const frozen = ['where', 'aggregates'];
+  return !_.contains(frozen, funcName);
+}
+function isYamFuncRemovable(funcName) {
+  const removable = ['where', 'aggregates', 'bucket'];
+  return !_.contains(removable, funcName);
+}
+
+function yamsFuncView(expr, actions) {
+  const [_dot, [funcName, ...args]] = expr;
+
+  const editable = isYamFuncEditable(funcName);
+
+  const removeButton = () => {
+    if(isYamFuncRemovable(funcName)) {
+      return html`
+        <a class="remove"
+          onclick=${() => actions.onExprDeleted(expr)}
+          href="javascript:void(0)">
+          <i class="ion-ios-close"></i>
+        </a>
+      `;
+    }
+  }
+
+  const sig = signatureOf(funcName);
+  const typedExprs = _.zip(sig, args);
+
+  return html`
+    <div class="expr yam-func ${editable? 'editable' : 'frozen'}">
+      <span class="func-name">${funcName}</span>
+      ${typedExprs.map(exprView)}
+      ${removeButton()}
     </div>
   `
 }
 
-function infixView(expr, which, actions) {
-  const [operator, [arg1, arg2]] = expr;
-
+function infixView([type, expr], actions) {
+  const [funcName, [arg1, arg2]] = expr;
+  // console.log("INFIX", type, funcName, arg1, arg2)
   return html`
     <div class="expr infix">
-      <span>${arg1}</span>
-      <span class="operator">${operator}</span>
-      <span>${arg2}</span>
+      <span>(${exprView(arg1)}</span>
+      <span class="funcName">${funcName}</span>
+      <span>${exprView(arg2)})</span>
     </div>
   `
 }
 
-function exprView(expr, which, actions) {
-  if(isYamFunc(expr)) return yamsFuncView(expr, which, actions);
-  if(isInfix(expr)) return infixView(expr, which, actions);
-  return html`
-    <span class="expr">
-      ${expr.toString()}
-    </span>
-  `
+function exprView(expr, actions) {
+  if(isYamFunc(expr)) return yamsFuncView(expr, actions);
+  if(isInfix(expr)) return infixView(expr, actions);
+  return atomView(expr, actions)
 }
 
 
@@ -57,8 +71,8 @@ function view(query, onExprAdded, onExprDeleted, onExprUpdated) {
   const actions = {onExprAdded, onExprDeleted, onExprUpdated}
   return html`
     <div class="query-builder">
-      ${query.map((clause, i) => {
-        return exprView(clause, i, actions)
+      ${query.map((expr) => {
+        return exprView(expr, actions)
       })}
     </div>
   `

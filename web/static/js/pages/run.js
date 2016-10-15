@@ -17,7 +17,6 @@ function latencyChart({run}, send) {
   var canvas = document.createElement('canvas');
 
   el.isSameNode = (other) => {
-    // console.log("Is same", el, other);
     return other.className === el.className;
   }
 
@@ -91,7 +90,123 @@ function latencyChart({run}, send) {
         }
       });
 
-      chart.data.datasets = datasets;
+      chart.data.datasets = datasets.filter((ds) => {
+        return ds.label.indexOf('latency') !== -1;
+      });
+
+      const pallette = [
+        ['rgba(246, 81, 29, 1)', 'rgba(246, 81, 29, .2)'],
+        ['rgba(255, 180, 0, 1)', 'rgba(255, 180, 0, .2)'],
+        ['rgba(0, 166, 237, 1)', 'rgba(0, 166, 237, .2)'],
+        ['rgba(127, 184, 0, 1)', 'rgba(127, 184, 0, .2)'],
+        ['rgba(13, 44, 84, 1)', 'rgba(13, 44, 84, .2)'],
+     ]
+
+      chart.data.datasets.forEach((ds, i) => {
+        ds.pointRadius = 0;
+        ds.borderColor = pallette[i % pallette.length][0];
+        ds.backgroundColor = pallette[i % pallette.length][1];
+        ds.borderWidth = 1;
+        ds.hitRadius = 5;
+      });
+    }
+
+    chart.data.labels = _.range(
+      0,
+      _.max(chart.data.datasets.map(d => d.data.length))
+    );
+
+
+    chart.update();
+  }
+
+  return () => {
+    return {el, update};
+  }
+}
+
+function throughputChart({run}, send) {
+  const el = document.createElement('div');
+  el.setAttribute('class', 'chart-container')
+  var canvas = document.createElement('canvas');
+
+  el.isSameNode = (other) => {
+    return other.className === el.className;
+  }
+
+  var w = document.body.clientWidth - 32;
+  var h = 500;
+
+  canvas.setAttribute("style", `width: ${w}px; height: ${h}px`);
+  canvas.width = w;
+  canvas.height = h;
+  canvas.setAttribute('width', `${w}px`);
+  canvas.setAttribute('height', `${h}px`);
+  el.appendChild(canvas);
+
+  var ctx = canvas.getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'line',
+    options: {
+      responsive: false,
+      animation: {
+        duration: 500,
+      },
+      tooltips: {
+        mode: "x-axis",
+        callbacks: {
+          // label: ({yLabel}) => millisFormat(yLabel)
+        }
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            // callback: (value) => millisFormat(value)
+          }
+        }],
+        xAxes: [{
+          ticks: {
+            maxTicksLimit: 16,
+            // callback: (value, index) => {
+            //   const point = chart.data.datasets[0].data[index];
+            //   if(point) {
+            //     return timeFormat(point.x);
+            //   }
+            //   return false;
+            // }
+          }
+        }]
+      }
+    },
+    data: {
+      labels: [],
+      datasets: []
+    }
+  });
+
+  const update = (datasets) => {
+    if(datasets) {
+      datasets = datasets.sort((a, b) => {
+        if(a.label.indexOf("min") !== -1) {
+          return -1;
+        }
+        if(b.label.indexOf("min") !== -1) {
+          return 1;
+        }
+        if(a.label.indexOf("max") !== -1) {
+          return 1;
+        }
+        if(b.label.indexOf("max") !== -1) {
+          return -1;
+        }
+        if(a.label > b.label) {
+          return 1;
+        }
+      });
+
+      chart.data.datasets = datasets.filter((ds) => {
+        return ds.label.indexOf('throughput') !== -1;
+      });
 
       const pallette = [
         ['rgba(246, 81, 29, 1)', 'rgba(246, 81, 29, .2)'],
@@ -133,6 +248,15 @@ const defaultQuery = () => ([
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
   [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+
+  [".", ["percentile", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]]], 50, "p50_throughput"]],
+  // [".", ["minimum", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]], "min_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
+  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+
+
+
   [".", ["aggregates"]]
 ])
 
@@ -183,7 +307,7 @@ function statusQuery(run) {
 
 function rolling(query) {
   return [
-    [".", ["bucket", 1000, "milliseconds"]],
+    [".", ["bucket", 4000, "milliseconds"]],
     ...query.slice(1)
   ]
 }
@@ -241,6 +365,7 @@ function model(api, channelFactory) {
         yam.on('connected', () => {
           send('run:resetChart', done);
           send('run:appendChart', latencyChart(state, send), done);
+          send('run:appendChart', throughputChart(state, send), done);
 
           const {
             startSeconds,
@@ -350,15 +475,15 @@ function appendChart(el, state) {
   return {...state, charts: [...state.charts, el]};
 }
 
-function addExpr({which, expr}, state) {
+function addExpr({expr}, state) {
 }
 
-function delExpr({which, expr}, state) {
+function delExpr({expr}, state) {
   const q = _.without(state.query, expr)
   return {...state, query: q};
 }
 
-function updateExpr({which, expr}, state) {
+function updateExpr({expr}, state) {
 }
 
 function show(run, state) {
@@ -459,9 +584,9 @@ function runView(state, send) {
     return;
   }
 
-  const onExprAdded   = (expr, which) => send('run:addExpr', {which, expr})
-  const onExprDeleted = (expr, which) => send('run:delExpr', {which, expr})
-  const onExprUpdated = (expr, which) => send('run:updateExpr', {which, expr})
+  const onExprAdded   = (expr) => send('run:addExpr', {expr})
+  const onExprDeleted = (expr) => send('run:delExpr', {expr})
+  const onExprUpdated = (expr) => send('run:updateExpr', {expr})
 
   return html `
     <div>
