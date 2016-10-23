@@ -10,7 +10,7 @@ defmodule Perf.TestHelpers do
 
   def wait_for_run_completion(run) do
     {_, handle} = Yams.Session.open(run.yam_ref)
-    Yams.Session.changes(handle)
+    Yams.Session.changes!(handle)
     |> Yams.Query.as_stream!
     |> Stream.take_while(fn
       {_, %{"type" => "done"}} -> false

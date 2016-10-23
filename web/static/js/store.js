@@ -146,28 +146,56 @@ class Api extends Store {
 
 
 
-class Yams extends Store {
+class Yams extends Emitter {
+  constructor(socket, params) {
+    super();
+    this._socket = socket;
+    this._channels = {};
+    this._params = params;
+    socket.onError((e) => {
+      this.onError(e);
+    });
+  }
   name() {
     return 'yams';
   }
 
-  _asyncStream(op, payload, cb) {
-    var sha256 = createHash('sha256');
-    const ref = sha256.update(JSON.stringify(payload)).digest("hex");
-    this.send(`${op}:${ref}`, payload);
-    return this._underlying.on(`change:events:${ref}`, cb);
+  onError(resp) {
+    this.emit('error', resp);
   }
 
-  changes({query}, cb) {
-    this._asyncStream('change:events', {query}, cb);
+  _makeChannel(name) {
+    if(this._channels[name]) {
+      this._channels[name].leave();
+    }
+    let channel = this._socket.channel('yams', this._params);
+    this._channels[name] = channel;
+    return channel;
   }
 
-  query({startSeconds, endSeconds, query}, cb) {
-    this._asyncStream('query:events', {
-      start_t_seconds: startSeconds,
-      end_t_seconds: endSeconds,
-      query
-    }, cb);
+  changes(name, {query}, cb) {
+    const channel = this._makeChannel(name)
+    channel.on('change:events', cb);
+    channel.join()
+    .receive("ok", resp => {
+      channel.push('change:events', {query});
+    })
+    .receive("error", resp => this.onError(resp));
+    return this;
+  }
+
+  query(name, {startSeconds, endSeconds, query}, cb) {
+    const channel = this._makeChannel(name);
+    channel.on('query:events', cb);
+    channel.join()
+    .receive("ok", resp => {
+      channel.push('query:events', {
+        start_t_seconds: startSeconds,
+        end_t_seconds: endSeconds,
+        query
+      });
+    })
+    .receive("error", resp => this.onError(resp));
   }
 }
 

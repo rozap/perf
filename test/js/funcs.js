@@ -33,17 +33,17 @@ describe('funcs', () => {
     });
 
     it('can make a bucket', () => {
-      const node = Any.fromAst([".", ["bucket", 5000, "milliseconds"]]);
+      const node = Any.fromAst(["bucket", 5000, "milliseconds"]);
       expect(node.id()).to.eql('bucket');
     });
 
     it('can make a where', () => {
-      const node = Any.fromAst([".", ["where", ["==", ["row.type", "success"]]]]);
+      const node = Any.fromAst(["where", ["==", "row.type", "success"]]);
       expect(node.id()).to.eql('where');
     });
 
     it('can make a percentile', () => {
-      const node = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]]);
+      const node = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"]);
       expect(node.id()).to.eql('percentile');
     });
   })
@@ -65,19 +65,19 @@ describe('funcs', () => {
     });
 
     it('can make a bucket', () => {
-      const ast = [".", ["bucket", 5000, "milliseconds"]];
+      const ast = ["bucket", 5000, "milliseconds"];
       const node = Any.fromAst(ast);
       expect(node.toAst()).to.eql(ast)
     });
 
     it('can make a where', () => {
-      const ast = [".", ["where", ["==", ["row.type", "success"]]]];
+      const ast = ["where", ["==", "row.type", "success"]];
       const node = Any.fromAst(ast);
       expect(node.toAst()).to.eql(ast);
     });
 
     it('can make a percentile', () => {
-      const ast = [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]];
+      const ast = ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"];
       const node = Any.fromAst(ast);
       expect(node.toAst()).to.eql(ast);
     });
@@ -85,47 +85,47 @@ describe('funcs', () => {
 
   describe('type checked', () => {
     it('can check an ok ==', () => {
-      const node = Any.fromAst(["==", [5, "success"]]);
+      const node = Any.fromAst(["==", 5, "success"]);
       const checked = node.check()
       expect(checked).to.eql(ok);
     });
 
     it('bucket typecheck', () => {
-      const node = Any.fromAst([".", ["bucket", 5000, "milliseconds"]]);
+      const node = Any.fromAst(["bucket", 5000, "milliseconds"]);
       expect(node.check()).to.eql(ok);
-      const bad = Any.fromAst([".", ["bucket", 5000, "fooey"]]);
+      const bad = Any.fromAst(["bucket", 5000, "fooey"]);
       expect(bad.check()).to.eql(error(
         "Invocation of function 'bucket' expected 'timeunit' but got 'text'"
       ));
     });
 
     it('where typecheck', () => {
-      const node = Any.fromAst([".", ["where", ["==", ["row.type", "success"]]]]);
+      const node = Any.fromAst(["where", ["==", "row.type", "success"]]);
       expect(node.check()).to.eql(ok);
-      const bad = Any.fromAst([".", ["where", "foo"]]);
+      const bad = Any.fromAst(["where", "foo"]);
       expect(bad.check()).to.eql(error(
         "Invocation of function 'where' expected 'bool' but got 'text'"
       ));
 
-      const badFunc = Any.fromAst([".", ["where", ["+", ["row.start_t", 5]]]]);
+      const badFunc = Any.fromAst(["where", ["+", "row.start_t", 5]]);
       expect(badFunc.check()).to.eql(error(
         "Invocation of function 'where' expected 'bool' but got 'num'"
       ));
     });
 
     it('percentile typecheck', () => {
-      const node = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]]);
+      const node = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"]);
       expect(node.check()).to.eql(ok);
 
-      var bad = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], "foo", 28]]);
+      var bad = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], "foo", 28]);
       expect(bad.check()).to.eql(error(
         "Invocation of function 'percentile' expected 'num' but got 'text'"
       ));
-      bad = Any.fromAst([".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 28, 28]]);
+      bad = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], 28, 28]);
       expect(bad.check()).to.eql(error(
         "Invocation of function 'percentile' expected 'text' but got 'num'"
       ));
-      bad = Any.fromAst([".", ["percentile", ["==", ["row.end_t", 28]], 28, "foo"]]);
+      bad = Any.fromAst(["percentile", ["==", "row.end_t", 28], 28, "foo"]);
       expect(bad.check()).to.eql(error(
         "Invocation of function 'percentile' expected 'num' but got 'bool'"
       ));

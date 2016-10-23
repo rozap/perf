@@ -122,7 +122,7 @@ function latencyChart({run}, send) {
   }
 
   return () => {
-    return {el, update};
+    return {el, update, chart};
   }
 }
 
@@ -236,27 +236,27 @@ function throughputChart({run}, send) {
   }
 
   return () => {
-    return {el, update};
+    return {el, update, chart};
   }
 }
 
 
 const defaultQuery = () => fromAst([
-  [".", ["bucket", 5000, "milliseconds"]],
-  [".", ["where", ["==", ["row.type", "success"]]]],
-  [".", ["maximum", ["-", ["row.end_t", "row.start_t"]], "max_latency"]],
-  [".", ["minimum", ["-", ["row.end_t", "row.start_t"]], "min_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
-  [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
+  ["bucket", 5000, "milliseconds"],
+  ["where", ["==", "row.type", "success"]],
+  ["maximum", ["-", "row.end_t", "row.start_t"], "max_latency"],
+  ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
+  ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
+  ["percentile", ["-", "row.end_t", "row.start_t"], 75, "p75_latency"],
+  ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"],
 
-  [".", ["percentile", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]]], 50, "p50_throughput"]],
+  ["percentile", ["/", "row.size", ["-", "row.end_t", "row.start_t"]], 50, "p50_throughput"],
   // [".", ["minimum", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]], "min_latency"]],
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
   // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
 
-  [".", ["aggregates"]]
+  ["aggregates"]
 ])
 
 function summaryQuery(run, query) {
@@ -270,43 +270,41 @@ function summaryQuery(run, query) {
 function statusQuery(run) {
   const {duration} = domainOf(run);
   return [
-    [".", ["bucket", duration, "seconds"]],
-    [".", ["count_where", ["==", ["row.type", "success"]], "success_count"]],
-    [".", ["count_where", ["==", ["row.type", "error"]], "error_count"]],
-    [".", [
+    ["bucket", duration, "seconds"],
+    ["count_where", ["==", "row.type", "success"], "success_count"],
+    ["count_where", ["==", "row.type", "error"], "error_count"],
+    [
       "count_where", [
-        "&&", [
-          [">=", ["row.status", 200]],
-          ["<", ["row.status", 300]]
-        ]
+        "&&",
+        [">=", "row.status", 200],
+        ["<", "row.status", 300]
+
       ],
-      "2xx_count"]
+      "2xx_count"
     ],
-    [".", [
+    [
       "count_where", [
-        "&&", [
-          [">=", ["row.status", 400]],
-          ["<", ["row.status", 500]]
-        ]
+        "&&",
+          [">=", "row.status", 400],
+          ["<", "row.status", 500]
       ],
-      "4xx_count"]
+      "4xx_count"
     ],
-    [".", [
+    [
       "count_where", [
-        "&&", [
-          [">=", ["row.status", 500]],
-          ["<", ["row.status", 600]]
-        ]
+        "&&",
+        [">=", "row.status", 500],
+        ["<", "row.status", 600]
       ],
-      "5xx_count"]
+      "5xx_count"
     ],
-    [".", ["aggregates"]]
+    ["aggregates"]
   ]
 }
 
 function rolling(query) {
   return [
-    [".", ["bucket", 4000, "milliseconds"]],
+    ["bucket", 4000, "milliseconds"],
     ...query.slice(1)
   ]
 }
@@ -341,18 +339,17 @@ function model(api, channelFactory) {
       datasets: {},
       summary: {events: []},
       status: {events: []},
-      qb: {}
     },
     namespace: 'run',
     reducers: {
       show,
       error,
       appendChart,
-      resetChart,
       summary,
       status,
+      appendData,
       onChangeExpr,
-      appendData
+      clearDatasets,
     },
     effects: {
       getRun: _.partial(getRun, api),
@@ -360,61 +357,74 @@ function model(api, channelFactory) {
         yam = channelFactory.create('yams', {
           run_id: run.id
         });
-        yam.on('connected', () => {
-          send('run:resetChart', done);
-          send('run:appendChart', latencyChart(state, send), done);
-          send('run:appendChart', throughputChart(state, send), done);
-
-          const {
-            startSeconds,
-            endSeconds,
-          } = domainOf(state.run);
-
-          const chartQ = {
-            startSeconds,
-            endSeconds,
-            query: toAst(state.query)
-          };
-
-          yam.query(chartQ, onYamChartChanges)
-
-          if (isInProgress(state.run)) {
-            send('run:chartChanges', chartQ, done);
-
-            send('run:summaryChanges', {
-              startSeconds,
-              endSeconds,
-              query: rolling(summaryQuery(state.run, toAst(state.query)))
-            }, done);
-
-            send('run:statusChanges', {
-              startSeconds,
-              endSeconds,
-              query: rolling(statusQuery(state.run))
-            }, done);
-          } else {
-            yam.query({
-              startSeconds,
-              endSeconds,
-              query: summaryQuery(state.run, toAst(state.query))
-            }, onYamSummaryChanges);
-
-            yam.query({
-              startSeconds,
-              endSeconds,
-              query: statusQuery(state.run)
-            }, onYamStatusChanges);
-          }
-        });
+        send('run:initCharts', {}, done);
       },
+      initCharts: (_params, state, send, done) => {
+        send('run:appendChart', latencyChart(state, send), done);
+        // send('run:appendChart', throughputChart(state, send), done);
+
+        send('run:sendChartQuery', {}, done);
+
+
+        // if (isInProgress(state.run)) {
+        //   send('run:chartChanges', chartQ, done);
+        //   send('run:summaryChanges', {
+        //     startSeconds,
+        //     endSeconds,
+        //     query: rolling(summaryQuery(state.run, toAst(state.query)))
+        //   }, done);
+
+        //   send('run:statusChanges', {
+        //     startSeconds,
+        //     endSeconds,
+        //     query: rolling(statusQuery(state.run))
+        //   }, done);
+        // } else {
+        //   yam.query('summary', {
+        //     startSeconds,
+        //     endSeconds,
+        //     query: summaryQuery(state.run, toAst(state.query))
+        //   }, onYamSummaryChanges);
+
+        //   yam.query('status', {
+        //     startSeconds,
+        //     endSeconds,
+        //     query: statusQuery(state.run)
+        //   }, onYamStatusChanges);
+        // }
+      },
+      sendChartQuery: ({}, state, send, done) => {
+        send('run:clearDatasets', {}, done);
+        state.charts.forEach((chart) => {
+          const c = chart().chart;
+          c.data.datasets = [];
+          c.render();
+        });
+        // state.charts.forEach((chart) => chart().update([]));
+
+        const {
+          startSeconds,
+          endSeconds,
+        } = domainOf(state.run);
+
+        const chartQ = {
+          startSeconds,
+          endSeconds,
+          query: toAst(state.query)
+        };
+
+        yam.query('charts', chartQ, onYamChartChanges)
+
+      },
+
       chartChanges: (query, state) => {
-      yam.changes(query, onYamChartChanges);
+        yam.changes('chart-changes', query, onYamChartChanges);
       },
       summaryChanges: (query, state, send, done) => {
-        yam.changes(query, onYamSummaryChanges);
+        yam.changes('summary-changes', query, onYamSummaryChanges);
       },
       statusChanges: (query, state, send, done) => {
-        yam.changes(query, onYamStatusChanges);
+        yam.changes('status-changes', query, onYamStatusChanges);
       }
     },
     subscriptions: [
@@ -457,6 +467,14 @@ function appendData({events}, state, send, done) {
   return {...state, datasets}
 }
 
+
+function clearDatasets(_, state) {
+  return {...state, datasets: {}};
+}
+
+function onChangeExpr(queryBuilderState, state) {
+  return {...state, query: queryBuilderState}
+}
 function summary(summary, state) {
   return {...state, summary};
 }
@@ -465,18 +483,9 @@ function status(status, state) {
   return {...state, status};
 }
 
-function resetChart(_, state) {
-  return {...state, charts: []};
-}
-
 function appendChart(el, state) {
   return {...state, charts: [...state.charts, el]};
 }
-
-function onChangeExpr(queryBuilderState, state) {
-  return {...state, qb: queryBuilderState}
-}
-
 
 function show(run, state) {
   return {
@@ -548,7 +557,6 @@ function summaryView({summary: {events}}) {
   `
 }
 
-
 function progressView({run}, send) {
   var finished = html `<span>In progress</span>`;
   if (!isInProgress(run)) {
@@ -576,7 +584,16 @@ function runView(state, send) {
     return;
   }
 
-  const onChangeExpr = (queryBuilderState) => send('run:onChangeExpr', queryBuilderState)
+  const oldQuery = toAst(state.query);
+  const onChangeExpr = (queryBuilderState) => {
+    send('run:onChangeExpr', queryBuilderState);
+    const newQuery = toAst(queryBuilderState);
+    if(!_.isEqual(oldQuery, newQuery)) {
+      console.log(oldQuery, '===>', newQuery);
+      send('run:sendChartQuery', {});
+    }
+
+  }
 
   return html `
     <div>
@@ -590,9 +607,12 @@ function runView(state, send) {
         state.query,
         onChangeExpr
       )}
-
     </div>
   `
+
+
+
+
 }
 
 //TODO: make this match the route nav

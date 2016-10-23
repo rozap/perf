@@ -39,18 +39,30 @@ defmodule YamChannelTest do
   end
 
   test "can get a more complex aggregate", %{socket: socket} do
-    aggs = push(socket, "query:events", %{
+    push(socket, "query:events", %{
       "start_t_seconds" => Yams.key_to_seconds(from_ts),
       "end_t_seconds" => Yams.key_to_seconds(to_ts),
       "query" => [
-        [".", ["bucket", 10, "milliseconds"]],
-        [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
-        [".", ["percentile", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]]], 95, "p95_throughput"]],
-        [".", ["aggregates"]]
+        ["bucket", 10, "milliseconds"],
+        ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
+        ["percentile",
+          ["/", "row.size", ["-", "row.end_t", "row.start_t"]],
+          95,
+          "p95_throughput"
+        ],
+        ["aggregates"]
       ]
     })
-    |> wait_for_json
-    |> Map.get("events")
+
+    message = receive do
+      %Phoenix.Socket.Message{} = message -> message
+    end
+
+    aggs = message
+    |> Map.get(:payload)
+    |> Map.get(:events)
+    |> Poison.encode!
+    |> Poison.decode!
     |> Enum.map(fn e -> e["aggregations"] end)
 
     assert aggs ==  [
@@ -60,7 +72,4 @@ defmodule YamChannelTest do
     ]
 
   end
-
-
-
 end

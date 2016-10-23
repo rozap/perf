@@ -32,8 +32,8 @@ defmodule Perf.YamsChannel do
 
 
 
-  def handle_in("change:events:" <> ref, %{"query" => query}, socket) do
-    Logger.warn("Starting a #{ref} changestream")
+  def handle_in("change:events", %{"query" => query}, socket) do
+    Logger.warn("Starting a changestream")
     spawn_link(fn ->
       changes = socket.assigns.handle
       |> Session.changes
@@ -44,7 +44,7 @@ defmodule Perf.YamsChannel do
           stream
           |> Yams.Query.as_stream!
           |> Stream.each(fn events ->
-            push socket, "change:events:#{ref}", %{events: [events]}
+            push socket, "change:events", %{events: [events]}
           end)
           |> Stream.run
         {:error, err} ->
@@ -55,7 +55,7 @@ defmodule Perf.YamsChannel do
     {:reply, {:ok, %{}}, socket}
   end
 
-  def handle_in("query:events:" <> ref, %{
+  def handle_in("query:events", %{
       "start_t_seconds" => start_t_seconds,
       "end_t_seconds" => end_t_seconds,
       "query" => query}, socket) when is_number(start_t_seconds) and is_number(end_t_seconds) do
@@ -68,14 +68,14 @@ defmodule Perf.YamsChannel do
       {:ok, stream} ->
         spawn_link(fn ->
           {events, elapsed} = timer do
-            Logger.info("Running the query...")
             {:ok, quoted} = Yams.Interpreter.compile(query)
+            Logger.info("Running the query... #{Macro.to_string(quoted)}")
             events = stream
             |> Yams.Query.as_stream!
             |> Stream.chunk(@chunk, @chunk, [])
             |> Stream.each(fn events ->
               Logger.info("Sending a batch of events")
-              push socket, "change:events:#{ref}", %{events: events}
+              push socket, "query:events", %{events: events}
             end)
             |> Stream.run
           end

@@ -33,7 +33,8 @@
     "uuid": "latest",
     "vinyl-buffer": "latest",
     "vinyl-source-stream": "latest",
-    "watchify": "latest"
+    "watchify": "latest",
+    "sexp": "latest"
   },
   "devDependencies": {
     "chai": "^3.5.0",
