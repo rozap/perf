@@ -95,7 +95,7 @@ describe('funcs', () => {
       expect(node.check()).to.eql(ok);
       const bad = Any.fromAst(["bucket", 5000, "fooey"]);
       expect(bad.check()).to.eql(error(
-        "Invocation of function 'bucket' expected 'timeunit' but got 'text'"
+        "Invocation of function 'bucket' expected 'timeunit' but got 'text' in argument 1"
       ));
     });
 
@@ -104,12 +104,12 @@ describe('funcs', () => {
       expect(node.check()).to.eql(ok);
       const bad = Any.fromAst(["where", "foo"]);
       expect(bad.check()).to.eql(error(
-        "Invocation of function 'where' expected 'bool' but got 'text'"
+        "Invocation of function 'where' expected 'bool' but got 'text' in argument 0"
       ));
 
       const badFunc = Any.fromAst(["where", ["+", "row.start_t", 5]]);
       expect(badFunc.check()).to.eql(error(
-        "Invocation of function 'where' expected 'bool' but got 'num'"
+        "Invocation of function 'where' expected 'bool' but got 'num' in argument 0"
       ));
     });
 
@@ -119,15 +119,15 @@ describe('funcs', () => {
 
       var bad = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], "foo", 28]);
       expect(bad.check()).to.eql(error(
-        "Invocation of function 'percentile' expected 'num' but got 'text'"
+        "Invocation of function 'percentile' expected 'num' but got 'text' in argument 1"
       ));
       bad = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], 28, 28]);
       expect(bad.check()).to.eql(error(
-        "Invocation of function 'percentile' expected 'text' but got 'num'"
+        "Invocation of function 'percentile' expected 'text' but got 'num' in argument 2"
       ));
       bad = Any.fromAst(["percentile", ["==", "row.end_t", 28], 28, "foo"]);
       expect(bad.check()).to.eql(error(
-        "Invocation of function 'percentile' expected 'num' but got 'bool'"
+        "Invocation of function 'percentile' expected 'num' but got 'bool' in argument 0"
       ));
     });
   })

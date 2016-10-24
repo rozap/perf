@@ -134,6 +134,10 @@ class Num extends Atom {
   static subTypes() { return []; }
   static isa(a) { return _.isNumber(a) }
   inputType() { return 'number'; }
+  mutate(value) {
+    this.value = parseInt(value);
+  }
+
 }
 class Text extends Atom {
   static subTypes() { return []; }
@@ -190,19 +194,28 @@ class Timeunit extends Enum {
     return _.contains(this.options(), a);
   }
   static options() {
-    return ['minutes', 'seconds', 'milliseconds', 'microseconds'];
+    return ['seconds', 'milliseconds', 'microseconds'];
   }
   options() {
     return this.constructor.options();
   }
 }
 class Func extends Any {
+  constructor(ast) {
+    const [_name, ...subExprs] = ast;
+    super(subExprs.map(se => Any.fromAst(se)));
+  }
+
   static subTypes() {
     return [
-      Bucket, Where, Percentile, Minimum, Maximum, CountWhere, Aggregates,
+      ...userYamFuncs(), Bucket, Aggregates,
       Gt, Lt, Gte, Lte, Eq, Neq,
       Plus, Minus, Mult, Div
     ];
+  }
+
+  toAst() {
+    return [this.id(), ...this.value.map(sub => sub.toAst())];
   }
 
   toSexpr() {
@@ -222,29 +235,24 @@ class Func extends Any {
       return !actual.isInstanceOf(t)
     });
 
+
     if(badInvocation) {
+      const argIndex = _.indexOf(invocation, badInvocation);
       const [expectedType, actual] = badInvocation;
 
       var got = actual.id();
       if(actual.isInstanceOf(Func)) {
         got = actual.returnType().id();
       }
-      return error(`Invocation of function '${this.id()}' expected '${expectedType.id()}' but got '${got}'`);
+      return error(`Invocation of function '${this.id()}' expected '${expectedType.id()}' but got '${got}' in argument ${argIndex}`);
     };
     return ok();
   }
 }
 class YamFunc extends Func {
-  constructor(ast) {
-    const [_name, ...subExprs] = ast;
-    super(subExprs.map(se => Any.fromAst(se)));
-  }
-  static isa([funcName]) { return funcName === this.id(); }
-  static subTypes() { return [] }
 
-  toAst() {
-    return [this.id(), ...this.value.map(sub => sub.toAst())];
-  }
+  static subTypes() { return [] }
+  static isa([funcName]) { return funcName === this.id(); }
 
   show(actions) {
     const node = this;
@@ -284,23 +292,9 @@ class YamFunc extends Func {
 }
 
 class Infix extends Func {
-  constructor(ast) {
-    const [_name, ...subExprs] = ast;
-    super(subExprs.map(se => Any.fromAst(se)));
-  }
   static signature() { return [Any, Any]; }
   static subTypes() { return [] }
-  static isa([operator, _args]) { return this.op() === operator; }
-
-  toAst() {
-    return [this.op(), ...this.value.map(sub => sub.toAst())];
-  }
-
-  id() {
-    return this.op();
-  }
-
-  op() { return this.constructor.op() }
+  static isa([funcName]) { return funcName === this.id(); }
 
   show(actions) {
     const [left, right] = this.value;
@@ -311,9 +305,11 @@ class Infix extends Func {
       this.doEdit(actions);
     }
 
+    const id = this.id();
+
     return html`
       <div class="expr infix" onclick=${edit}>
-        <span class="funcName">(${this.op()}</span>
+        <span class="funcName">(${id}</span>
         <span>${left.view(actions)}</span>
         <span>${right.view(actions)})</span>
       </div>
@@ -323,7 +319,8 @@ class Infix extends Func {
   edit(actions) {
     const unedit = (e) => {
       const ast = sexp(e.currentTarget.value);
-      actions.onReplace(Infix.fromAst(ast));
+      console.log("Replace with ast", ast)
+      actions.onReplace(Any.fromAst(ast));
       this.doneEdit(actions)
     }
     const onload = (el) => el.focus();
@@ -352,17 +349,17 @@ class Arithmetic extends Infix {
     return ['+', '-', '*', '/'];
   }
 }
-class Gt extends  Comparator { static op() { return '>'} }
-class Lt extends  Comparator { static op() { return '<'} }
-class Gte extends Comparator { static op() { return '>='} }
-class Lte extends Comparator { static op() { return '<='} }
-class Eq extends  Comparator { static op() { return '=='} }
-class Neq extends Comparator { static op() { return '!='} }
+class Gt extends  Comparator { static id() { return '>'} }
+class Lt extends  Comparator { static id() { return '<'} }
+class Gte extends Comparator { static id() { return '>='} }
+class Lte extends Comparator { static id() { return '<='} }
+class Eq extends  Comparator { static id() { return '=='} }
+class Neq extends Comparator { static id() { return '!='} }
 
-class Plus  extends Arithmetic { static op() { return '+'} }
-class Minus extends Arithmetic { static op() { return '-'} }
-class Mult  extends Arithmetic { static op() { return '*'} }
-class Div   extends Arithmetic { static op() { return '/'} }
+class Plus  extends Arithmetic { static id() { return '+'} }
+class Minus extends Arithmetic { static id() { return '-'} }
+class Mult  extends Arithmetic { static id() { return '*'} }
+class Div   extends Arithmetic { static id() { return '/'} }
 
 class Bucket extends YamFunc {
   static signature() { return [Num, Timeunit]; }
@@ -371,24 +368,63 @@ class Bucket extends YamFunc {
 }
 class Where extends YamFunc {
   static signature() { return [Bool]; }
+  static empty() {
+    return Any.fromAst(['where', ['==', 'row.type', 'success']]);
+  }
 }
 class Percentile extends YamFunc {
   static signature() { return [Num, Num, Text]; }
+  static empty() {
+    return Any.fromAst(
+      ['percentile', 
+        ['-', 'row.end_t', 'row.start_t'],
+        50,
+        'p50_latency'
+      ]
+    )
+  }
 }
 class Minimum extends YamFunc {
   static signature() { return [Num, Text]; }
+  static empty() {
+    return Any.fromAst(
+      ['minimum', 
+        ['-', 'row.end_t', 'row.start_t'],
+        'min_latency'
+      ]
+    )
+  }
 }
 class Maximum extends YamFunc {
   static signature() { return [Num, Text]; }
+  static empty() {
+    return Any.fromAst(
+      ['maximum', 
+        ['-', 'row.end_t', 'row.start_t'],
+        'max_latency'
+      ]
+    )
+  }
 }
 class CountWhere extends YamFunc {
   static signature() { return [Bool, Text]; }
+  static empty() {
+    return Any.fromAst(
+      ['count_where', 
+        ['>', ['-', 'row.end_t', 'row.start_t'], 100],
+        'exceeds_100ms'
+      ]
+    )
+  }
 }
 class Aggregates extends YamFunc {
   static signature() { return []; }
   canRemove() { return false; }
   canEdit() { return false; }
+}
 
+function userYamFuncs() {
+  return [Where, Percentile, Minimum, Maximum, CountWhere];
 }
 
 function fromAst(exprs) {
@@ -410,5 +446,6 @@ export default {
   Any, Num, Text, Row, Bool, Func, Timeunit,
   Gt, Lt, Gte, Lte, Eq, Neq,
   Plus, Minus, Mult, Div,
-  Bucket, Where, Percentile
+  Bucket, Where, Percentile, CountWhere, Minimum, Maximum,
+  userYamFuncs
 }

@@ -7,257 +7,28 @@ import flash from './widgets/flash';
 import loader from './widgets/loader';
 import {fromAst, toAst} from './widgets/yams/funcs';
 import queryBuilderView from './widgets/query-builder';
+import {chart} from './widgets/chart';
 import moment from 'moment';
 import {utcFormat, domainOf, timeFormat, millisFormat} from '../time';
-import cjs from 'chart.js';
 
 
-function latencyChart({run}, send) {
-  const el = document.createElement('div');
-  el.setAttribute('class', 'chart-container')
-  var canvas = document.createElement('canvas');
-
-  el.isSameNode = (other) => {
-    return other.className === el.className;
-  }
-
-  var w = document.body.clientWidth - 32;
-  var h = 500;
-
-  canvas.setAttribute("style", `width: ${w}px; height: ${h}px`);
-  canvas.width = w;
-  canvas.height = h;
-  canvas.setAttribute('width', `${w}px`);
-  canvas.setAttribute('height', `${h}px`);
-  el.appendChild(canvas);
-
-  var ctx = canvas.getContext('2d');
-  var chart = new Chart(ctx, {
-    type: 'line',
-    options: {
-      responsive: false,
-      animation: {
-        duration: 500,
-      },
-      tooltips: {
-        mode: "x-axis",
-        callbacks: {
-          label: ({yLabel}) => millisFormat(yLabel)
-        }
-      },
-      scales: {
-        yAxes: [{
-          ticks: {
-            callback: (value) => millisFormat(value)
-          }
-        }],
-        xAxes: [{
-          ticks: {
-            maxTicksLimit: 16,
-            callback: (value, index) => {
-              const point = chart.data.datasets[0].data[index];
-              if(point) {
-                return timeFormat(point.x);
-              }
-              return false;
-            }
-          }
-        }]
-      }
-    },
-    data: {
-      labels: [],
-      datasets: []
-    }
-  });
-
-  const update = (datasets) => {
-    if(datasets) {
-      datasets = datasets.sort((a, b) => {
-        if(a.label.indexOf("min") !== -1) {
-          return -1;
-        }
-        if(b.label.indexOf("min") !== -1) {
-          return 1;
-        }
-        if(a.label.indexOf("max") !== -1) {
-          return 1;
-        }
-        if(b.label.indexOf("max") !== -1) {
-          return -1;
-        }
-        if(a.label > b.label) {
-          return 1;
-        }
-      });
-
-      chart.data.datasets = datasets.filter((ds) => {
-        return ds.label.indexOf('latency') !== -1;
-      });
-
-      const pallette = [
-        ['rgba(246, 81, 29, 1)', 'rgba(246, 81, 29, .2)'],
-        ['rgba(255, 180, 0, 1)', 'rgba(255, 180, 0, .2)'],
-        ['rgba(0, 166, 237, 1)', 'rgba(0, 166, 237, .2)'],
-        ['rgba(127, 184, 0, 1)', 'rgba(127, 184, 0, .2)'],
-        ['rgba(13, 44, 84, 1)', 'rgba(13, 44, 84, .2)'],
-     ]
-
-      chart.data.datasets.forEach((ds, i) => {
-        ds.pointRadius = 0;
-        ds.borderColor = pallette[i % pallette.length][0];
-        ds.backgroundColor = pallette[i % pallette.length][1];
-        ds.borderWidth = 1;
-        ds.hitRadius = 5;
-      });
-    }
-
-    chart.data.labels = _.range(
-      0,
-      _.max(chart.data.datasets.map(d => d.data.length))
-    );
 
 
-    chart.update();
-  }
+const defaultQueries = () => {
+  const latency = fromAst([
+    ["bucket", 5000, "milliseconds"],
+    ["where", ["==", "row.type", "success"]],
+    ["maximum", ["-", "row.end_t", "row.start_t"], "max_latency"],
+    ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 75, "p75_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"],
 
-  return () => {
-    return {el, update, chart};
-  }
+    ["aggregates"]
+  ]);
+
+  return {latency};
 }
-
-function throughputChart({run}, send) {
-  const el = document.createElement('div');
-  el.setAttribute('class', 'chart-container')
-  var canvas = document.createElement('canvas');
-
-  el.isSameNode = (other) => {
-    return other.className === el.className;
-  }
-
-  var w = document.body.clientWidth - 32;
-  var h = 500;
-
-  canvas.setAttribute("style", `width: ${w}px; height: ${h}px`);
-  canvas.width = w;
-  canvas.height = h;
-  canvas.setAttribute('width', `${w}px`);
-  canvas.setAttribute('height', `${h}px`);
-  el.appendChild(canvas);
-
-  var ctx = canvas.getContext('2d');
-  var chart = new Chart(ctx, {
-    type: 'line',
-    options: {
-      responsive: false,
-      animation: {
-        duration: 500,
-      },
-      tooltips: {
-        mode: "x-axis",
-        callbacks: {
-          // label: ({yLabel}) => millisFormat(yLabel)
-        }
-      },
-      scales: {
-        yAxes: [{
-          ticks: {
-            // callback: (value) => millisFormat(value)
-          }
-        }],
-        xAxes: [{
-          ticks: {
-            maxTicksLimit: 16,
-            // callback: (value, index) => {
-            //   const point = chart.data.datasets[0].data[index];
-            //   if(point) {
-            //     return timeFormat(point.x);
-            //   }
-            //   return false;
-            // }
-          }
-        }]
-      }
-    },
-    data: {
-      labels: [],
-      datasets: []
-    }
-  });
-
-  const update = (datasets) => {
-    if(datasets) {
-      datasets = datasets.sort((a, b) => {
-        if(a.label.indexOf("min") !== -1) {
-          return -1;
-        }
-        if(b.label.indexOf("min") !== -1) {
-          return 1;
-        }
-        if(a.label.indexOf("max") !== -1) {
-          return 1;
-        }
-        if(b.label.indexOf("max") !== -1) {
-          return -1;
-        }
-        if(a.label > b.label) {
-          return 1;
-        }
-      });
-
-      chart.data.datasets = datasets.filter((ds) => {
-        return ds.label.indexOf('throughput') !== -1;
-      });
-
-      const pallette = [
-        ['rgba(246, 81, 29, 1)', 'rgba(246, 81, 29, .2)'],
-        ['rgba(255, 180, 0, 1)', 'rgba(255, 180, 0, .2)'],
-        ['rgba(0, 166, 237, 1)', 'rgba(0, 166, 237, .2)'],
-        ['rgba(127, 184, 0, 1)', 'rgba(127, 184, 0, .2)'],
-        ['rgba(13, 44, 84, 1)', 'rgba(13, 44, 84, .2)'],
-     ]
-
-      chart.data.datasets.forEach((ds, i) => {
-        ds.pointRadius = 0;
-        ds.borderColor = pallette[i % pallette.length][0];
-        ds.backgroundColor = pallette[i % pallette.length][1];
-        ds.borderWidth = 1;
-        ds.hitRadius = 5;
-      });
-    }
-
-    chart.data.labels = _.range(
-      0,
-      _.max(chart.data.datasets.map(d => d.data.length))
-    );
-
-
-    chart.update();
-  }
-
-  return () => {
-    return {el, update, chart};
-  }
-}
-
-
-const defaultQuery = () => fromAst([
-  ["bucket", 5000, "milliseconds"],
-  ["where", ["==", "row.type", "success"]],
-  ["maximum", ["-", "row.end_t", "row.start_t"], "max_latency"],
-  ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
-  ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
-  ["percentile", ["-", "row.end_t", "row.start_t"], 75, "p75_latency"],
-  ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"],
-
-  ["percentile", ["/", "row.size", ["-", "row.end_t", "row.start_t"]], 50, "p50_throughput"],
-  // [".", ["minimum", ["/", ["row.size", ["-", ["row.end_t", "row.start_t"]]], "min_latency"]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 95, "p95_latency"]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 75, "p75_latency"]],
-  // [".", ["percentile", ["-", ["row.end_t", "row.start_t"]], 50, "p50_latency"]],
-
-  ["aggregates"]
-])
 
 function summaryQuery(run, query) {
   const {duration} = domainOf(run);
@@ -309,33 +80,20 @@ function rolling(query) {
   ]
 }
 
-function eventsToMeasures(events) {
-  var measures = {};
-  events.forEach((e) => {
-    _.each(e.aggregations, (value, key) => {
-      var points = measures[key] || [];
-      const x = e.end_t / (1000 * 1000);
-      points.push({x, y: value})
-      measures[key] = points;
-    });
-  });
-  return measures;
-}
 
 function model(api, channelFactory) {
   var yam;
   var onYamChartChanges;
   var onYamSummaryChanges;
   var onYamStatusChanges;
-  var chart;
 
   return {
     state: {
-      query: defaultQuery(),
+      queries: defaultQueries(),
+      charts: {},
       run: false,
       isLoading: false,
       latencyChart: false,
-      charts: [],
       datasets: {},
       summary: {events: []},
       status: {events: []},
@@ -349,7 +107,7 @@ function model(api, channelFactory) {
       status,
       appendData,
       onChangeExpr,
-      clearDatasets,
+      clearDataset,
     },
     effects: {
       getRun: _.partial(getRun, api),
@@ -357,13 +115,17 @@ function model(api, channelFactory) {
         yam = channelFactory.create('yams', {
           run_id: run.id
         });
-        send('run:initCharts', {}, done);
+
+        send('run:appendChart', {tag: 'latency', chart: chart(state, send)}, done);
+        send('run:sendQuery', {tag: 'latency'}, done);
+
+        // send('run:initCharts', {}, done);
       },
-      initCharts: (_params, state, send, done) => {
-        send('run:appendChart', latencyChart(state, send), done);
+      // initCharts: (_params, state, send, done) => {
+      //   send('run:appendChart', chart(state, send), done);
+      //   send('run:sendQuery', {tag: 'latency'}, done);
         // send('run:appendChart', throughputChart(state, send), done);
 
-        send('run:sendChartQuery', {}, done);
 
 
         // if (isInProgress(state.run)) {
@@ -392,15 +154,13 @@ function model(api, channelFactory) {
         //     query: statusQuery(state.run)
         //   }, onYamStatusChanges);
         // }
-      },
-      sendChartQuery: ({}, state, send, done) => {
-        send('run:clearDatasets', {}, done);
-        state.charts.forEach((chart) => {
-          const c = chart().chart;
-          c.data.datasets = [];
-          c.render();
-        });
-        // state.charts.forEach((chart) => chart().update([]));
+      // },
+      sendQuery: ({tag}, state, send, done) => {
+        send('run:clearDataset', {tag}, done);
+
+        const chart = state.charts[tag]().chart;
+        chart.data.datasets = [];
+        chart.render();
 
         const {
           startSeconds,
@@ -410,26 +170,25 @@ function model(api, channelFactory) {
         const chartQ = {
           startSeconds,
           endSeconds,
-          query: toAst(state.query)
+          query: toAst(state.queries[tag])
         };
 
-        yam.query('charts', chartQ, onYamChartChanges)
-
+        yam.query(`chart.${tag}`, chartQ, onYamChartChanges(tag));
       },
 
-      chartChanges: (query, state) => {
-        yam.changes('chart-changes', query, onYamChartChanges);
-      },
-      summaryChanges: (query, state, send, done) => {
-        yam.changes('summary-changes', query, onYamSummaryChanges);
-      },
-      statusChanges: (query, state, send, done) => {
-        yam.changes('status-changes', query, onYamStatusChanges);
-      }
+      // chartChanges: (query, state) => {
+      //   yam.changes('chart-changes', query, onYamChartChanges);
+      // },
+      // summaryChanges: (query, state, send, done) => {
+      //   yam.changes('summary-changes', query, onYamSummaryChanges);
+      // },
+      // statusChanges: (query, state, send, done) => {
+      //   yam.changes('status-changes', query, onYamStatusChanges);
+      // }
     },
     subscriptions: [
       (send, done) => {
-        onYamChartChanges = (c) => send('run:appendData', c, done);
+        onYamChartChanges = (tag) => (events) => send('run:appendData', {tag, events: events.events}, done);
         onYamSummaryChanges = (c) => send('run:summary', c, done);
         onYamStatusChanges = (c) => send('run:status', c, done);
       }
@@ -450,11 +209,26 @@ function getRun(api, {id}, state, send, done) {
     });
 }
 
-function appendData({events}, state, send, done) {
-  const measures = eventsToMeasures(events);
 
-  const datasets = _.map(measures, (data, label) => {
-    const dataset = _.find(state.datasets, ds => ds.label === label) || {
+function eventsToMeasures(events) {
+  var measures = {};
+  events.forEach((e) => {
+    _.each(e.aggregations, (value, key) => {
+      var points = measures[key] || [];
+      const x = e.end_t / (1000 * 1000);
+      points.push({x, y: value})
+      measures[key] = points;
+    });
+  });
+  return measures;
+}
+
+function appendData({tag, events}, state, send, done) {
+  const measures = eventsToMeasures(events);
+  console.log("Append data", tag, measures);
+
+  const tagDatasets = _.map(measures, (data, label) => {
+    const dataset = _.find(state.datasets[tag] || [], ds => ds.label === label) || {
       label,
       data: []
     };
@@ -462,18 +236,25 @@ function appendData({events}, state, send, done) {
 
     return dataset;
   });
-  state.charts.forEach((chart) => chart().update(datasets));
 
-  return {...state, datasets}
+  state.charts[tag]().update(tagDatasets);
+
+  // i know this is mutatey but it's slow otherwise 
+  var datasets = state.datasets;
+  datasets[tag] = tagDatasets;
+  return {...state, datasets: datasets};
 }
 
 
-function clearDatasets(_, state) {
-  return {...state, datasets: {}};
+function clearDataset({tag}, state) {
+  return {...state, datasets: _.omit(state.datasets, tag)};
 }
 
-function onChangeExpr(queryBuilderState, state) {
-  return {...state, query: queryBuilderState}
+function onChangeExpr({tag, query}, state) {
+  var o = {};
+  o[tag] = query;
+  const queries = _.extend({}, state.queries, o);
+  return {...state, queries: queries}
 }
 function summary(summary, state) {
   return {...state, summary};
@@ -483,8 +264,11 @@ function status(status, state) {
   return {...state, status};
 }
 
-function appendChart(el, state) {
-  return {...state, charts: [...state.charts, el]};
+function appendChart({tag, chart}, state) {
+  var o = {};
+  o[tag] = chart;
+  const charts = _.extend({}, state.charts, o);
+  return {...state, charts: charts};
 }
 
 function show(run, state) {
@@ -584,15 +368,32 @@ function runView(state, send) {
     return;
   }
 
-  const oldQuery = toAst(state.query);
-  const onChangeExpr = (queryBuilderState) => {
-    send('run:onChangeExpr', queryBuilderState);
-    const newQuery = toAst(queryBuilderState);
-    if(!_.isEqual(oldQuery, newQuery)) {
-      console.log(oldQuery, '===>', newQuery);
-      send('run:sendChartQuery', {});
+
+  const chartAndQuery = (tag, f) => {
+    const oldQuery = toAst(state.queries[tag]);
+    const onChangeExpr = (query, isValid) => {
+      send('run:onChangeExpr', {tag, query});
+      const newQuery = toAst(query);
+      console.log("expr changed, valid: ", isValid)
+      if(isValid && !_.isEqual(oldQuery, newQuery)) {
+        console.log(oldQuery, '===>', newQuery);
+        send('run:sendQuery', {tag});
+      }
     }
 
+    return html`
+    <div class="aspect">
+      <div class="chart">
+        ${f(state, send).el}
+      </div>
+      <div class="query-builder">
+        ${queryBuilderView(
+          state.queries[tag],
+          onChangeExpr
+        )}
+      </div>
+    </div>
+    `
   }
 
   return html `
@@ -601,18 +402,10 @@ function runView(state, send) {
       ${statiiView(state)}
       ${summaryView(state)}
       <div class="charts">
-        ${state.charts.map(t => t(state, send).el)}
+        ${_.map(state.charts, (f, tag) => chartAndQuery(tag, f))}
       </div>
-      ${queryBuilderView(
-        state.query,
-        onChangeExpr
-      )}
     </div>
   `
-
-
-
-
 }
 
 //TODO: make this match the route nav

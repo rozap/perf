@@ -17,63 +17,86 @@
     border-left: none;
   }
 }
-.expr {
-  font-family: monospace;
-  padding: @margin;
-  margin: @margin/4 0px;
-  display: inline-block;
-
+.query-builder {
+  font-size: 90%;
   .expr {
-    margin: 0px;
-    padding: 0px @margin/2;
-  }
-
-  &.infix {
-    input {
-      width: 400px;
-    }
-
-    .infix {
-      padding: 0px 0px;
-    }
-  }
-}
-.expr.yam-func {
-  display: block;
-  border-bottom: 1px solid @gray-lighter;
-  border-top: 1px solid @gray-lighter;
-  border-right: 1px solid @gray-lighter;
-  border-left: 2px solid @gray;
-
-  &:hover {
-    background: @white;
-  }
-  &.editable {
-    border-left: 2px solid @blue;
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+    padding: @margin;
+    margin: @margin/4 0px;
+    display: inline-block;
 
     .expr {
-      &:hover {
-        background: @gray-lighter;
+      margin: 0px;
+      padding: 0px @margin/2;
+    }
+
+    &.infix {
+      input {
+        width: 400px;
+        height: 2em;
+      }
+
+      .infix {
+        padding: 0px 0px;
       }
     }
   }
-  &.frozen {
-    .expr {
-      &:hover {
-        background: @white;
-      }
+  .expr.add-new-yam.yam-func {
+    display: flex;
+    align-items: center;
+    border-left: 2px solid @green;
+    .new-func {
+      flex-grow: 1;
     }
   }
-  .remove {
-    float: right;
+  .expr.yam-func {
+    display: block;
+    border-bottom: 1px solid @gray-lighter;
+    border-top: 1px solid @gray-lighter;
+    border-right: 1px solid @gray-lighter;
+    border-left: 2px solid @gray;
+
+    &:hover {
+      background: @white;
+    }
+    &.editable {
+      border-left: 2px solid @blue;
+
+      .expr {
+        &:hover {
+          background: @gray-lighter;
+        }
+      }
+    }
+    &.frozen {
+      .expr {
+        &:hover {
+          background: @white;
+        }
+      }
+    }
+    .remove {
+      float: right;
+    }
+    .func-name {
+      font-weight: bold;
+    }
   }
-  .func-name {
-    font-weight: bold;
+
+  .check-result {
+    .result {
+      display: block;
+      padding: @margin;
+    }
+    .error {
+      border-left: 2px solid @red;
+      color: @red;
+    }
   }
 }
 
 @chart-height: 500px;
 .charts {
   // display: none;
-  height: @chart-height * 2;
+  height: @chart-height;
 }
