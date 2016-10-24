@@ -45,7 +45,7 @@ defmodule Perf.YamsChannel do
           |> Yams.Query.aggregates
           |> Yams.Query.as_stream!
           |> Stream.each(fn events ->
-            push socket, "change:events", %{events: [events]}
+            push socket, "events", %{events: [events]}
           end)
           |> Stream.run
         {:error, err} ->
@@ -81,7 +81,7 @@ defmodule Perf.YamsChannel do
             |> Stream.chunk(@chunk, @chunk, [])
             |> Stream.each(fn events ->
               Logger.info("Sending a batch of events")
-              push socket, "query:events", %{events: events}
+              push socket, "events", %{events: events}
             end)
             |> Stream.run
           end

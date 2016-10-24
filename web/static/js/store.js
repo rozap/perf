@@ -175,34 +175,33 @@ class Yams extends Emitter {
     return channel;
   }
 
-  // _bindChannel()
-
-  changes(name, {query}, cb) {
+  streamOf(name, queryName, query) {
     const channel = this._makeChannel(name)
-    channel.on('change:events', cb);
-    channel.onError(() => this.onError());
+    const ee = new Emitter();
+    // channel.on('events', (data) => console.log(data))
+    channel.on('events', (data) => ee.emit('events', data));
+    channel.onError(() => ee.emit('error'));
+    channel.onClose(() => ee.emit('close'));
+
     channel.join()
     .receive("ok", resp => {
-      channel.push('change:events', {query});
+      channel.push(queryName, query);
     })
-    .receive("error", resp => this.onError(resp));
-    return this;
+    .receive("error", resp => ee.emit('error', resp));
+
+    return ee;
   }
 
-  query(name, {startSeconds, endSeconds, query}, cb) {
-    const channel = this._makeChannel(name);
-    channel.on('query:events', cb);
-    channel.onError(() => this.onError());
-    channel.join()
-    .receive("ok", resp => {
-      channel.push('query:events', {
-        start_t_seconds: startSeconds,
-        end_t_seconds: endSeconds,
-        query
-      });
-    })
-    .receive("error", resp => this.onError(resp));
+  changes(name, {query}) {
+    return this.streamOf(name, 'change:events', query);
+  }
 
+  query(name, {startSeconds, endSeconds, query}) {
+    return this.streamOf(name, 'query:events', {
+      start_t_seconds: startSeconds,
+      end_t_seconds: endSeconds,
+      query
+    });
   }
 }
 

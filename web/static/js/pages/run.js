@@ -1,7 +1,6 @@
 import choo from "choo"
 import html from "choo/html"
 import _ from "underscore";
-import errorView from './widgets/error';
 import menu from './widgets/menu';
 import flash from './widgets/flash';
 import loader from './widgets/loader';
@@ -103,6 +102,7 @@ function model(api, channelFactory) {
       run: false,
       isLoading: false,
       latencyChart: false,
+      error: false,
       datasets: {},
       summary: {events: []},
       status: {events: []},
@@ -117,6 +117,7 @@ function model(api, channelFactory) {
       appendData,
       onChangeExpr,
       clearDataset,
+      yamError
     },
     effects: {
       getRun: _.partial(getRun, api),
@@ -127,7 +128,6 @@ function model(api, channelFactory) {
 
         send('run:appendChart', {tag: 'latency', chart: chart(state, send)}, done);
         send('run:sendQuery', {tag: 'latency'}, done);
-
 
         const {
           startSeconds,
@@ -154,13 +154,17 @@ function model(api, channelFactory) {
             startSeconds,
             endSeconds,
             query: toAst(summaryQuery(state.run))
-          }, onYamSummaryChanges);
+          })
+          .on('events', onYamSummaryChanges)
+          .on('error', onYamError(send, done, 'summary'))
 
           yam.query('status', {
             startSeconds,
             endSeconds,
             query: toAst(statusQuery(state.run))
-          }, (c) => console.log("status??", c));
+          })
+          .on('events', onYamStatusChanges)
+          .on('error', onYamError(send, done, 'status'))
         }
 
         // send('run:initCharts', {}, done);
@@ -217,7 +221,9 @@ function model(api, channelFactory) {
           query: toAst(state.queries[tag])
         };
 
-        yam.query(`chart.${tag}`, chartQ, onYamChartChanges(tag));
+        yam.query(`chart.${tag}`, chartQ)
+        .on('events', onYamChartChanges(tag))
+        .on('error', onYamError(send, done, tag))
       },
 
       // chartChanges: (query, state) => {
@@ -242,6 +248,12 @@ function model(api, channelFactory) {
 
 function isInProgress(run) {
   return !run.finished_at;
+}
+
+function onYamError(send, done, channel) {
+  return (error) => {
+    send('run:yamError', {channel: channel, error}, done);
+  }
 }
 
 function getRun(api, {id}, state, send, done) {
@@ -283,7 +295,7 @@ function appendData({tag, events}, state, send, done) {
 
   state.charts[tag]().update(tagDatasets);
 
-  // i know this is mutatey but it's slow otherwise 
+  // i know this is mutatey but it's slow otherwise
   var datasets = state.datasets;
   datasets[tag] = tagDatasets;
   return {...state, datasets: datasets};
@@ -292,6 +304,11 @@ function appendData({tag, events}, state, send, done) {
 
 function clearDataset({tag}, state) {
   return {...state, datasets: _.omit(state.datasets, tag)};
+}
+
+function yamError({channel, error}, state) {
+  const e = {error: {english: 'Error while fetching metrics'}};
+  return {...state, error: e}
 }
 
 function onChangeExpr({tag, query}, state) {
