@@ -5,7 +5,7 @@ defmodule Perf.UserSocket do
 
   ## Channels
   channel "api", Perf.ApiChannel
-  channel "yams", Perf.YamsChannel
+  channel "yams:*", Perf.YamsChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

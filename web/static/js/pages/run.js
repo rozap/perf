@@ -22,25 +22,34 @@ const defaultQueries = () => {
     ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
     ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
     ["percentile", ["-", "row.end_t", "row.start_t"], 75, "p75_latency"],
-    ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"],
-
-    ["aggregates"]
+    ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"]
   ]);
 
   return {latency};
 }
 
+const defaultQueryBuilders = (queries) => {
+  return _.mapObject(queries, (_, tag) => {
+    return queryBuilderView(tag);
+  });
+}
+
 function summaryQuery(run, query) {
   const {duration} = domainOf(run);
-  return [
-    [".", ["bucket", duration, "seconds"]],
-    ...query.slice(1)
-  ]
+  return fromAst([
+    ["bucket", duration, "milliseconds"],
+    ["where", ["==", "row.type", "success"]],
+    ["maximum", ["-", "row.end_t", "row.start_t"], "max_latency"],
+    ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 75, "p75_latency"],
+    ["percentile", ["-", "row.end_t", "row.start_t"], 50, "p50_latency"]
+  ])
 }
 
 function statusQuery(run) {
   const {duration} = domainOf(run);
-  return [
+  return fromAst([
     ["bucket", duration, "seconds"],
     ["count_where", ["==", "row.type", "success"], "success_count"],
     ["count_where", ["==", "row.type", "error"], "error_count"],
@@ -68,9 +77,8 @@ function statusQuery(run) {
         ["<", "row.status", 600]
       ],
       "5xx_count"
-    ],
-    ["aggregates"]
-  ]
+    ]
+  ]);
 }
 
 function rolling(query) {
@@ -90,6 +98,7 @@ function model(api, channelFactory) {
   return {
     state: {
       queries: defaultQueries(),
+      queryBuilders: defaultQueryBuilders(defaultQueries()),
       charts: {},
       run: false,
       isLoading: false,
@@ -118,6 +127,41 @@ function model(api, channelFactory) {
 
         send('run:appendChart', {tag: 'latency', chart: chart(state, send)}, done);
         send('run:sendQuery', {tag: 'latency'}, done);
+
+
+        const {
+          startSeconds,
+          endSeconds,
+        } = domainOf(state.run);
+
+        if (isInProgress(state.run)) {
+          console.log("it's in progress..")
+          // send('run:chartChanges', chartQ, done);
+          // send('run:summaryChanges', {
+          //   startSeconds,
+          //   endSeconds,
+          //   query: rolling(summaryQuery(state.run, toAst(state.query)))
+          // }, done);
+
+          // send('run:statusChanges', {
+          //   startSeconds,
+          //   endSeconds,
+          //   query: rolling(statusQuery(state.run))
+          // }, done);
+        } else {
+          console.log("Getting the thing....")
+          yam.query('summary', {
+            startSeconds,
+            endSeconds,
+            query: toAst(summaryQuery(state.run))
+          }, onYamSummaryChanges);
+
+          yam.query('status', {
+            startSeconds,
+            endSeconds,
+            query: toAst(statusQuery(state.run))
+          }, (c) => console.log("status??", c));
+        }
 
         // send('run:initCharts', {}, done);
       },
@@ -380,14 +424,13 @@ function runView(state, send) {
         send('run:sendQuery', {tag});
       }
     }
-
     return html`
     <div class="aspect">
       <div class="chart">
         ${f(state, send).el}
       </div>
       <div class="query-builder">
-        ${queryBuilderView(
+        ${state.queryBuilders[tag](
           state.queries[tag],
           onChangeExpr
         )}

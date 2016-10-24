@@ -7,7 +7,7 @@ defmodule Perf.YamsChannel do
 
   @chunk 300
 
-  def join("yams", %{"run_id" => run_id}, socket) do
+  def join("yams:" <> _, %{"run_id" => run_id}, socket) do
     case Repo.get(Run, run_id) do
       %Run{} = run ->
         case Session.open(run.yam_ref) do
@@ -20,7 +20,7 @@ defmodule Perf.YamsChannel do
             |> assign(:event_buf, [])
             |> assign(:handle, handle)
 
-            Logger.info("Started yams channel for #{inspect run}")
+            Logger.info("Started yams channel for run #{run.id}")
 
             {:ok, socket}
         end
@@ -42,6 +42,7 @@ defmodule Perf.YamsChannel do
       case changes do
         {:ok, stream} ->
           stream
+          |> Yams.Query.aggregates
           |> Yams.Query.as_stream!
           |> Stream.each(fn events ->
             push socket, "change:events", %{events: [events]}
@@ -62,15 +63,20 @@ defmodule Perf.YamsChannel do
     start_t = Yams.seconds_to_key(start_t_seconds)
     end_t = Yams.seconds_to_key(end_t_seconds)
 
+
+    Logger.info("Wat #{inspect query}")
+    {:ok, quoted} = Yams.Interpreter.compile(query)
+    Logger.info("Got a query request? #{Macro.to_string(quoted)}")
+
     case socket.assigns.handle
     |> Session.stream!({start_t, end_t})
     |> Yams.Interpreter.run(query) do
       {:ok, stream} ->
         spawn_link(fn ->
           {events, elapsed} = timer do
-            {:ok, quoted} = Yams.Interpreter.compile(query)
-            Logger.info("Running the query... #{Macro.to_string(quoted)}")
+            # Logger.info("Running the query... #{Macro.to_string(quoted)}")
             events = stream
+            |> Yams.Query.aggregates
             |> Yams.Query.as_stream!
             |> Stream.chunk(@chunk, @chunk, [])
             |> Stream.each(fn events ->

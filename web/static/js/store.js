@@ -161,6 +161,7 @@ class Yams extends Emitter {
   }
 
   onError(resp) {
+    console.error('yam channel error', resp)
     this.emit('error', resp);
   }
 
@@ -168,14 +169,18 @@ class Yams extends Emitter {
     if(this._channels[name]) {
       this._channels[name].leave();
     }
-    let channel = this._socket.channel('yams', this._params);
+    let channel = this._socket.channel(`yams:${name}`, this._params);
+    console.info(`Joining yams:${name}`);
     this._channels[name] = channel;
     return channel;
   }
 
+  // _bindChannel()
+
   changes(name, {query}, cb) {
     const channel = this._makeChannel(name)
     channel.on('change:events', cb);
+    channel.onError(() => this.onError());
     channel.join()
     .receive("ok", resp => {
       channel.push('change:events', {query});
@@ -187,6 +192,7 @@ class Yams extends Emitter {
   query(name, {startSeconds, endSeconds, query}, cb) {
     const channel = this._makeChannel(name);
     channel.on('query:events', cb);
+    channel.onError(() => this.onError());
     channel.join()
     .receive("ok", resp => {
       channel.push('query:events', {
@@ -196,6 +202,7 @@ class Yams extends Emitter {
       });
     })
     .receive("error", resp => this.onError(resp));
+
   }
 }
 
