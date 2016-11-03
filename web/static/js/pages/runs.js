@@ -4,14 +4,18 @@ import _ from "underscore";
 import errorView from './widgets/error';
 import menu from './widgets/menu';
 import flash from './widgets/flash';
+import pager from './widgets/pager';
 import moment from 'moment';
 
 function model(store) {
   return {
-    state: { items: [], count: 0, hasLoaded: false },
+    state: { page: 0, collection: { items: [] }, hasLoaded: false },
     namespace: 'runs',
     reducers: {
-      list
+      list,
+      error,
+      nextPage,
+      prevPage
     },
     effects: {
       getRuns: _.partial(getRuns, store)
@@ -20,32 +24,44 @@ function model(store) {
 }
 
 function getRuns(store, _, state, send, done) {
-  console.log(store);
-  store.list('run')
+  const limit = 16;
+  const offset = state.page * limit;
+  store.list('run', {offset, limit})
   .on('error', (error) => send('runs:error'))
   .on('ok', (resp) => send('runs:list', resp, done));
 }
 
-function list({count, items}, state) {
-  return {
-    ...state,
-    hasLoaded: true,
-    items,
-    count
-  }
+function list(collection, state) {
+  return {...state, collection, hasLoaded: true}
 }
 
-function error(resp, state) {
-  return {
-    ...state,
-    hasLoaded: true
-  }
+function error(error, state) {
+  return {...state, error, hasLoaded: true}
 }
 
-function runView({id, suite, inserted_at, finished_at}) {
-  var time = `ran ${moment.utc(inserted_at).fromNow()}`;
+function nextPage(_, state) {
+  if(state.page >= state.collection.page_count) return state;
+  return {...state, page: (state.page + 1)}
+}
+
+function prevPage(_, state) {
+  if(state.page <= 0) return state;
+  return {...state, page: (state.page - 1)}
+}
+
+
+function runView({id, suite, status, inserted_at, finished_at}) {
+  var time = `started ${moment.utc(inserted_at).fromNow()}`;
   if(finished_at) {
     time = `finished ${moment.utc(finished_at).fromNow()}`;
+  }
+
+  const runStatus = () => {
+    return html`
+      <span class="status badge badge-${status.type.replace('_', '-')}">
+        ${status.type}
+      </span>
+    `;
   }
 
   return html`
@@ -55,6 +71,10 @@ function runView({id, suite, inserted_at, finished_at}) {
           ${suite.name} ${time}
         </a>
       </h3>
+
+      <div class="status">
+        ${runStatus()}
+      </div>
     </div>
   `
 }
@@ -62,12 +82,29 @@ function runView({id, suite, inserted_at, finished_at}) {
 function view(appState, prev, send) {
   const {runs: state} = appState;
 
-  if(!state.hasLoaded) {
+  const get = () => {
     send('runs:getRuns');
   }
 
+  const onNextPage = () => {
+    send('runs:nextPage');
+    get();
+  }
+  const onPrevPage = () => {
+    send('runs:prevPage');
+    get();
+  }
+
+  const noRuns = () => {
+    if(!state.hasLoaded) return;
+    if(state.collection.items.length) return;
+    return html`
+      <div class="alert">You have not run any suites yet. To do so, click the "run" button on the suite page.</div>
+    `;
+  }
+
   return html`
-    <div class="app">
+    <div class="app" onload=${get}>
       ${menu(appState, send)}
       ${flash(appState, send)}
 
@@ -79,8 +116,11 @@ function view(appState, prev, send) {
         </div>
 
         <div class="suites">
-          ${state.items.map((run) => runView(run))}
+          ${noRuns()}
+          ${state.collection.items.map((run) => runView(run))}
         </div>
+
+        ${pager(state.collection, onNextPage, onPrevPage)}
       </div>
     </div>
   `

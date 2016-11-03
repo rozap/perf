@@ -1,6 +1,9 @@
 defmodule Perf.Resource.ListAny do
   import Ecto.Query
   alias Perf.Resource.State
+  require Logger
+
+  @page_size 16
 
   def query(model, %State{params: params} = state) do
     query = from(m in model.__struct__)
@@ -23,7 +26,6 @@ defmodule Perf.Resource.ListAny do
   end
 
   def apply_filters(query, %{"where" => wheres}) do
-    IO.puts "wheres.. #{inspect wheres}"
     Enum.reduce(wheres, query, fn clause, q ->
       filter(q, clause)
     end)
@@ -31,9 +33,18 @@ defmodule Perf.Resource.ListAny do
 
   def apply_filters(query, _), do: query
 
-  def evaluate(_, %State{query: query, params: params} = state) do
+  defp offset_limit(%State{params: params}) do
     offset = Dict.get(params, "offset", 0)
-    limit = Dict.get(params, "limit", 16)
+    limit = Dict.get(params, "limit", @page_size)
+
+    {offset, limit}
+  end
+
+  def evaluate(_, %State{query: query, params: params} = state) do
+    {offset, limit} = offset_limit(state)
+
+    IO.inspect params
+    Logger.info("Fetching #{offset} #{limit}")
 
     try do
       query = query
@@ -57,9 +68,15 @@ defmodule Perf.Resource.ListAny do
     |> select([m], count(m.id))
     |> Perf.Repo.one
     
+
+    {offset, limit} = offset_limit(state)
+
     resp = %{}
     |> Dict.put("items", models)
     |> Dict.put("count", count)
+    |> Dict.put("page_size", @page_size)
+    |> Dict.put("page", trunc(offset / @page_size))
+    |> Dict.put("page_count", trunc(count / @page_size))
     
     struct(state, resp: resp)
   end

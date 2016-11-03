@@ -75,11 +75,7 @@ a {
   }
 }
 .mono {
-  font-family: monospace;
-  padding: @margin;
-  background: @gray-lighter;
-  border: 1px solid @gray-light;
-  border-radius: @base-radius;
+  font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
 }
 
 form {
@@ -147,6 +143,17 @@ form {
   padding: 0px @margin/2;
 }
 
+.alert {
+  border: 1px solid @gray-lighter;
+  margin: @margin 0px;
+  text-align: left;
+  p {
+    padding: @margin/2;
+    color: @red;
+  }
+  padding: @margin;
+}
+
 .field-errors {
   li {
     color: @red;
@@ -176,22 +183,23 @@ ul {
 
 .badge {
   padding: @margin/8 @margin/2;
-  box-shadow: inset 1px 1px 4px @gray-light;
-  border-radius: @base-radius;
+  box-shadow: 1px 1px 2px @gray-light;
+  display: inline-block;
+  border-radius: @base-radius / 2;
   color: @white;
-  margin: @margin/2;
+  margin-top: @margin / 2;
 }
 
 .badge-get {
   background: @blue;
 }
-.badge-post {
+.badge-post, .badge-succeeded {
   background: @green;
 }
-.badge-put {
+.badge-put, .badge-in-progress {
   background: @orange;
 }
-.badge-delete {
+.badge-delete, .badge-error {
   background: @red;
 }
 .badge-patch {
@@ -274,5 +282,25 @@ ul {
   }
   .graphic {
     
+  }
+}
+
+.pager {
+  border-top: 1px solid @gray-lighter;
+  padding: @margin;
+  .page, .dummy {
+    width: @margin * 2.2;
+  }
+
+  .dummy {
+    display: inline-block;
+  }
+  .page {
+    i {
+      padding: @margin;
+    }
+  }
+  .pages {
+    .mono;
   }
 }

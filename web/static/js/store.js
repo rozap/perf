@@ -165,6 +165,12 @@ class Yams extends Emitter {
     this.emit('error', resp);
   }
 
+  close() {
+    _.each(this._channels, (chan) => {
+      chan.close();
+    });
+  }
+
   _makeChannel(name) {
     if(this._channels[name]) {
       this._channels[name].leave();
@@ -195,7 +201,6 @@ class Yams extends Emitter {
   }
 
   changes(name, query) {
-    console.info(query)
     return this.streamOf(name, 'change:events', query);
   }
 

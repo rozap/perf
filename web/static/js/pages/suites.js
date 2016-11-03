@@ -73,6 +73,15 @@ function view(appState, prev, send) {
     send('suites:getSuites');
   }
 
+  const noSuites = () => {
+    if(!state.hasLoaded) return;
+    if(state.items.length) return;
+    return html`
+      <div class="alert">You have not created any suites yet. To do so, click the "New Suite" button.</div>
+    `;
+  }
+
+
   return html`
     <div class="app">
       ${menu(appState, send)}
@@ -89,6 +98,7 @@ function view(appState, prev, send) {
         </div>
 
         <div class="suites">
+          ${noSuites()}
           ${state.items.map((suite) => suiteView(suite))}
         </div>
       </div>

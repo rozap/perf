@@ -83,6 +83,20 @@ function rolling(query) {
   ]
 }
 
+function emptyState() {
+  return {
+    queries: defaultQueries(),
+    queryBuilders: defaultQueryBuilders(defaultQueries()),
+    charts: {},
+    run: false,
+    isLoading: false,
+    latencyChart: false,
+    error: false,
+    datasets: {},
+    summary: {events: []},
+    status: {events: []},
+  }
+}
 
 function model(api, channelFactory) {
   var yam;
@@ -91,21 +105,11 @@ function model(api, channelFactory) {
   var onYamStatusChanges;
 
   return {
-    state: {
-      queries: defaultQueries(),
-      queryBuilders: defaultQueryBuilders(defaultQueries()),
-      charts: {},
-      run: false,
-      isLoading: false,
-      latencyChart: false,
-      error: false,
-      datasets: {},
-      summary: {events: []},
-      status: {events: []},
-    },
+    state: emptyState(),
     namespace: 'run',
     reducers: {
       show,
+      clear,
       error,
       appendChart,
       summary,
@@ -290,6 +294,10 @@ function show(run, state) {
   }
 }
 
+function clear(_params, _state) {
+  return emptyState();
+}
+
 function error(error, state) {
   return {
       ...state,
@@ -372,13 +380,10 @@ function progressView({run}, send) {
 }
 
 function runView(state, send) {
-  if (state.shouldLoad) {
+  if (!state.run) {
+    console.log("No run, just loading..")
     return loader('Loading that run...');
   }
-  if (!state.run) {
-    return;
-  }
-
 
   const chartAndQuery = (tag, f) => {
     const oldQuery = toAst(state.queries[tag]);
@@ -423,6 +428,7 @@ function runView(state, send) {
 
 //TODO: make this match the route nav
 function shouldLoad(appState) {
+  debugger
   return !appState.run.run && !appState.run.isLoading && !appState.run.error;
 }
 
@@ -432,7 +438,11 @@ function view(appState, prev, send) {
   } = appState;
 
   const get = () => {
-    send('run:getRun', params);
+    const wantId = parseInt(params.id);
+    if(wantId !== (state.run && state.run.id)) {
+      send('run:clear', params);
+      send('run:getRun', params);
+    }
   }
 
   return html `

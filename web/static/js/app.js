@@ -48,6 +48,10 @@ function rootModel() {
       error: false
     },
     reducers: {
+      setLocation: (loc, state) => {
+        console.log(loc)
+        return state;
+      },
       login: (user, state) => _.extend({}, state, {user}),
       error: (error, state) => _.extend({}, state, {error})
     },
