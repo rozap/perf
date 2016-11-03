@@ -178,21 +178,24 @@ class Yams extends Emitter {
   streamOf(name, queryName, query) {
     const channel = this._makeChannel(name)
     const ee = new Emitter();
-    // channel.on('events', (data) => console.log(data))
+
     channel.on('events', (data) => ee.emit('events', data));
-    channel.onError(() => ee.emit('error'));
+    channel.onError((e) => ee.emit('error', e));
     channel.onClose(() => ee.emit('close'));
 
     channel.join()
-    .receive("ok", resp => {
-      channel.push(queryName, query);
+    .receive("ok", _ => {
+      console.log(name, "QUERY", query)
+      channel.push(queryName, query)
+      .receive('error', e => ee.emit('error', e))
     })
-    .receive("error", resp => ee.emit('error', resp));
+    .receive("error", e => ee.emit('error', e));
 
     return ee;
   }
 
-  changes(name, {query}) {
+  changes(name, query) {
+    console.info(query)
     return this.streamOf(name, 'change:events', query);
   }
 

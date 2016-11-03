@@ -124,7 +124,7 @@ class Atom extends Any {
     return html`
       <input type="${this.inputType()}" value=${this.value}
         onload=${onload}
-        onchange=${onUpdate}
+        onkeyup=${onUpdate}
         onblur=${unedit}/>
     `
   }
@@ -209,7 +209,7 @@ class Func extends Any {
   static subTypes() {
     return [
       ...userYamFuncs(), Bucket, Aggregates,
-      Gt, Lt, Gte, Lte, Eq, Neq,
+      Gt, Lt, Gte, Lte, Eq, Neq, And, Or,
       Plus, Minus, Mult, Div
     ];
   }
@@ -340,7 +340,13 @@ class Infix extends Func {
 class Comparator extends Infix {
   returnType() { return Bool; }
   options() {
-    return ['>', '<', '>=', '<=', '==', '!=']
+    return ['>', '<', '>=', '<=', '==', '!='];
+  }
+}
+class BoolOperation extends Infix {
+  returnType() { return Bool; }
+  options() {
+    return ['&&', '||'];
   }
 }
 class Arithmetic extends Infix {
@@ -355,6 +361,10 @@ class Gte extends Comparator { static id() { return '>='} }
 class Lte extends Comparator { static id() { return '<='} }
 class Eq extends  Comparator { static id() { return '=='} }
 class Neq extends Comparator { static id() { return '!='} }
+
+class And extends BoolOperation { static id() { return '&&'} }
+class Or extends BoolOperation { static id() { return '||'} }
+
 
 class Plus  extends Arithmetic { static id() { return '+'} }
 class Minus extends Arithmetic { static id() { return '-'} }
@@ -376,7 +386,7 @@ class Percentile extends YamFunc {
   static signature() { return [Num, Num, Text]; }
   static empty() {
     return Any.fromAst(
-      ['percentile', 
+      ['percentile',
         ['-', 'row.end_t', 'row.start_t'],
         50,
         'p50_latency'
@@ -388,7 +398,7 @@ class Minimum extends YamFunc {
   static signature() { return [Num, Text]; }
   static empty() {
     return Any.fromAst(
-      ['minimum', 
+      ['minimum',
         ['-', 'row.end_t', 'row.start_t'],
         'min_latency'
       ]
@@ -399,7 +409,7 @@ class Maximum extends YamFunc {
   static signature() { return [Num, Text]; }
   static empty() {
     return Any.fromAst(
-      ['maximum', 
+      ['maximum',
         ['-', 'row.end_t', 'row.start_t'],
         'max_latency'
       ]
@@ -410,7 +420,7 @@ class CountWhere extends YamFunc {
   static signature() { return [Bool, Text]; }
   static empty() {
     return Any.fromAst(
-      ['count_where', 
+      ['count_where',
         ['>', ['-', 'row.end_t', 'row.start_t'], 100],
         'exceeds_100ms'
       ]
@@ -444,7 +454,7 @@ function check(nodes) {
 export default {
   fromAst, toAst, check,
   Any, Num, Text, Row, Bool, Func, Timeunit,
-  Gt, Lt, Gte, Lte, Eq, Neq,
+  Gt, Lt, Gte, Lte, Eq, Neq, And, Or,
   Plus, Minus, Mult, Div,
   Bucket, Where, Percentile, CountWhere, Minimum, Maximum,
   userYamFuncs

@@ -51,7 +51,7 @@ defmodule Perf.Mixfile do
      {:statistics, "~> 0.4.1"},
      {:distillery, "~> 0.9"},
      {:logger_file_backend, "0.0.9"},
-     {:yams, "~> 0.2.0"}
+     {:yams, "~> 0.2.1"}
    ]
   end
 

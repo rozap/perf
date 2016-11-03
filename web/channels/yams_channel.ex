@@ -36,7 +36,7 @@ defmodule Perf.YamsChannel do
     Logger.warn("Starting a changestream")
     spawn_link(fn ->
       changes = socket.assigns.handle
-      |> Session.changes
+      |> Session.changes!
       |> Yams.Interpreter.run(query)
 
       case changes do
@@ -56,21 +56,30 @@ defmodule Perf.YamsChannel do
     {:reply, {:ok, %{}}, socket}
   end
 
-  def handle_in("query:events", %{
-      "start_t_seconds" => start_t_seconds,
-      "end_t_seconds" => end_t_seconds,
-      "query" => query}, socket) when is_number(start_t_seconds) and is_number(end_t_seconds) do
+  defp compile_query(query) do
+    case Yams.Interpreter.compile(query) do
+      {:error, reason} ->
+        Logger.warn("Query failed to compile #{reason}")
+        {:error, %{
+          kind: :bad_request,
+          error: %{
+            english: reason,
+            reason: "query_compilation_failure"
+          }
+        }}
+      {:ok, _} = result -> result
+    end
+  end
+
+  defp eval_query({:ok, query}, socket, {start_t_seconds, end_t_seconds}) do
     start_t = Yams.seconds_to_key(start_t_seconds)
     end_t = Yams.seconds_to_key(end_t_seconds)
 
-
-    Logger.info("Wat #{inspect query}")
-    {:ok, quoted} = Yams.Interpreter.compile(query)
-    Logger.info("Got a query request? #{Macro.to_string(quoted)}")
-
-    case socket.assigns.handle
+    result = socket.assigns.handle
     |> Session.stream!({start_t, end_t})
-    |> Yams.Interpreter.run(query) do
+    |> Yams.Interpreter.run(query)
+
+    case result do
       {:ok, stream} ->
         spawn_link(fn ->
           {events, elapsed} = timer do
@@ -87,15 +96,35 @@ defmodule Perf.YamsChannel do
           end
         end)
 
-        {:reply, {:ok, %{}}, socket}
-
+        {:ok, %{}}
       {:error, reason} ->
-        with {:ok, quoted} <- Yams.Interpreter.compile(query) do
-          Logger.warn("Failed on #{Macro.to_string(quoted)}")
-        end
-
-        {:reply, {:error, %{kind: :bad_request, reason: reason}}, socket}
+        Logger.warn("Query failed at runtime: #{inspect reason}")
+        {:error, %{
+          kind: :bad_request,
+          error: %{
+            english: reason,
+            reason: "query_runtime_failure"
+          }
+        }}
     end
+  end
+
+  defp eval_query(result, _, _) do
+    result
+  end
+
+  def handle_in("query:events", %{
+      "start_t_seconds" => start_t_seconds,
+      "end_t_seconds" => end_t_seconds,
+      "query" => query}, socket) when is_number(start_t_seconds) and is_number(end_t_seconds) do
+
+    resp = query
+    |> compile_query
+    |> eval_query(socket, {start_t_seconds, end_t_seconds})
+
+    IO.inspect resp
+
+    {:reply, resp, socket}
   end
 
   def handle_in(message, params, socket) do

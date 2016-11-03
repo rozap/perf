@@ -22,7 +22,6 @@ function view(tag) {
     }
 
     const onChangeNode = (node) => {
-      console.log(isValid(nodes), check(nodes))
       onChange(nodes, isValid(nodes));
     }
 
@@ -78,7 +77,7 @@ function view(tag) {
             <a href="javascript:void(0)"
               onclick=${onAddNode}
               class="pure-button pure-button-primary add-expression">
-              Add Expression 
+              Add Expression
             </a>
 
           </div>

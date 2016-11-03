@@ -15,7 +15,7 @@ import {utcFormat, domainOf, timeFormat, millisFormat} from '../time';
 
 const defaultQueries = () => {
   const latency = fromAst([
-    ["bucket", 5000, "milliseconds"],
+    ["bucket", 1000, "milliseconds"],
     ["where", ["==", "row.type", "success"]],
     ["maximum", ["-", "row.end_t", "row.start_t"], "max_latency"],
     ["minimum", ["-", "row.end_t", "row.start_t"], "min_latency"],
@@ -50,39 +50,35 @@ function statusQuery(run) {
   const {duration} = domainOf(run);
   return fromAst([
     ["bucket", duration, "seconds"],
-    ["count_where", ["==", "row.type", "success"], "success_count"],
-    ["count_where", ["==", "row.type", "error"], "error_count"],
+    ["count_where", ["==", "row.type", "success"], "Sucesses"],
+    ["count_where", ["==", "row.type", "error"], "Errors"],
     [
       "count_where", [
         "&&",
         [">=", "row.status", 200],
         ["<", "row.status", 300]
-
-      ],
-      "2xx_count"
+      ],  "2xx codes"
     ],
     [
       "count_where", [
         "&&",
-          [">=", "row.status", 400],
-          ["<", "row.status", 500]
-      ],
-      "4xx_count"
+        [">=", "row.status", 400],
+        ["<", "row.status", 500]
+      ], "4xx codes"
     ],
     [
       "count_where", [
         "&&",
         [">=", "row.status", 500],
         ["<", "row.status", 600]
-      ],
-      "5xx_count"
+      ], "5xx codes"
     ]
   ]);
 }
 
 function rolling(query) {
   return [
-    ["bucket", 4000, "milliseconds"],
+    ["bucket", 1000, "milliseconds"],
     ...query.slice(1)
   ]
 }
@@ -129,27 +125,21 @@ function model(api, channelFactory) {
         send('run:appendChart', {tag: 'latency', chart: chart(state, send)}, done);
         send('run:sendQuery', {tag: 'latency'}, done);
 
-        const {
-          startSeconds,
-          endSeconds,
-        } = domainOf(state.run);
-
         if (isInProgress(state.run)) {
-          console.log("it's in progress..")
-          // send('run:chartChanges', chartQ, done);
-          // send('run:summaryChanges', {
-          //   startSeconds,
-          //   endSeconds,
-          //   query: rolling(summaryQuery(state.run, toAst(state.query)))
-          // }, done);
+          yam.changes('status', {query: rolling(toAst(statusQuery(state.run)))})
+          .on('events', onYamStatusChanges)
+          .on('error', onYamError(send, done, 'status'));
 
-          // send('run:statusChanges', {
-          //   startSeconds,
-          //   endSeconds,
-          //   query: rolling(statusQuery(state.run))
-          // }, done);
+          yam.changes('summary', {query: rolling(toAst(summaryQuery(state.run)))})
+          .on('events', onYamSummaryChanges)
+          .on('error', onYamError(send, done, 'summary'));
+
         } else {
-          console.log("Getting the thing....")
+          let {
+            startSeconds,
+            endSeconds,
+          } = domainOf(state.run);
+
           yam.query('summary', {
             startSeconds,
             endSeconds,
@@ -166,43 +156,7 @@ function model(api, channelFactory) {
           .on('events', onYamStatusChanges)
           .on('error', onYamError(send, done, 'status'))
         }
-
-        // send('run:initCharts', {}, done);
       },
-      // initCharts: (_params, state, send, done) => {
-      //   send('run:appendChart', chart(state, send), done);
-      //   send('run:sendQuery', {tag: 'latency'}, done);
-        // send('run:appendChart', throughputChart(state, send), done);
-
-
-
-        // if (isInProgress(state.run)) {
-        //   send('run:chartChanges', chartQ, done);
-        //   send('run:summaryChanges', {
-        //     startSeconds,
-        //     endSeconds,
-        //     query: rolling(summaryQuery(state.run, toAst(state.query)))
-        //   }, done);
-
-        //   send('run:statusChanges', {
-        //     startSeconds,
-        //     endSeconds,
-        //     query: rolling(statusQuery(state.run))
-        //   }, done);
-        // } else {
-        //   yam.query('summary', {
-        //     startSeconds,
-        //     endSeconds,
-        //     query: summaryQuery(state.run, toAst(state.query))
-        //   }, onYamSummaryChanges);
-
-        //   yam.query('status', {
-        //     startSeconds,
-        //     endSeconds,
-        //     query: statusQuery(state.run)
-        //   }, onYamStatusChanges);
-        // }
-      // },
       sendQuery: ({tag}, state, send, done) => {
         send('run:clearDataset', {tag}, done);
 
@@ -215,26 +169,25 @@ function model(api, channelFactory) {
           endSeconds,
         } = domainOf(state.run);
 
+        const query = toAst(state.queries[tag]);
+
         const chartQ = {
           startSeconds,
           endSeconds,
-          query: toAst(state.queries[tag])
+          query
         };
 
         yam.query(`chart.${tag}`, chartQ)
         .on('events', onYamChartChanges(tag))
         .on('error', onYamError(send, done, tag))
-      },
 
-      // chartChanges: (query, state) => {
-      //   yam.changes('chart-changes', query, onYamChartChanges);
-      // },
-      // summaryChanges: (query, state, send, done) => {
-      //   yam.changes('summary-changes', query, onYamSummaryChanges);
-      // },
-      // statusChanges: (query, state, send, done) => {
-      //   yam.changes('status-changes', query, onYamStatusChanges);
-      // }
+        if (isInProgress(state.run)) {
+          yam.changes(`chart-${tag}`, {query})
+          .on('events', onYamChartChanges(tag))
+          .on('error', onYamError(send, done, `chart-${tag}`));
+        }
+
+      }
     },
     subscriptions: [
       (send, done) => {
@@ -256,6 +209,10 @@ function onYamError(send, done, channel) {
   }
 }
 
+function yamError({channel, error}, state) {
+  return {...state, error}
+}
+
 function getRun(api, {id}, state, send, done) {
   api.get('run', {id})
     .on('error', (error) => send('run:error', error, done))
@@ -264,7 +221,6 @@ function getRun(api, {id}, state, send, done) {
       send('run:initYam', run, done);
     });
 }
-
 
 function eventsToMeasures(events) {
   var measures = {};
@@ -281,7 +237,6 @@ function eventsToMeasures(events) {
 
 function appendData({tag, events}, state, send, done) {
   const measures = eventsToMeasures(events);
-  console.log("Append data", tag, measures);
 
   const tagDatasets = _.map(measures, (data, label) => {
     const dataset = _.find(state.datasets[tag] || [], ds => ds.label === label) || {
@@ -304,11 +259,6 @@ function appendData({tag, events}, state, send, done) {
 
 function clearDataset({tag}, state) {
   return {...state, datasets: _.omit(state.datasets, tag)};
-}
-
-function yamError({channel, error}, state) {
-  const e = {error: {english: 'Error while fetching metrics'}};
-  return {...state, error: e}
 }
 
 function onChangeExpr({tag, query}, state) {
@@ -355,7 +305,7 @@ function statiiView({run, status: {events}}) {
   var label,
     unit;
   if(isInProgress(run)) {
-    label = 'Response rates';
+    label = 'Rates';
     unit = '/s'
   } else {
     label = 'Responses';
@@ -435,10 +385,13 @@ function runView(state, send) {
     const onChangeExpr = (query, isValid) => {
       send('run:onChangeExpr', {tag, query});
       const newQuery = toAst(query);
-      console.log("expr changed, valid: ", isValid)
-      if(isValid && !_.isEqual(oldQuery, newQuery)) {
+      const hasChanged = !_.isEqual(oldQuery, newQuery);
+      console.log("expr changed, valid: ", isValid, hasChanged)
+      if(isValid) {
         console.log(oldQuery, '===>', newQuery);
         send('run:sendQuery', {tag});
+      } else {
+        console.log(newQuery)
       }
     }
     return html`

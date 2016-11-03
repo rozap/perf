@@ -39,6 +39,6 @@
   "ranch": {:hex, :ranch, "1.2.1", "a6fb992c10f2187b46ffd17ce398ddf8a54f691b81768f9ef5f461ea7e28c762", [:make], []},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.0", "edee20847c42e379bf91261db474ffbe373f8acb56e9079acb6038d4e0bf414f", [:rebar, :make], []},
   "statistics": {:hex, :statistics, "0.4.1", "e9bfe6649f70842d9ebce69aa31ac8b6928e096bde43b683d7d673057237d028", [:mix], []},
-  "uuid": {:hex, :uuid, "1.1.4", "36c7734e4c8e357f2f67ba57fb61799d60c20a7f817b104896cca64b857e3686", [:mix], []},
+  "uuid": {:hex, :uuid, "1.1.5", "96cb36d86ee82f912efea4d50464a5df606bf3f1163d6bdbb302d98474969369", [:mix], []},
   "workex": {:hex, :workex, "0.10.0", "9e06b19fa976bb0378848b247183a038f0e7dc3bae17196ef0c52a2263633a55", [:mix], [{:exactor, "~> 2.2.0", [hex: :exactor, optional: false]}]},
-  "yams": {:hex, :yams, "0.2.0", "7d5a75a697f9a494214ba08d305cf38cf920eb0b8d5e09d5eb3179d351910af5", [:mix], [{:eleveldb, "~> 2.2.19", [hex: :eleveldb, optional: false]}, {:statistics, "~> 0.4.1", [hex: :statistics, optional: false]}, {:uuid, "~> 1.1.4", [hex: :uuid, optional: false]}]}}
+  "yams": {:hex, :yams, "0.2.1", "bad0a28eb5deaf7a164d0f29cf60609e5a264c987546cf2d3d91f3aa3f9a1622", [:mix], [{:eleveldb, "~> 2.2.19", [hex: :eleveldb, optional: false]}, {:statistics, "~> 0.4.1", [hex: :statistics, optional: false]}, {:uuid, "~> 1.1.4", [hex: :uuid, optional: false]}]}}

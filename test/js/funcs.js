@@ -46,6 +46,19 @@ describe('funcs', () => {
       const node = Any.fromAst(["percentile", ["-", "row.end_t", "row.start_t"], 95, "p95_latency"]);
       expect(node.id()).to.eql('percentile');
     });
+
+    it('can make a nested expression', () => {
+      const ast = [
+        "count_where", [
+          "&&",
+          [">=", "row.status", 200],
+          ["<", "row.status", 300]
+        ],
+        "2xx_count"
+      ];
+      const node = Any.fromAst(ast);
+      expect(node.toAst()).to.eql(ast);
+    });
   })
 
   describe('toAst', () => {
